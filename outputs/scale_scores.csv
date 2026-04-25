@@ -1,0 +1,361 @@
+﻿participant_id,identity_label,identity_ordinal,process_condition,process_ordinal,structure_level,scenario_id,domain,choice_valence,char_len,synthetic,agency,experience,free_will_attribution,autonomy,outcome_accountability,moral_praise_blame,process_accountability,perceived_intelligence,factual_manipulation_check,subjective_process_completeness,responsibility_total
+AI_reasons_concise_025,AI 决策者,0,reasons_concise,2,2,self_control_deadline,自我控制,positive_choice,223,True,5.5,2.4,5.8,6.0,5.0,4.0,5.0,6.0,1.3333333333333333,5.0,4.666666666666667
+AI_direct_choice_long_004,AI 决策者,0,direct_choice_long,0,0,responsibility_mistake,责任困境,negative_choice,576,True,3.1666666666666665,1.4,3.2,3.6666666666666665,5.0,3.5,4.0,4.0,0.0,3.0,4.166666666666667
+AI_alternatives_022,AI 决策者,0,alternatives,1,1,privacy_shortcut,责任困境,negative_choice,180,True,4.166666666666667,1.8,4.0,4.666666666666667,4.0,4.0,5.0,5.666666666666667,1.0,4.666666666666667,4.333333333333333
+HU_direct_choice_005,人类决策者,1,direct_choice,0,0,obedience_unfair_order,服从与自主,negative_choice,107,True,3.5,4.4,3.2,3.0,6.0,5.5,5.0,4.333333333333333,0.0,3.6666666666666665,5.5
+HU_reflection_feedback_014,人类决策者,1,reflection_feedback,3,3,privacy_shortcut,责任困境,negative_choice,513,True,4.5,2.2,4.2,4.666666666666667,5.5,5.5,4.5,4.666666666666667,2.0,5.666666666666667,5.166666666666667
+HU_alternatives_011,人类决策者,1,alternatives,1,1,risk_project_choice,风险决策,mixed_choice,177,True,5.0,4.2,5.4,5.333333333333333,6.0,5.0,5.0,5.666666666666667,1.3333333333333333,5.0,5.333333333333333
+AI_alternatives_025,AI 决策者,0,alternatives,1,1,self_control_deadline,自我控制,positive_choice,178,True,4.833333333333333,1.8,4.2,5.0,3.0,2.5,4.0,6.0,0.6666666666666666,4.333333333333333,3.1666666666666665
+HU_reasons_022,人类决策者,1,reasons,2,2,privacy_shortcut,责任困境,negative_choice,355,True,4.5,2.4,4.8,4.666666666666667,6.0,6.0,5.0,5.333333333333333,1.6666666666666667,4.666666666666667,5.666666666666667
+HU_direct_choice_014,人类决策者,1,direct_choice,0,0,privacy_shortcut,责任困境,negative_choice,111,True,4.166666666666667,5.0,5.6,5.0,6.0,6.0,5.0,5.0,0.0,3.3333333333333335,5.666666666666667
+AI_reflection_feedback_022,AI 决策者,0,reflection_feedback,3,3,privacy_shortcut,责任困境,negative_choice,520,True,5.166666666666667,1.0,4.4,4.333333333333333,5.0,5.0,5.5,5.666666666666667,2.0,6.0,5.166666666666667
+AI_direct_choice_014,AI 决策者,0,direct_choice,0,0,privacy_shortcut,责任困境,negative_choice,113,True,4.0,1.8,4.2,4.666666666666667,5.0,4.0,4.0,5.333333333333333,0.0,3.0,4.333333333333333
+HU_alternatives_019,人类决策者,1,alternatives,1,1,risk_project_choice,风险决策,mixed_choice,177,True,4.333333333333333,4.6,4.4,4.666666666666667,5.0,3.5,4.0,5.0,1.6666666666666667,4.333333333333333,4.166666666666667
+HU_reasons_019,人类决策者,1,reasons,2,2,risk_project_choice,风险决策,mixed_choice,355,True,5.0,4.4,4.8,5.333333333333333,6.0,4.5,5.0,5.666666666666667,2.0,5.333333333333333,5.166666666666667
+AI_reflection_feedback_004,AI 决策者,0,reflection_feedback,3,3,responsibility_mistake,责任困境,negative_choice,522,True,5.166666666666667,2.4,5.4,5.333333333333333,4.0,4.0,5.0,5.666666666666667,2.0,5.333333333333333,4.333333333333333
+HU_reasons_concise_000,人类决策者,1,reasons_concise,2,2,moral_friend_report,道德冲突,positive_choice,247,True,5.0,3.6,5.4,5.666666666666667,6.0,5.5,5.5,5.666666666666667,1.6666666666666667,4.666666666666667,5.666666666666667
+HU_direct_choice_long_001,人类决策者,1,direct_choice_long,0,0,self_control_deadline,自我控制,positive_choice,575,True,4.5,4.0,4.8,5.666666666666667,6.0,5.5,5.5,5.333333333333333,0.0,3.3333333333333335,5.666666666666667
+HU_reasons_concise_006,人类决策者,1,reasons_concise,2,2,privacy_shortcut,责任困境,negative_choice,223,True,4.5,4.6,5.4,5.0,6.0,5.0,5.5,4.666666666666667,1.6666666666666667,4.666666666666667,5.5
+HU_direct_choice_003,人类决策者,1,direct_choice,0,0,risk_project_choice,风险决策,mixed_choice,115,True,4.666666666666667,3.4,4.6,5.0,5.0,4.0,5.0,5.0,0.0,4.0,4.666666666666667
+HU_direct_choice_long_010,人类决策者,1,direct_choice_long,0,0,relationship_honesty,人际关系,mixed_choice,564,True,3.8333333333333335,4.6,3.4,3.6666666666666665,5.5,5.0,4.5,4.0,0.0,3.3333333333333335,5.0
+AI_reasons_concise_012,AI 决策者,0,reasons_concise,2,2,responsibility_mistake,责任困境,negative_choice,227,True,3.8333333333333335,1.0,3.6,4.0,3.0,2.0,3.0,4.666666666666667,2.0,4.666666666666667,2.6666666666666665
+AI_reflection_feedback_010,AI 决策者,0,reflection_feedback,3,3,relationship_honesty,人际关系,mixed_choice,512,True,4.5,1.0,4.2,4.333333333333333,3.0,3.0,5.0,4.666666666666667,2.0,5.0,3.6666666666666665
+HU_reasons_005,人类决策者,1,reasons,2,2,obedience_unfair_order,服从与自主,negative_choice,350,True,3.1666666666666665,3.4,3.4,3.0,6.0,6.0,5.0,4.0,1.6666666666666667,4.333333333333333,5.666666666666667
+AI_reflection_feedback_028,AI 决策者,0,reflection_feedback,3,3,responsibility_mistake,责任困境,negative_choice,522,True,4.5,2.0,4.0,4.333333333333333,3.0,3.0,4.0,4.666666666666667,2.0,5.0,3.3333333333333335
+HU_direct_choice_024,人类决策者,1,direct_choice,0,0,moral_friend_report,道德冲突,positive_choice,130,True,5.333333333333333,4.6,6.0,5.666666666666667,6.0,6.0,5.0,6.0,0.0,3.6666666666666665,5.666666666666667
+HU_direct_choice_022,人类决策者,1,direct_choice,0,0,privacy_shortcut,责任困境,negative_choice,111,True,4.5,3.6,4.8,4.666666666666667,6.0,6.0,5.0,5.0,0.0,3.0,5.666666666666667
+AI_direct_choice_000,AI 决策者,0,direct_choice,0,0,moral_friend_report,道德冲突,positive_choice,132,True,4.833333333333333,1.0,4.2,5.0,6.0,5.5,5.0,6.0,0.0,4.0,5.5
+HU_direct_choice_long_008,人类决策者,1,direct_choice_long,0,0,moral_friend_report,道德冲突,positive_choice,587,True,5.0,4.2,5.6,5.666666666666667,6.5,6.0,5.0,5.333333333333333,0.0,3.0,5.833333333333333
+HU_reasons_015,人类决策者,1,reasons,2,2,team_credit,人际关系,mixed_choice,339,True,4.5,3.8,5.4,5.0,6.0,5.0,5.0,5.0,2.0,4.666666666666667,5.333333333333333
+HU_reflection_feedback_028,人类决策者,1,reflection_feedback,3,3,responsibility_mistake,责任困境,negative_choice,515,True,5.166666666666667,4.6,5.2,5.0,6.0,5.0,5.5,5.333333333333333,2.0,6.0,5.5
+AI_reasons_concise_006,AI 决策者,0,reasons_concise,2,2,privacy_shortcut,责任困境,negative_choice,225,True,3.0,1.0,3.4,3.0,2.0,2.0,3.0,4.333333333333333,1.3333333333333333,3.6666666666666665,2.3333333333333335
+AI_reasons_004,AI 决策者,0,reasons,2,2,responsibility_mistake,责任困境,negative_choice,361,True,4.5,1.0,4.0,4.333333333333333,3.0,2.0,4.0,5.0,2.0,5.0,3.0
+AI_reasons_023,AI 决策者,0,reasons,2,2,team_credit,人际关系,mixed_choice,343,True,4.333333333333333,2.4,4.0,4.333333333333333,3.0,3.0,4.0,5.0,2.0,4.666666666666667,3.3333333333333335
+HU_reflection_feedback_009,人类决策者,1,reflection_feedback,3,3,self_control_deadline,自我控制,positive_choice,511,True,5.666666666666667,3.4,5.2,5.666666666666667,5.0,4.5,5.0,6.0,2.0,5.0,4.833333333333333
+HU_reasons_concise_018,人类决策者,1,reasons_concise,2,2,relationship_honesty,人际关系,mixed_choice,215,True,4.166666666666667,3.6,4.4,4.0,5.0,4.0,4.5,4.0,1.6666666666666667,4.333333333333333,4.5
+HU_alternatives_027,人类决策者,1,alternatives,1,1,risk_project_choice,风险决策,mixed_choice,177,True,4.333333333333333,3.6,4.6,4.666666666666667,5.5,4.5,5.0,5.0,0.6666666666666666,4.666666666666667,5.0
+HU_direct_choice_long_011,人类决策者,1,direct_choice_long,0,0,risk_project_choice,风险决策,mixed_choice,572,True,4.666666666666667,3.4,5.6,5.666666666666667,6.0,5.0,5.5,5.666666666666667,0.0,4.333333333333333,5.5
+HU_reasons_concise_015,人类决策者,1,reasons_concise,2,2,team_credit,人际关系,mixed_choice,207,True,4.5,4.0,4.8,4.333333333333333,6.0,5.0,5.0,5.0,1.3333333333333333,5.0,5.333333333333333
+HU_reasons_013,人类决策者,1,reasons,2,2,obedience_unfair_order,服从与自主,negative_choice,350,True,4.166666666666667,3.6,4.0,3.6666666666666665,5.0,4.0,5.0,4.666666666666667,2.0,4.666666666666667,4.666666666666667
+AI_direct_choice_long_015,AI 决策者,0,direct_choice_long,0,0,team_credit,人际关系,mixed_choice,562,True,2.6666666666666665,1.0,2.2,3.0,4.0,3.0,3.0,4.333333333333333,0.0,2.6666666666666665,3.3333333333333335
+HU_reflection_feedback_021,人类决策者,1,reflection_feedback,3,3,obedience_unfair_order,服从与自主,negative_choice,508,True,4.333333333333333,3.2,3.4,4.0,4.0,4.0,5.0,5.0,2.0,5.0,4.333333333333333
+AI_alternatives_010,AI 决策者,0,alternatives,1,1,relationship_honesty,人际关系,mixed_choice,172,True,4.166666666666667,1.8,4.4,4.0,3.0,3.0,4.0,5.0,1.0,4.0,3.3333333333333335
+AI_reasons_016,AI 决策者,0,reasons,2,2,moral_friend_report,道德冲突,positive_choice,383,True,5.0,1.8,3.6,4.333333333333333,4.0,3.0,4.0,6.0,2.0,5.0,3.6666666666666665
+HU_alternatives_017,人类决策者,1,alternatives,1,1,self_control_deadline,自我控制,positive_choice,175,True,5.0,3.6,5.4,6.0,5.0,4.5,5.0,5.333333333333333,1.0,4.666666666666667,4.833333333333333
+HU_reasons_concise_028,人类决策者,1,reasons_concise,2,2,responsibility_mistake,责任困境,negative_choice,225,True,5.0,3.8,4.8,4.666666666666667,6.0,5.0,5.0,5.333333333333333,2.0,5.333333333333333,5.333333333333333
+AI_reasons_concise_015,AI 决策者,0,reasons_concise,2,2,team_credit,人际关系,mixed_choice,209,True,4.0,1.0,4.2,4.333333333333333,4.0,3.0,4.0,4.666666666666667,1.3333333333333333,4.333333333333333,3.6666666666666665
+HU_alternatives_002,人类决策者,1,alternatives,1,1,relationship_honesty,人际关系,mixed_choice,169,True,4.666666666666667,4.6,5.2,5.333333333333333,6.0,5.0,4.0,5.0,1.3333333333333333,4.666666666666667,5.0
+HU_reasons_025,人类决策者,1,reasons,2,2,self_control_deadline,自我控制,positive_choice,353,True,5.666666666666667,5.0,6.0,6.0,6.0,6.0,6.0,6.0,2.0,6.0,6.0
+HU_reasons_concise_005,人类决策者,1,reasons_concise,2,2,obedience_unfair_order,服从与自主,negative_choice,218,True,4.333333333333333,4.2,3.4,3.6666666666666665,6.0,5.5,5.5,5.333333333333333,1.6666666666666667,5.0,5.666666666666667
+AI_reasons_014,AI 决策者,0,reasons,2,2,privacy_shortcut,责任困境,negative_choice,359,True,3.8333333333333335,1.4,4.2,4.333333333333333,5.0,4.0,4.0,5.666666666666667,2.0,4.666666666666667,4.333333333333333
+AI_direct_choice_long_017,AI 决策者,0,direct_choice_long,0,0,self_control_deadline,自我控制,positive_choice,578,True,4.833333333333333,2.2,4.2,5.333333333333333,5.0,3.5,4.0,5.666666666666667,0.0,3.3333333333333335,4.166666666666667
+HU_direct_choice_long_002,人类决策者,1,direct_choice_long,0,0,relationship_honesty,人际关系,mixed_choice,564,True,4.166666666666667,5.2,5.8,5.0,6.0,5.5,5.0,5.0,0.0,3.3333333333333335,5.5
+HU_reflection_feedback_025,人类决策者,1,reflection_feedback,3,3,self_control_deadline,自我控制,positive_choice,511,True,5.666666666666667,4.0,6.0,5.666666666666667,6.0,5.5,5.0,5.666666666666667,2.0,5.666666666666667,5.5
+HU_direct_choice_long_019,人类决策者,1,direct_choice_long,0,0,risk_project_choice,风险决策,mixed_choice,572,True,4.833333333333333,4.0,5.0,5.0,6.0,5.0,5.0,5.333333333333333,0.0,2.6666666666666665,5.333333333333333
+AI_alternatives_000,AI 决策者,0,alternatives,1,1,moral_friend_report,道德冲突,positive_choice,204,True,5.166666666666667,2.2,4.8,5.0,5.0,5.0,5.0,6.0,1.6666666666666667,5.0,5.0
+AI_alternatives_029,AI 决策者,0,alternatives,1,1,obedience_unfair_order,服从与自主,negative_choice,175,True,2.5,1.0,2.0,2.3333333333333335,4.0,4.0,5.0,4.333333333333333,1.0,3.0,4.333333333333333
+HU_reflection_feedback_017,人类决策者,1,reflection_feedback,3,3,self_control_deadline,自我控制,positive_choice,511,True,5.666666666666667,3.4,6.0,6.0,6.0,5.5,5.0,5.666666666666667,2.0,5.0,5.5
+AI_alternatives_013,AI 决策者,0,alternatives,1,1,obedience_unfair_order,服从与自主,negative_choice,175,True,3.5,2.4,3.0,3.0,5.0,4.0,5.0,5.0,1.0,4.0,4.666666666666667
+AI_reasons_concise_005,AI 决策者,0,reasons_concise,2,2,obedience_unfair_order,服从与自主,negative_choice,220,True,3.0,1.0,2.2,2.3333333333333335,4.0,3.0,4.0,4.0,1.3333333333333333,3.6666666666666665,3.6666666666666665
+HU_direct_choice_long_000,人类决策者,1,direct_choice_long,0,0,moral_friend_report,道德冲突,positive_choice,587,True,4.5,4.4,5.2,5.0,6.0,6.0,5.0,5.333333333333333,0.0,3.3333333333333335,5.666666666666667
+AI_direct_choice_long_021,AI 决策者,0,direct_choice_long,0,0,obedience_unfair_order,服从与自主,negative_choice,567,True,2.5,2.0,2.2,2.3333333333333335,3.0,3.0,3.0,3.3333333333333335,0.0,3.0,3.0
+HU_reasons_concise_010,人类决策者,1,reasons_concise,2,2,relationship_honesty,人际关系,mixed_choice,215,True,5.166666666666667,5.6,5.6,5.333333333333333,6.0,5.0,5.0,5.0,1.6666666666666667,5.333333333333333,5.333333333333333
+HU_direct_choice_long_009,人类决策者,1,direct_choice_long,0,0,self_control_deadline,自我控制,positive_choice,575,True,5.333333333333333,4.0,5.4,6.0,6.0,5.0,4.0,5.333333333333333,0.0,4.0,5.0
+AI_alternatives_006,AI 决策者,0,alternatives,1,1,privacy_shortcut,责任困境,negative_choice,180,True,3.6666666666666665,1.2,4.2,4.333333333333333,2.0,3.0,5.0,5.666666666666667,1.0,4.0,3.3333333333333335
+HU_direct_choice_long_007,人类决策者,1,direct_choice_long,0,0,team_credit,人际关系,mixed_choice,559,True,4.0,3.2,4.8,4.666666666666667,6.0,6.0,5.0,4.0,0.6666666666666666,4.0,5.666666666666667
+AI_alternatives_014,AI 决策者,0,alternatives,1,1,privacy_shortcut,责任困境,negative_choice,180,True,4.166666666666667,1.4,4.6,4.666666666666667,6.0,5.0,5.0,5.666666666666667,1.0,4.0,5.333333333333333
+AI_reasons_concise_016,AI 决策者,0,reasons_concise,2,2,moral_friend_report,道德冲突,positive_choice,249,True,4.5,1.8,4.6,5.0,5.0,4.0,5.0,5.666666666666667,1.6666666666666667,4.666666666666667,4.666666666666667
+AI_direct_choice_long_011,AI 决策者,0,direct_choice_long,0,0,risk_project_choice,风险决策,mixed_choice,575,True,4.0,1.0,3.6,4.0,3.0,2.0,3.0,4.666666666666667,0.0,4.0,2.6666666666666665
+HU_alternatives_021,人类决策者,1,alternatives,1,1,obedience_unfair_order,服从与自主,negative_choice,172,True,3.8333333333333335,3.8,2.8,3.0,5.5,5.5,5.0,4.0,0.6666666666666666,3.6666666666666665,5.333333333333333
+HU_reasons_029,人类决策者,1,reasons,2,2,obedience_unfair_order,服从与自主,negative_choice,350,True,3.5,4.6,4.4,4.0,6.0,5.0,5.0,4.666666666666667,1.6666666666666667,4.666666666666667,5.333333333333333
+HU_direct_choice_019,人类决策者,1,direct_choice,0,0,risk_project_choice,风险决策,mixed_choice,115,True,4.333333333333333,3.6,5.0,4.666666666666667,5.0,4.0,4.0,4.666666666666667,1.0,4.0,4.333333333333333
+HU_reflection_feedback_003,人类决策者,1,reflection_feedback,3,3,risk_project_choice,风险决策,mixed_choice,513,True,5.833333333333333,3.0,6.0,6.0,6.0,5.0,5.0,5.666666666666667,2.0,6.0,5.333333333333333
+AI_direct_choice_long_002,AI 决策者,0,direct_choice_long,0,0,relationship_honesty,人际关系,mixed_choice,567,True,2.5,1.0,3.0,3.0,4.0,3.0,3.0,3.3333333333333335,0.0,2.0,3.3333333333333335
+AI_alternatives_027,AI 决策者,0,alternatives,1,1,risk_project_choice,风险决策,mixed_choice,180,True,4.5,1.0,4.0,4.666666666666667,5.0,5.0,4.0,5.666666666666667,1.0,4.0,4.666666666666667
+AI_alternatives_020,AI 决策者,0,alternatives,1,1,responsibility_mistake,责任困境,negative_choice,182,True,4.666666666666667,2.4,5.0,5.333333333333333,5.0,5.0,5.0,5.333333333333333,0.6666666666666666,4.666666666666667,5.0
+AI_direct_choice_016,AI 决策者,0,direct_choice,0,0,moral_friend_report,道德冲突,positive_choice,132,True,5.666666666666667,1.0,5.6,6.0,6.0,6.0,5.0,6.0,0.0,5.666666666666667,5.666666666666667
+HU_direct_choice_long_006,人类决策者,1,direct_choice_long,0,0,privacy_shortcut,责任困境,negative_choice,568,True,3.5,3.4,4.0,4.0,6.0,5.0,5.0,4.333333333333333,0.0,3.3333333333333335,5.333333333333333
+HU_direct_choice_028,人类决策者,1,direct_choice,0,0,responsibility_mistake,责任困境,negative_choice,116,True,4.333333333333333,4.6,5.2,4.666666666666667,6.0,5.0,5.0,4.0,0.0,3.3333333333333335,5.333333333333333
+HU_reasons_016,人类决策者,1,reasons,2,2,moral_friend_report,道德冲突,positive_choice,379,True,5.5,4.0,6.0,5.666666666666667,6.0,6.0,5.0,6.333333333333333,2.0,6.0,5.666666666666667
+AI_reflection_feedback_025,AI 决策者,0,reflection_feedback,3,3,self_control_deadline,自我控制,positive_choice,518,True,5.0,1.8,4.4,5.0,4.0,4.0,5.0,5.666666666666667,2.0,5.333333333333333,4.333333333333333
+HU_reasons_concise_003,人类决策者,1,reasons_concise,2,2,risk_project_choice,风险决策,mixed_choice,223,True,5.666666666666667,5.0,6.0,5.666666666666667,6.0,5.0,5.0,5.666666666666667,1.6666666666666667,6.0,5.333333333333333
+AI_direct_choice_003,AI 决策者,0,direct_choice,0,0,risk_project_choice,风险决策,mixed_choice,117,True,5.333333333333333,1.0,5.0,5.333333333333333,4.0,3.0,5.0,5.666666666666667,0.0,5.0,4.0
+AI_direct_choice_023,AI 决策者,0,direct_choice,0,0,team_credit,人际关系,mixed_choice,104,True,3.5,1.0,3.4,4.0,5.0,2.0,5.0,5.666666666666667,0.0,3.3333333333333335,4.0
+AI_reflection_feedback_002,AI 决策者,0,reflection_feedback,3,3,relationship_honesty,人际关系,mixed_choice,512,True,4.5,1.0,3.8,4.333333333333333,3.0,3.0,4.0,4.333333333333333,2.0,4.333333333333333,3.3333333333333335
+HU_reflection_feedback_010,人类决策者,1,reflection_feedback,3,3,relationship_honesty,人际关系,mixed_choice,505,True,4.666666666666667,3.0,4.6,4.666666666666667,5.0,4.0,5.0,5.0,2.0,5.0,4.666666666666667
+HU_alternatives_001,人类决策者,1,alternatives,1,1,self_control_deadline,自我控制,positive_choice,175,True,5.0,5.2,5.8,5.666666666666667,6.0,5.0,5.0,5.666666666666667,1.3333333333333333,4.666666666666667,5.333333333333333
+HU_alternatives_029,人类决策者,1,alternatives,1,1,obedience_unfair_order,服从与自主,negative_choice,172,True,3.1666666666666665,3.6,3.4,3.3333333333333335,6.0,5.0,5.5,4.333333333333333,1.0,3.0,5.5
+AI_alternatives_016,AI 决策者,0,alternatives,1,1,moral_friend_report,道德冲突,positive_choice,204,True,5.333333333333333,1.0,5.6,5.666666666666667,5.0,5.0,5.0,6.0,1.0,5.0,5.0
+AI_reflection_feedback_021,AI 决策者,0,reflection_feedback,3,3,obedience_unfair_order,服从与自主,negative_choice,515,True,4.333333333333333,1.0,3.6,3.3333333333333335,5.0,5.0,5.5,5.0,2.0,5.333333333333333,5.166666666666667
+AI_alternatives_017,AI 决策者,0,alternatives,1,1,self_control_deadline,自我控制,positive_choice,178,True,4.333333333333333,2.2,3.6,4.333333333333333,4.0,3.0,4.0,5.666666666666667,1.0,4.666666666666667,3.6666666666666665
+HU_direct_choice_long_026,人类决策者,1,direct_choice_long,0,0,relationship_honesty,人际关系,mixed_choice,564,True,3.1666666666666665,4.0,4.4,3.6666666666666665,6.0,5.0,4.0,3.6666666666666665,0.0,2.3333333333333335,5.0
+AI_alternatives_015,AI 决策者,0,alternatives,1,1,team_credit,人际关系,mixed_choice,164,True,3.8333333333333335,2.2,4.4,4.666666666666667,4.0,3.0,4.0,4.666666666666667,1.0,3.6666666666666665,3.6666666666666665
+AI_direct_choice_026,AI 决策者,0,direct_choice,0,0,relationship_honesty,人际关系,mixed_choice,109,True,4.5,1.8,4.8,5.0,5.0,4.0,5.0,5.333333333333333,0.6666666666666666,3.3333333333333335,4.666666666666667
+HU_reasons_008,人类决策者,1,reasons,2,2,moral_friend_report,道德冲突,positive_choice,379,True,5.333333333333333,3.6,5.4,5.333333333333333,5.5,6.0,5.0,5.666666666666667,2.0,5.333333333333333,5.5
+HU_reasons_012,人类决策者,1,reasons,2,2,responsibility_mistake,责任困境,negative_choice,357,True,4.666666666666667,5.2,5.0,4.666666666666667,6.0,5.0,5.0,4.666666666666667,2.0,4.666666666666667,5.333333333333333
+AI_direct_choice_long_022,AI 决策者,0,direct_choice_long,0,0,privacy_shortcut,责任困境,negative_choice,571,True,3.3333333333333335,1.0,3.2,3.0,5.0,5.0,4.0,3.3333333333333335,0.0,2.0,4.666666666666667
+AI_reasons_007,AI 决策者,0,reasons,2,2,team_credit,人际关系,mixed_choice,343,True,4.666666666666667,1.6,4.6,4.666666666666667,5.0,4.0,5.0,4.666666666666667,2.0,5.0,4.666666666666667
+HU_direct_choice_026,人类决策者,1,direct_choice,0,0,relationship_honesty,人际关系,mixed_choice,107,True,2.8333333333333335,5.0,3.8,4.0,6.0,5.5,4.5,3.0,0.0,2.6666666666666665,5.333333333333333
+AI_reasons_concise_024,AI 决策者,0,reasons_concise,2,2,moral_friend_report,道德冲突,positive_choice,249,True,4.833333333333333,1.0,5.0,5.0,4.0,4.0,4.0,6.0,1.6666666666666667,5.0,4.0
+AI_reflection_feedback_009,AI 决策者,0,reflection_feedback,3,3,self_control_deadline,自我控制,positive_choice,518,True,5.666666666666667,1.8,5.4,6.0,4.0,3.5,5.0,6.0,2.0,6.0,4.166666666666667
+AI_reasons_concise_000,AI 决策者,0,reasons_concise,2,2,moral_friend_report,道德冲突,positive_choice,249,True,5.333333333333333,2.2,5.2,5.666666666666667,5.0,5.0,5.0,6.0,1.6666666666666667,5.333333333333333,5.0
+AI_reflection_feedback_019,AI 决策者,0,reflection_feedback,3,3,risk_project_choice,风险决策,mixed_choice,520,True,4.5,1.0,3.6,4.333333333333333,2.0,2.0,3.5,5.666666666666667,2.0,6.0,2.5
+HU_alternatives_020,人类决策者,1,alternatives,1,1,responsibility_mistake,责任困境,negative_choice,179,True,4.0,4.6,4.8,4.333333333333333,6.0,4.5,5.0,4.0,0.6666666666666666,3.6666666666666665,5.166666666666667
+HU_reflection_feedback_011,人类决策者,1,reflection_feedback,3,3,risk_project_choice,风险决策,mixed_choice,513,True,6.166666666666667,2.0,6.0,6.0,7.0,7.0,7.0,6.666666666666667,2.0,6.333333333333333,7.0
+AI_reasons_025,AI 决策者,0,reasons,2,2,self_control_deadline,自我控制,positive_choice,357,True,5.333333333333333,2.2,5.2,5.666666666666667,4.0,4.0,5.0,5.666666666666667,2.0,5.0,4.333333333333333
+AI_direct_choice_028,AI 决策者,0,direct_choice,0,0,responsibility_mistake,责任困境,negative_choice,118,True,4.166666666666667,1.8,4.0,4.0,4.0,4.0,4.0,4.0,0.6666666666666666,4.0,4.0
+HU_reasons_concise_002,人类决策者,1,reasons_concise,2,2,relationship_honesty,人际关系,mixed_choice,215,True,3.8333333333333335,3.8,3.8,3.3333333333333335,5.0,4.0,4.5,4.0,1.6666666666666667,4.0,4.5
+AI_direct_choice_long_023,AI 决策者,0,direct_choice_long,0,0,team_credit,人际关系,mixed_choice,562,True,4.833333333333333,2.6,4.8,5.0,5.0,5.0,5.0,5.333333333333333,0.0,3.6666666666666665,5.0
+AI_reflection_feedback_001,AI 决策者,0,reflection_feedback,3,3,self_control_deadline,自我控制,positive_choice,518,True,5.666666666666667,2.2,4.6,5.333333333333333,5.0,4.0,6.0,5.666666666666667,2.0,5.333333333333333,5.0
+AI_direct_choice_009,AI 决策者,0,direct_choice,0,0,self_control_deadline,自我控制,positive_choice,120,True,5.166666666666667,1.0,3.2,5.0,5.0,5.0,5.0,6.0,0.6666666666666666,4.666666666666667,5.0
+AI_reflection_feedback_023,AI 决策者,0,reflection_feedback,3,3,team_credit,人际关系,mixed_choice,504,True,5.333333333333333,1.0,5.2,5.333333333333333,4.0,4.0,5.0,5.666666666666667,2.0,6.0,4.333333333333333
+HU_reasons_concise_008,人类决策者,1,reasons_concise,2,2,moral_friend_report,道德冲突,positive_choice,247,True,4.5,4.0,4.4,4.666666666666667,6.0,5.0,4.0,5.333333333333333,1.6666666666666667,4.666666666666667,5.0
+HU_direct_choice_016,人类决策者,1,direct_choice,0,0,moral_friend_report,道德冲突,positive_choice,130,True,5.5,3.2,6.0,5.666666666666667,6.0,6.0,5.0,6.0,0.0,5.0,5.666666666666667
+AI_reflection_feedback_006,AI 决策者,0,reflection_feedback,3,3,privacy_shortcut,责任困境,negative_choice,520,True,5.333333333333333,2.0,4.6,5.333333333333333,5.0,4.0,5.0,5.666666666666667,2.0,5.666666666666667,4.666666666666667
+HU_direct_choice_long_022,人类决策者,1,direct_choice_long,0,0,privacy_shortcut,责任困境,negative_choice,568,True,4.166666666666667,5.4,4.8,4.666666666666667,6.0,6.0,5.0,4.333333333333333,0.0,3.3333333333333335,5.666666666666667
+HU_direct_choice_025,人类决策者,1,direct_choice,0,0,self_control_deadline,自我控制,positive_choice,118,True,5.0,3.8,6.0,6.0,6.0,6.0,5.0,6.0,0.0,4.0,5.666666666666667
+AI_reasons_026,AI 决策者,0,reasons,2,2,relationship_honesty,人际关系,mixed_choice,351,True,3.8333333333333335,1.0,3.8,4.0,4.0,3.0,4.0,4.333333333333333,2.0,4.333333333333333,3.6666666666666665
+AI_reasons_concise_017,AI 决策者,0,reasons_concise,2,2,self_control_deadline,自我控制,positive_choice,223,True,5.666666666666667,2.0,5.2,6.0,4.0,3.5,5.0,6.0,1.6666666666666667,5.0,4.166666666666667
+AI_direct_choice_013,AI 决策者,0,direct_choice,0,0,obedience_unfair_order,服从与自主,negative_choice,109,True,2.8333333333333335,1.0,2.2,2.3333333333333335,4.0,3.0,3.0,4.666666666666667,0.0,2.3333333333333335,3.3333333333333335
+HU_reasons_concise_021,人类决策者,1,reasons_concise,2,2,obedience_unfair_order,服从与自主,negative_choice,218,True,3.1666666666666665,4.6,2.8,2.6666666666666665,6.0,5.0,5.0,4.666666666666667,1.6666666666666667,4.666666666666667,5.333333333333333
+AI_reasons_concise_020,AI 决策者,0,reasons_concise,2,2,responsibility_mistake,责任困境,negative_choice,227,True,4.333333333333333,1.6,4.8,5.0,5.0,4.0,4.5,5.333333333333333,1.6666666666666667,5.0,4.5
+AI_reasons_001,AI 决策者,0,reasons,2,2,self_control_deadline,自我控制,positive_choice,357,True,5.5,2.4,5.2,6.0,4.0,3.0,5.0,6.0,2.0,5.666666666666667,4.0
+HU_direct_choice_029,人类决策者,1,direct_choice,0,0,obedience_unfair_order,服从与自主,negative_choice,107,True,3.1666666666666665,4.6,2.6,2.6666666666666665,6.0,5.0,5.0,3.6666666666666665,0.3333333333333333,3.6666666666666665,5.333333333333333
+AI_direct_choice_024,AI 决策者,0,direct_choice,0,0,moral_friend_report,道德冲突,positive_choice,132,True,5.0,2.0,4.8,5.333333333333333,5.0,4.5,5.0,6.0,0.0,4.333333333333333,4.833333333333333
+AI_reflection_feedback_029,AI 决策者,0,reflection_feedback,3,3,obedience_unfair_order,服从与自主,negative_choice,515,True,4.5,1.0,4.0,4.333333333333333,5.0,5.0,5.0,5.666666666666667,2.0,5.0,5.0
+HU_direct_choice_010,人类决策者,1,direct_choice,0,0,relationship_honesty,人际关系,mixed_choice,107,True,3.5,4.6,4.8,4.333333333333333,6.0,5.0,4.0,4.333333333333333,0.0,3.0,5.0
+HU_alternatives_007,人类决策者,1,alternatives,1,1,team_credit,人际关系,mixed_choice,161,True,4.0,3.4,4.4,4.333333333333333,5.0,4.5,4.0,4.333333333333333,0.6666666666666666,3.6666666666666665,4.5
+AI_reasons_concise_002,AI 决策者,0,reasons_concise,2,2,relationship_honesty,人际关系,mixed_choice,217,True,4.166666666666667,1.4,4.4,3.6666666666666665,5.0,4.0,5.0,5.0,1.6666666666666667,4.0,4.666666666666667
+AI_direct_choice_long_009,AI 决策者,0,direct_choice_long,0,0,self_control_deadline,自我控制,positive_choice,578,True,4.666666666666667,1.4,4.6,5.0,4.0,3.5,3.0,5.333333333333333,0.0,3.3333333333333335,3.5
+HU_direct_choice_long_027,人类决策者,1,direct_choice_long,0,0,risk_project_choice,风险决策,mixed_choice,572,True,4.5,4.2,5.4,5.666666666666667,6.0,4.5,4.5,5.0,0.0,3.3333333333333335,5.0
+AI_reasons_005,AI 决策者,0,reasons,2,2,obedience_unfair_order,服从与自主,negative_choice,354,True,3.5,2.0,3.4,3.6666666666666665,4.0,4.0,4.5,4.666666666666667,2.0,4.666666666666667,4.166666666666667
+HU_reasons_018,人类决策者,1,reasons,2,2,relationship_honesty,人际关系,mixed_choice,347,True,4.333333333333333,4.2,4.8,4.333333333333333,6.0,5.0,4.0,4.333333333333333,2.0,4.666666666666667,5.0
+HU_reasons_001,人类决策者,1,reasons,2,2,self_control_deadline,自我控制,positive_choice,353,True,5.5,4.6,5.8,6.0,5.5,6.0,5.5,5.666666666666667,2.0,5.666666666666667,5.666666666666667
+AI_reasons_010,AI 决策者,0,reasons,2,2,relationship_honesty,人际关系,mixed_choice,351,True,4.5,2.0,4.2,4.666666666666667,4.0,4.0,4.0,5.333333333333333,2.0,4.666666666666667,4.0
+HU_direct_choice_023,人类决策者,1,direct_choice,0,0,team_credit,人际关系,mixed_choice,102,True,4.5,4.8,5.2,5.0,5.5,4.5,5.0,5.0,0.0,4.0,5.0
+HU_direct_choice_021,人类决策者,1,direct_choice,0,0,obedience_unfair_order,服从与自主,negative_choice,107,True,3.3333333333333335,3.2,2.6,2.6666666666666665,6.0,5.0,5.0,4.0,0.0,3.6666666666666665,5.333333333333333
+HU_reflection_feedback_023,人类决策者,1,reflection_feedback,3,3,team_credit,人际关系,mixed_choice,497,True,5.0,3.0,4.8,4.666666666666667,4.0,4.0,4.0,5.666666666666667,2.0,5.0,4.0
+AI_direct_choice_005,AI 决策者,0,direct_choice,0,0,obedience_unfair_order,服从与自主,negative_choice,109,True,2.5,1.0,2.6,2.6666666666666665,4.0,3.0,3.5,4.333333333333333,0.0,2.6666666666666665,3.5
+HU_reasons_concise_007,人类决策者,1,reasons_concise,2,2,team_credit,人际关系,mixed_choice,207,True,4.333333333333333,3.0,4.8,5.0,5.5,4.0,4.5,5.0,1.3333333333333333,4.333333333333333,4.666666666666667
+AI_alternatives_012,AI 决策者,0,alternatives,1,1,responsibility_mistake,责任困境,negative_choice,182,True,3.8333333333333335,2.2,4.2,4.333333333333333,3.0,3.0,3.0,4.666666666666667,0.6666666666666666,3.6666666666666665,3.0
+AI_reasons_concise_022,AI 决策者,0,reasons_concise,2,2,privacy_shortcut,责任困境,negative_choice,225,True,4.0,1.0,3.6,4.333333333333333,4.0,3.0,4.0,4.666666666666667,1.6666666666666667,4.666666666666667,3.6666666666666665
+HU_direct_choice_long_024,人类决策者,1,direct_choice_long,0,0,moral_friend_report,道德冲突,positive_choice,587,True,5.333333333333333,5.0,6.0,5.666666666666667,6.0,6.0,5.0,6.0,0.0,4.666666666666667,5.666666666666667
+AI_reasons_concise_003,AI 决策者,0,reasons_concise,2,2,risk_project_choice,风险决策,mixed_choice,225,True,4.833333333333333,1.4,4.6,5.0,4.0,3.0,4.5,5.666666666666667,1.6666666666666667,4.666666666666667,3.8333333333333335
+HU_reasons_concise_014,人类决策者,1,reasons_concise,2,2,privacy_shortcut,责任困境,negative_choice,223,True,4.5,3.2,5.0,5.0,6.0,5.0,5.0,4.666666666666667,1.0,4.0,5.333333333333333
+HU_direct_choice_008,人类决策者,1,direct_choice,0,0,moral_friend_report,道德冲突,positive_choice,130,True,5.333333333333333,4.0,5.8,6.0,6.0,6.0,5.0,5.666666666666667,0.0,5.0,5.666666666666667
+HU_direct_choice_011,人类决策者,1,direct_choice,0,0,risk_project_choice,风险决策,mixed_choice,115,True,4.666666666666667,2.6,5.2,5.333333333333333,6.0,4.5,5.0,5.666666666666667,0.0,4.0,5.166666666666667
+HU_direct_choice_long_005,人类决策者,1,direct_choice_long,0,0,obedience_unfair_order,服从与自主,negative_choice,564,True,3.1666666666666665,4.0,2.8,2.6666666666666665,6.0,5.0,4.5,4.0,0.0,2.0,5.166666666666667
+HU_direct_choice_long_012,人类决策者,1,direct_choice_long,0,0,responsibility_mistake,责任困境,negative_choice,573,True,4.666666666666667,4.6,5.2,4.666666666666667,6.0,5.5,5.0,4.666666666666667,0.0,4.333333333333333,5.5
+HU_reflection_feedback_029,人类决策者,1,reflection_feedback,3,3,obedience_unfair_order,服从与自主,negative_choice,508,True,3.8333333333333335,3.8,3.6,3.6666666666666665,6.0,5.0,5.0,5.333333333333333,2.0,4.666666666666667,5.333333333333333
+HU_alternatives_012,人类决策者,1,alternatives,1,1,responsibility_mistake,责任困境,negative_choice,179,True,4.166666666666667,4.8,5.6,5.0,5.0,4.0,5.0,4.666666666666667,0.6666666666666666,4.0,4.666666666666667
+AI_reasons_008,AI 决策者,0,reasons,2,2,moral_friend_report,道德冲突,positive_choice,383,True,5.666666666666667,2.4,5.2,5.666666666666667,6.0,5.0,5.0,6.0,2.0,6.0,5.333333333333333
+AI_reasons_003,AI 决策者,0,reasons,2,2,risk_project_choice,风险决策,mixed_choice,359,True,4.5,2.0,4.2,5.0,4.0,4.0,5.0,5.666666666666667,2.0,4.666666666666667,4.333333333333333
+AI_reflection_feedback_008,AI 决策者,0,reflection_feedback,3,3,moral_friend_report,道德冲突,positive_choice,544,True,5.5,2.0,4.8,5.333333333333333,5.0,5.0,5.0,6.0,2.0,6.0,5.0
+HU_direct_choice_001,人类决策者,1,direct_choice,0,0,self_control_deadline,自我控制,positive_choice,118,True,4.5,4.0,5.0,5.0,5.0,4.0,4.0,5.0,0.0,3.0,4.333333333333333
+AI_reasons_concise_001,AI 决策者,0,reasons_concise,2,2,self_control_deadline,自我控制,positive_choice,223,True,4.666666666666667,2.0,4.0,5.0,4.0,4.0,4.0,5.666666666666667,1.3333333333333333,4.666666666666667,4.0
+HU_reasons_004,人类决策者,1,reasons,2,2,responsibility_mistake,责任困境,negative_choice,357,True,4.166666666666667,4.8,4.0,4.333333333333333,6.0,5.0,5.0,5.0,2.0,4.666666666666667,5.333333333333333
+HU_alternatives_003,人类决策者,1,alternatives,1,1,risk_project_choice,风险决策,mixed_choice,177,True,4.666666666666667,3.8,5.0,5.333333333333333,5.5,4.5,5.0,5.666666666666667,1.6666666666666667,5.0,5.0
+HU_reasons_concise_011,人类决策者,1,reasons_concise,2,2,risk_project_choice,风险决策,mixed_choice,223,True,4.0,4.2,4.6,4.666666666666667,6.0,4.5,5.0,5.0,1.6666666666666667,5.0,5.166666666666667
+AI_reasons_concise_008,AI 决策者,0,reasons_concise,2,2,moral_friend_report,道德冲突,positive_choice,249,True,5.0,1.0,4.4,5.0,4.0,3.0,4.0,5.666666666666667,1.3333333333333333,5.0,3.6666666666666665
+HU_alternatives_022,人类决策者,1,alternatives,1,1,privacy_shortcut,责任困境,negative_choice,177,True,3.5,3.4,4.0,4.0,5.0,5.0,5.0,4.333333333333333,1.0,3.6666666666666665,5.0
+HU_reflection_feedback_024,人类决策者,1,reflection_feedback,3,3,moral_friend_report,道德冲突,positive_choice,537,True,5.833333333333333,4.4,6.0,6.0,6.0,6.0,5.0,6.0,2.0,6.0,5.666666666666667
+AI_alternatives_007,AI 决策者,0,alternatives,1,1,team_credit,人际关系,mixed_choice,164,True,3.6666666666666665,1.0,3.6,4.0,3.0,2.0,2.5,4.333333333333333,1.0,3.6666666666666665,2.5
+HU_alternatives_014,人类决策者,1,alternatives,1,1,privacy_shortcut,责任困境,negative_choice,177,True,3.8333333333333335,4.8,4.2,4.333333333333333,6.0,5.0,5.0,5.0,0.6666666666666666,3.6666666666666665,5.333333333333333
+HU_reasons_concise_022,人类决策者,1,reasons_concise,2,2,privacy_shortcut,责任困境,negative_choice,223,True,4.166666666666667,2.0,4.8,4.333333333333333,6.0,6.0,5.5,5.0,1.6666666666666667,5.0,5.833333333333333
+AI_direct_choice_long_029,AI 决策者,0,direct_choice_long,0,0,obedience_unfair_order,服从与自主,negative_choice,567,True,2.1666666666666665,1.0,2.0,2.0,4.0,3.0,3.0,4.0,0.0,2.0,3.3333333333333335
+HU_reasons_concise_016,人类决策者,1,reasons_concise,2,2,moral_friend_report,道德冲突,positive_choice,247,True,5.166666666666667,5.2,5.8,5.666666666666667,7.0,6.0,5.0,6.666666666666667,1.6666666666666667,5.333333333333333,6.0
+HU_direct_choice_000,人类决策者,1,direct_choice,0,0,moral_friend_report,道德冲突,positive_choice,130,True,4.833333333333333,3.4,5.4,5.333333333333333,6.0,6.0,5.0,5.333333333333333,0.0,4.333333333333333,5.666666666666667
+AI_direct_choice_002,AI 决策者,0,direct_choice,0,0,relationship_honesty,人际关系,mixed_choice,109,True,3.8333333333333335,2.2,4.2,4.333333333333333,3.0,2.0,3.0,4.0,0.0,4.0,2.6666666666666665
+HU_reasons_024,人类决策者,1,reasons,2,2,moral_friend_report,道德冲突,positive_choice,379,True,5.5,4.4,5.8,6.0,6.0,6.0,5.0,6.0,2.0,6.0,5.666666666666667
+HU_reflection_feedback_008,人类决策者,1,reflection_feedback,3,3,moral_friend_report,道德冲突,positive_choice,537,True,5.0,3.6,5.0,5.333333333333333,6.0,5.0,4.5,5.666666666666667,2.0,5.333333333333333,5.166666666666667
+HU_direct_choice_012,人类决策者,1,direct_choice,0,0,responsibility_mistake,责任困境,negative_choice,116,True,5.0,3.2,5.2,5.0,6.0,5.0,5.0,5.0,0.0,4.0,5.333333333333333
+HU_alternatives_028,人类决策者,1,alternatives,1,1,responsibility_mistake,责任困境,negative_choice,179,True,4.333333333333333,4.6,4.8,4.333333333333333,5.5,4.5,5.5,4.666666666666667,0.6666666666666666,4.333333333333333,5.166666666666667
+AI_reflection_feedback_026,AI 决策者,0,reflection_feedback,3,3,relationship_honesty,人际关系,mixed_choice,512,True,4.666666666666667,2.4,4.8,5.666666666666667,5.0,4.0,5.0,5.666666666666667,2.0,5.0,4.666666666666667
+AI_reasons_concise_010,AI 决策者,0,reasons_concise,2,2,relationship_honesty,人际关系,mixed_choice,217,True,4.0,1.0,3.8,4.333333333333333,3.0,2.0,3.0,4.666666666666667,1.6666666666666667,3.3333333333333335,2.6666666666666665
+AI_reflection_feedback_000,AI 决策者,0,reflection_feedback,3,3,moral_friend_report,道德冲突,positive_choice,544,True,5.833333333333333,2.0,4.4,5.333333333333333,6.0,6.0,6.0,6.0,2.0,6.0,6.0
+AI_alternatives_001,AI 决策者,0,alternatives,1,1,self_control_deadline,自我控制,positive_choice,178,True,4.166666666666667,1.4,3.8,4.333333333333333,5.0,3.0,4.0,5.666666666666667,1.0,3.6666666666666665,4.0
+AI_alternatives_002,AI 决策者,0,alternatives,1,1,relationship_honesty,人际关系,mixed_choice,172,True,3.6666666666666665,1.0,4.2,3.6666666666666665,3.0,3.0,3.0,4.333333333333333,1.0,3.0,3.0
+AI_direct_choice_001,AI 决策者,0,direct_choice,0,0,self_control_deadline,自我控制,positive_choice,120,True,4.833333333333333,2.4,4.6,5.333333333333333,4.0,3.0,3.5,5.666666666666667,0.0,3.6666666666666665,3.5
+HU_direct_choice_004,人类决策者,1,direct_choice,0,0,responsibility_mistake,责任困境,negative_choice,116,True,4.833333333333333,3.8,5.6,5.333333333333333,6.0,5.0,6.0,4.0,0.0,3.0,5.666666666666667
+HU_alternatives_005,人类决策者,1,alternatives,1,1,obedience_unfair_order,服从与自主,negative_choice,172,True,3.0,4.2,3.6,3.0,6.0,6.0,5.0,4.333333333333333,1.0,3.6666666666666665,5.666666666666667
+HU_reflection_feedback_018,人类决策者,1,reflection_feedback,3,3,relationship_honesty,人际关系,mixed_choice,505,True,5.166666666666667,4.8,5.4,5.333333333333333,6.0,5.0,6.0,5.333333333333333,2.0,6.0,5.666666666666667
+AI_alternatives_003,AI 决策者,0,alternatives,1,1,risk_project_choice,风险决策,mixed_choice,180,True,3.6666666666666665,1.0,3.6,4.333333333333333,3.0,2.0,3.0,4.666666666666667,0.6666666666666666,3.3333333333333335,2.6666666666666665
+AI_direct_choice_long_007,AI 决策者,0,direct_choice_long,0,0,team_credit,人际关系,mixed_choice,562,True,3.5,2.4,3.4,3.6666666666666665,5.0,4.0,4.0,4.333333333333333,0.0,3.6666666666666665,4.333333333333333
+AI_alternatives_021,AI 决策者,0,alternatives,1,1,obedience_unfair_order,服从与自主,negative_choice,175,True,3.1666666666666665,1.0,2.6,2.6666666666666665,5.0,5.0,5.0,4.0,1.0,4.0,5.0
+AI_reasons_concise_011,AI 决策者,0,reasons_concise,2,2,risk_project_choice,风险决策,mixed_choice,225,True,4.166666666666667,1.0,4.2,4.333333333333333,4.0,3.0,4.0,5.666666666666667,2.0,4.333333333333333,3.6666666666666665
+AI_reasons_020,AI 决策者,0,reasons,2,2,responsibility_mistake,责任困境,negative_choice,361,True,4.166666666666667,1.6,4.4,4.666666666666667,4.0,3.0,5.0,5.0,2.0,4.666666666666667,4.0
+AI_direct_choice_015,AI 决策者,0,direct_choice,0,0,team_credit,人际关系,mixed_choice,104,True,3.5,1.0,4.2,4.0,4.0,4.0,4.5,4.666666666666667,0.0,3.6666666666666665,4.166666666666667
+AI_direct_choice_long_008,AI 决策者,0,direct_choice_long,0,0,moral_friend_report,道德冲突,positive_choice,590,True,3.6666666666666665,1.0,3.6,4.0,5.0,5.0,4.5,5.333333333333333,0.0,3.6666666666666665,4.833333333333333
+HU_alternatives_004,人类决策者,1,alternatives,1,1,responsibility_mistake,责任困境,negative_choice,179,True,4.166666666666667,4.4,4.2,4.0,6.0,5.0,5.0,4.333333333333333,1.0,4.666666666666667,5.333333333333333
+HU_reasons_concise_001,人类决策者,1,reasons_concise,2,2,self_control_deadline,自我控制,positive_choice,221,True,4.666666666666667,4.0,5.6,5.333333333333333,6.0,5.5,5.0,5.666666666666667,1.6666666666666667,4.666666666666667,5.5
+HU_reflection_feedback_006,人类决策者,1,reflection_feedback,3,3,privacy_shortcut,责任困境,negative_choice,513,True,5.0,2.4,5.4,5.0,5.5,5.0,5.0,5.666666666666667,2.0,5.666666666666667,5.166666666666667
+AI_reasons_019,AI 决策者,0,reasons,2,2,risk_project_choice,风险决策,mixed_choice,359,True,5.0,2.0,4.8,5.333333333333333,4.0,3.0,5.0,5.666666666666667,2.0,4.666666666666667,4.0
+HU_direct_choice_long_020,人类决策者,1,direct_choice_long,0,0,responsibility_mistake,责任困境,negative_choice,573,True,4.833333333333333,3.8,5.2,5.666666666666667,7.0,5.5,6.0,4.333333333333333,0.0,3.0,6.166666666666667
+AI_direct_choice_012,AI 决策者,0,direct_choice,0,0,responsibility_mistake,责任困境,negative_choice,118,True,4.5,1.4,4.8,5.333333333333333,5.0,4.0,5.0,4.333333333333333,0.0,3.6666666666666665,4.666666666666667
+HU_reflection_feedback_022,人类决策者,1,reflection_feedback,3,3,privacy_shortcut,责任困境,negative_choice,513,True,4.666666666666667,2.6,4.2,4.333333333333333,6.0,5.0,5.0,5.0,2.0,5.0,5.333333333333333
+AI_reasons_000,AI 决策者,0,reasons,2,2,moral_friend_report,道德冲突,positive_choice,383,True,5.5,2.0,4.6,5.0,5.0,5.0,5.0,5.666666666666667,2.0,5.0,5.0
+HU_reflection_feedback_005,人类决策者,1,reflection_feedback,3,3,obedience_unfair_order,服从与自主,negative_choice,508,True,4.833333333333333,4.4,4.0,4.0,6.0,6.0,5.0,5.333333333333333,2.0,5.333333333333333,5.666666666666667
+HU_direct_choice_long_023,人类决策者,1,direct_choice_long,0,0,team_credit,人际关系,mixed_choice,559,True,4.333333333333333,4.0,4.4,4.666666666666667,5.5,5.0,4.0,5.0,0.0,3.3333333333333335,4.833333333333333
+HU_direct_choice_007,人类决策者,1,direct_choice,0,0,team_credit,人际关系,mixed_choice,102,True,4.5,4.4,4.8,4.666666666666667,6.0,5.0,5.0,5.333333333333333,0.0,4.0,5.333333333333333
+AI_direct_choice_004,AI 决策者,0,direct_choice,0,0,responsibility_mistake,责任困境,negative_choice,118,True,4.833333333333333,2.0,4.8,5.0,6.0,5.0,5.5,4.666666666666667,0.0,4.333333333333333,5.5
+HU_direct_choice_015,人类决策者,1,direct_choice,0,0,team_credit,人际关系,mixed_choice,102,True,4.333333333333333,4.6,5.2,4.666666666666667,6.0,6.0,5.0,5.333333333333333,0.0,4.333333333333333,5.666666666666667
+AI_reasons_011,AI 决策者,0,reasons,2,2,risk_project_choice,风险决策,mixed_choice,359,True,5.333333333333333,1.0,4.8,5.666666666666667,5.0,3.5,5.0,6.666666666666667,2.0,6.0,4.5
+HU_alternatives_010,人类决策者,1,alternatives,1,1,relationship_honesty,人际关系,mixed_choice,169,True,4.0,4.8,4.6,4.333333333333333,6.0,5.0,5.0,4.0,1.0,3.6666666666666665,5.333333333333333
+HU_reflection_feedback_004,人类决策者,1,reflection_feedback,3,3,responsibility_mistake,责任困境,negative_choice,515,True,5.166666666666667,3.4,5.6,6.0,5.5,6.0,5.0,5.666666666666667,2.0,5.333333333333333,5.5
+HU_reasons_017,人类决策者,1,reasons,2,2,self_control_deadline,自我控制,positive_choice,353,True,5.666666666666667,4.2,5.6,6.0,6.0,5.0,5.5,5.666666666666667,2.0,5.666666666666667,5.5
+AI_alternatives_018,AI 决策者,0,alternatives,1,1,relationship_honesty,人际关系,mixed_choice,172,True,3.6666666666666665,1.4,3.4,3.6666666666666665,5.0,4.0,4.0,4.666666666666667,1.0,3.6666666666666665,4.333333333333333
+HU_alternatives_013,人类决策者,1,alternatives,1,1,obedience_unfair_order,服从与自主,negative_choice,172,True,3.1666666666666665,3.8,2.6,2.6666666666666665,6.0,5.0,5.0,4.666666666666667,1.0,3.3333333333333335,5.333333333333333
+AI_reflection_feedback_007,AI 决策者,0,reflection_feedback,3,3,team_credit,人际关系,mixed_choice,504,True,4.833333333333333,1.0,4.6,4.666666666666667,4.0,3.0,4.0,4.666666666666667,2.0,5.666666666666667,3.6666666666666665
+HU_direct_choice_018,人类决策者,1,direct_choice,0,0,relationship_honesty,人际关系,mixed_choice,107,True,4.5,4.8,5.6,5.333333333333333,6.0,5.5,5.0,4.333333333333333,0.0,3.6666666666666665,5.5
+AI_direct_choice_long_027,AI 决策者,0,direct_choice_long,0,0,risk_project_choice,风险决策,mixed_choice,575,True,3.3333333333333335,1.0,3.4,3.6666666666666665,5.0,4.0,5.0,4.333333333333333,0.0,2.6666666666666665,4.666666666666667
+AI_direct_choice_long_019,AI 决策者,0,direct_choice_long,0,0,risk_project_choice,风险决策,mixed_choice,575,True,3.8333333333333335,1.4,3.8,4.0,5.0,4.0,5.0,5.0,0.0,3.6666666666666665,4.666666666666667
+AI_reasons_concise_018,AI 决策者,0,reasons_concise,2,2,relationship_honesty,人际关系,mixed_choice,217,True,4.5,1.8,5.2,5.333333333333333,4.0,4.0,4.0,5.333333333333333,1.6666666666666667,4.666666666666667,4.0
+AI_alternatives_024,AI 决策者,0,alternatives,1,1,moral_friend_report,道德冲突,positive_choice,204,True,5.333333333333333,3.0,5.6,5.333333333333333,6.0,5.5,5.5,6.0,1.3333333333333333,5.0,5.666666666666667
+AI_reasons_013,AI 决策者,0,reasons,2,2,obedience_unfair_order,服从与自主,negative_choice,354,True,3.3333333333333335,1.0,3.0,2.6666666666666665,5.0,5.0,4.0,5.0,2.0,4.666666666666667,4.666666666666667
+HU_direct_choice_long_016,人类决策者,1,direct_choice_long,0,0,moral_friend_report,道德冲突,positive_choice,587,True,4.5,3.8,4.2,4.666666666666667,6.0,5.5,5.0,5.333333333333333,0.0,3.3333333333333335,5.5
+AI_alternatives_023,AI 决策者,0,alternatives,1,1,team_credit,人际关系,mixed_choice,164,True,3.8333333333333335,2.0,4.4,4.333333333333333,5.0,4.0,4.0,4.333333333333333,1.0,3.6666666666666665,4.333333333333333
+HU_reflection_feedback_002,人类决策者,1,reflection_feedback,3,3,relationship_honesty,人际关系,mixed_choice,505,True,5.666666666666667,4.6,5.2,5.333333333333333,5.0,4.5,4.0,5.666666666666667,2.0,5.666666666666667,4.5
+AI_reasons_009,AI 决策者,0,reasons,2,2,self_control_deadline,自我控制,positive_choice,357,True,4.833333333333333,2.2,4.4,5.0,4.0,3.0,4.0,5.666666666666667,2.0,4.666666666666667,3.6666666666666665
+HU_reflection_feedback_012,人类决策者,1,reflection_feedback,3,3,responsibility_mistake,责任困境,negative_choice,515,True,5.0,3.8,4.8,4.666666666666667,5.0,5.0,6.0,5.0,2.0,5.666666666666667,5.333333333333333
+AI_reasons_027,AI 决策者,0,reasons,2,2,risk_project_choice,风险决策,mixed_choice,359,True,5.166666666666667,1.8,4.4,5.0,5.0,4.0,5.0,5.666666666666667,2.0,5.666666666666667,4.666666666666667
+AI_reflection_feedback_016,AI 决策者,0,reflection_feedback,3,3,moral_friend_report,道德冲突,positive_choice,544,True,5.5,1.4,5.2,5.333333333333333,6.0,5.0,5.0,6.0,2.0,6.0,5.333333333333333
+AI_direct_choice_027,AI 决策者,0,direct_choice,0,0,risk_project_choice,风险决策,mixed_choice,117,True,3.8333333333333335,1.4,3.0,4.0,5.0,3.0,4.0,4.666666666666667,0.0,3.3333333333333335,4.0
+AI_reasons_021,AI 决策者,0,reasons,2,2,obedience_unfair_order,服从与自主,negative_choice,354,True,3.8333333333333335,2.0,4.2,4.0,5.0,5.0,5.0,5.333333333333333,2.0,5.0,5.0
+AI_direct_choice_long_013,AI 决策者,0,direct_choice_long,0,0,obedience_unfair_order,服从与自主,negative_choice,567,True,3.0,1.0,2.0,2.3333333333333335,5.0,5.0,5.0,4.0,0.0,3.3333333333333335,5.0
+AI_direct_choice_long_016,AI 决策者,0,direct_choice_long,0,0,moral_friend_report,道德冲突,positive_choice,590,True,4.5,1.8,4.8,5.0,5.0,5.0,5.0,5.333333333333333,0.0,4.0,5.0
+AI_reasons_012,AI 决策者,0,reasons,2,2,responsibility_mistake,责任困境,negative_choice,361,True,4.333333333333333,2.0,4.6,4.666666666666667,6.0,4.0,5.0,5.333333333333333,2.0,5.666666666666667,5.0
+AI_direct_choice_010,AI 决策者,0,direct_choice,0,0,relationship_honesty,人际关系,mixed_choice,109,True,4.166666666666667,2.4,4.4,4.666666666666667,5.5,4.0,5.0,5.0,0.0,3.3333333333333335,4.833333333333333
+AI_direct_choice_020,AI 决策者,0,direct_choice,0,0,responsibility_mistake,责任困境,negative_choice,118,True,4.833333333333333,1.2,4.2,4.666666666666667,5.0,4.0,5.0,5.0,0.6666666666666666,4.333333333333333,4.666666666666667
+AI_reasons_022,AI 决策者,0,reasons,2,2,privacy_shortcut,责任困境,negative_choice,359,True,4.0,1.8,5.0,5.0,5.0,5.0,5.5,5.333333333333333,2.0,5.333333333333333,5.166666666666667
+HU_reflection_feedback_026,人类决策者,1,reflection_feedback,3,3,relationship_honesty,人际关系,mixed_choice,505,True,5.5,3.0,4.8,5.0,5.0,5.0,5.0,5.333333333333333,2.0,6.0,5.0
+HU_reflection_feedback_020,人类决策者,1,reflection_feedback,3,3,responsibility_mistake,责任困境,negative_choice,515,True,5.166666666666667,3.8,5.2,6.0,5.0,4.5,5.0,5.0,2.0,5.666666666666667,4.833333333333333
+AI_alternatives_011,AI 决策者,0,alternatives,1,1,risk_project_choice,风险决策,mixed_choice,180,True,4.166666666666667,1.6,4.6,4.666666666666667,6.0,5.5,6.0,6.333333333333333,1.3333333333333333,5.0,5.833333333333333
+AI_reasons_concise_004,AI 决策者,0,reasons_concise,2,2,responsibility_mistake,责任困境,negative_choice,227,True,4.666666666666667,2.0,4.6,4.666666666666667,6.0,4.0,5.0,5.333333333333333,2.0,5.0,5.0
+AI_direct_choice_long_018,AI 决策者,0,direct_choice_long,0,0,relationship_honesty,人际关系,mixed_choice,567,True,2.6666666666666665,1.4,2.6,2.6666666666666665,4.0,3.0,4.0,3.6666666666666665,0.0,2.0,3.6666666666666665
+HU_alternatives_008,人类决策者,1,alternatives,1,1,moral_friend_report,道德冲突,positive_choice,201,True,4.666666666666667,4.6,5.8,5.333333333333333,6.0,5.5,5.0,6.0,1.0,5.0,5.5
+AI_reasons_015,AI 决策者,0,reasons,2,2,team_credit,人际关系,mixed_choice,343,True,5.0,1.0,4.4,5.0,6.0,4.0,6.0,5.666666666666667,2.0,6.0,5.333333333333333
+AI_direct_choice_011,AI 决策者,0,direct_choice,0,0,risk_project_choice,风险决策,mixed_choice,117,True,3.8333333333333335,1.0,2.6,3.3333333333333335,4.0,2.0,3.0,4.666666666666667,0.0,3.6666666666666665,3.0
+AI_reasons_concise_014,AI 决策者,0,reasons_concise,2,2,privacy_shortcut,责任困境,negative_choice,225,True,4.333333333333333,1.6,3.8,4.333333333333333,5.0,4.0,5.0,4.666666666666667,1.6666666666666667,4.0,4.666666666666667
+AI_direct_choice_long_026,AI 决策者,0,direct_choice_long,0,0,relationship_honesty,人际关系,mixed_choice,567,True,3.6666666666666665,2.4,4.0,4.0,5.0,4.0,5.0,4.333333333333333,0.0,3.0,4.666666666666667
+AI_reasons_concise_013,AI 决策者,0,reasons_concise,2,2,obedience_unfair_order,服从与自主,negative_choice,220,True,3.1666666666666665,1.0,2.8,2.6666666666666665,4.0,4.0,4.0,4.0,1.6666666666666667,4.333333333333333,4.0
+HU_reflection_feedback_007,人类决策者,1,reflection_feedback,3,3,team_credit,人际关系,mixed_choice,497,True,5.5,4.0,5.2,5.333333333333333,5.0,6.0,6.0,6.0,2.0,6.0,5.666666666666667
+HU_reasons_026,人类决策者,1,reasons,2,2,relationship_honesty,人际关系,mixed_choice,347,True,4.0,4.0,4.8,4.666666666666667,6.0,5.0,5.0,4.666666666666667,2.0,5.0,5.333333333333333
+HU_direct_choice_009,人类决策者,1,direct_choice,0,0,self_control_deadline,自我控制,positive_choice,118,True,5.5,3.8,6.0,6.0,6.0,5.0,5.0,6.0,0.0,4.0,5.333333333333333
+HU_direct_choice_long_013,人类决策者,1,direct_choice_long,0,0,obedience_unfair_order,服从与自主,negative_choice,564,True,3.5,3.8,3.4,3.3333333333333335,6.0,6.0,5.0,4.0,0.0,3.0,5.666666666666667
+HU_reasons_003,人类决策者,1,reasons,2,2,risk_project_choice,风险决策,mixed_choice,355,True,5.5,3.8,5.8,6.0,6.0,5.0,5.0,5.666666666666667,1.6666666666666667,4.666666666666667,5.333333333333333
+HU_reflection_feedback_027,人类决策者,1,reflection_feedback,3,3,risk_project_choice,风险决策,mixed_choice,513,True,5.166666666666667,2.4,4.6,5.333333333333333,5.0,4.0,5.0,5.666666666666667,2.0,5.666666666666667,4.666666666666667
+HU_reasons_023,人类决策者,1,reasons,2,2,team_credit,人际关系,mixed_choice,339,True,4.5,4.6,5.4,5.0,6.0,5.0,5.0,5.666666666666667,2.0,5.666666666666667,5.333333333333333
+AI_direct_choice_006,AI 决策者,0,direct_choice,0,0,privacy_shortcut,责任困境,negative_choice,113,True,3.6666666666666665,1.0,4.2,4.333333333333333,5.0,5.0,5.0,5.333333333333333,0.0,3.0,5.0
+HU_direct_choice_long_021,人类决策者,1,direct_choice_long,0,0,obedience_unfair_order,服从与自主,negative_choice,564,True,2.5,3.4,3.6,2.3333333333333335,6.0,6.0,5.0,4.0,0.0,3.0,5.666666666666667
+HU_direct_choice_long_017,人类决策者,1,direct_choice_long,0,0,self_control_deadline,自我控制,positive_choice,575,True,5.5,4.2,5.6,6.0,6.0,4.5,5.0,6.0,0.0,4.666666666666667,5.166666666666667
+AI_alternatives_008,AI 决策者,0,alternatives,1,1,moral_friend_report,道德冲突,positive_choice,204,True,4.666666666666667,2.0,4.2,4.666666666666667,5.0,4.0,5.0,5.666666666666667,1.0,3.6666666666666665,4.666666666666667
+HU_reasons_concise_020,人类决策者,1,reasons_concise,2,2,responsibility_mistake,责任困境,negative_choice,225,True,5.0,4.8,5.0,5.0,5.5,5.0,5.0,5.0,2.0,5.0,5.166666666666667
+HU_reasons_010,人类决策者,1,reasons,2,2,relationship_honesty,人际关系,mixed_choice,347,True,4.333333333333333,5.4,5.2,5.333333333333333,6.0,5.0,5.0,5.0,2.0,4.666666666666667,5.333333333333333
+HU_direct_choice_long_028,人类决策者,1,direct_choice_long,0,0,responsibility_mistake,责任困境,negative_choice,573,True,4.833333333333333,3.8,5.0,4.666666666666667,6.0,5.0,5.0,4.333333333333333,0.0,3.3333333333333335,5.333333333333333
+HU_reasons_007,人类决策者,1,reasons,2,2,team_credit,人际关系,mixed_choice,339,True,4.5,3.0,4.8,4.666666666666667,6.0,5.0,5.0,5.0,2.0,5.0,5.333333333333333
+HU_direct_choice_013,人类决策者,1,direct_choice,0,0,obedience_unfair_order,服从与自主,negative_choice,107,True,3.3333333333333335,4.4,3.0,3.0,6.0,5.5,5.0,5.0,0.3333333333333333,3.3333333333333335,5.5
+HU_direct_choice_long_014,人类决策者,1,direct_choice_long,0,0,privacy_shortcut,责任困境,negative_choice,568,True,4.5,3.6,4.2,4.666666666666667,6.0,5.0,5.0,5.0,0.0,4.0,5.333333333333333
+AI_direct_choice_long_024,AI 决策者,0,direct_choice_long,0,0,moral_friend_report,道德冲突,positive_choice,590,True,4.333333333333333,1.0,5.2,5.0,5.0,6.0,5.0,6.0,0.0,4.0,5.333333333333333
+AI_reflection_feedback_018,AI 决策者,0,reflection_feedback,3,3,relationship_honesty,人际关系,mixed_choice,512,True,6.0,2.2,5.8,6.333333333333333,5.0,5.0,6.0,6.0,2.0,6.666666666666667,5.333333333333333
+HU_alternatives_000,人类决策者,1,alternatives,1,1,moral_friend_report,道德冲突,positive_choice,201,True,5.166666666666667,4.6,5.8,5.333333333333333,6.0,6.0,5.0,6.0,1.0,5.0,5.666666666666667
+HU_alternatives_006,人类决策者,1,alternatives,1,1,privacy_shortcut,责任困境,negative_choice,177,True,4.333333333333333,2.6,4.8,4.666666666666667,6.0,6.0,5.5,4.333333333333333,1.0,4.333333333333333,5.833333333333333
+HU_direct_choice_long_015,人类决策者,1,direct_choice_long,0,0,team_credit,人际关系,mixed_choice,559,True,4.333333333333333,4.0,4.4,4.333333333333333,6.0,5.0,4.0,4.333333333333333,0.0,3.3333333333333335,5.0
+AI_reasons_concise_021,AI 决策者,0,reasons_concise,2,2,obedience_unfair_order,服从与自主,negative_choice,220,True,3.0,1.0,2.8,2.6666666666666665,5.0,4.0,4.0,4.666666666666667,1.6666666666666667,3.6666666666666665,4.333333333333333
+AI_alternatives_028,AI 决策者,0,alternatives,1,1,responsibility_mistake,责任困境,negative_choice,182,True,3.8333333333333335,1.0,3.2,3.6666666666666665,5.0,4.0,5.0,4.333333333333333,0.6666666666666666,4.0,4.666666666666667
+AI_direct_choice_022,AI 决策者,0,direct_choice,0,0,privacy_shortcut,责任困境,negative_choice,113,True,3.0,1.0,3.0,3.3333333333333335,4.0,3.0,4.0,4.666666666666667,0.0,2.6666666666666665,3.6666666666666665
+AI_reasons_024,AI 决策者,0,reasons,2,2,moral_friend_report,道德冲突,positive_choice,383,True,5.333333333333333,2.0,5.0,5.0,6.0,5.0,5.0,6.0,2.0,5.333333333333333,5.333333333333333
+HU_reflection_feedback_016,人类决策者,1,reflection_feedback,3,3,moral_friend_report,道德冲突,positive_choice,537,True,5.833333333333333,4.6,6.0,6.0,6.0,6.0,5.0,6.0,2.0,6.0,5.666666666666667
+AI_direct_choice_018,AI 决策者,0,direct_choice,0,0,relationship_honesty,人际关系,mixed_choice,109,True,3.1666666666666665,1.0,3.4,3.6666666666666665,3.0,3.0,3.0,4.0,0.0,3.3333333333333335,3.0
+HU_alternatives_015,人类决策者,1,alternatives,1,1,team_credit,人际关系,mixed_choice,161,True,4.666666666666667,6.0,4.0,4.666666666666667,6.0,5.0,5.0,4.333333333333333,1.0,3.6666666666666665,5.333333333333333
+HU_reasons_002,人类决策者,1,reasons,2,2,relationship_honesty,人际关系,mixed_choice,347,True,3.6666666666666665,4.6,5.0,4.333333333333333,5.0,5.5,5.0,4.666666666666667,2.0,4.666666666666667,5.166666666666667
+HU_reflection_feedback_013,人类决策者,1,reflection_feedback,3,3,obedience_unfair_order,服从与自主,negative_choice,508,True,5.166666666666667,2.4,5.2,5.0,6.0,5.5,5.0,5.333333333333333,2.0,5.666666666666667,5.5
+AI_reasons_concise_009,AI 决策者,0,reasons_concise,2,2,self_control_deadline,自我控制,positive_choice,223,True,5.666666666666667,2.4,5.6,5.666666666666667,5.0,4.0,5.0,6.0,1.6666666666666667,5.333333333333333,4.666666666666667
+HU_reasons_concise_009,人类决策者,1,reasons_concise,2,2,self_control_deadline,自我控制,positive_choice,221,True,5.5,4.8,6.0,6.0,6.0,5.0,5.0,5.666666666666667,1.6666666666666667,5.666666666666667,5.333333333333333
+AI_reasons_concise_029,AI 决策者,0,reasons_concise,2,2,obedience_unfair_order,服从与自主,negative_choice,220,True,2.6666666666666665,1.8,2.8,2.6666666666666665,5.0,4.0,4.5,4.666666666666667,1.6666666666666667,3.3333333333333335,4.5
+AI_direct_choice_long_010,AI 决策者,0,direct_choice_long,0,0,relationship_honesty,人际关系,mixed_choice,567,True,4.0,1.4,3.6,3.6666666666666665,5.0,4.0,5.0,4.333333333333333,0.0,3.0,4.666666666666667
+HU_reasons_021,人类决策者,1,reasons,2,2,obedience_unfair_order,服从与自主,negative_choice,350,True,3.8333333333333335,3.2,4.0,4.0,6.0,5.5,5.0,4.666666666666667,1.3333333333333333,4.333333333333333,5.5
+AI_reasons_006,AI 决策者,0,reasons,2,2,privacy_shortcut,责任困境,negative_choice,359,True,4.5,1.8,4.6,4.666666666666667,5.0,5.0,5.0,4.666666666666667,2.0,5.0,5.0
+HU_reasons_020,人类决策者,1,reasons,2,2,responsibility_mistake,责任困境,negative_choice,357,True,4.333333333333333,4.4,5.8,5.666666666666667,7.0,6.0,6.5,4.666666666666667,1.6666666666666667,4.333333333333333,6.5
+HU_reasons_concise_025,人类决策者,1,reasons_concise,2,2,self_control_deadline,自我控制,positive_choice,221,True,5.666666666666667,4.2,6.0,6.0,6.0,5.5,5.0,6.0,1.6666666666666667,5.666666666666667,5.5
+HU_reasons_000,人类决策者,1,reasons,2,2,moral_friend_report,道德冲突,positive_choice,379,True,5.0,4.0,5.2,5.0,6.0,6.0,5.0,5.666666666666667,2.0,5.333333333333333,5.666666666666667
+AI_reasons_concise_023,AI 决策者,0,reasons_concise,2,2,team_credit,人际关系,mixed_choice,209,True,4.833333333333333,1.0,4.4,4.666666666666667,3.0,3.0,4.0,5.666666666666667,1.3333333333333333,5.0,3.3333333333333335
+HU_alternatives_016,人类决策者,1,alternatives,1,1,moral_friend_report,道德冲突,positive_choice,201,True,5.666666666666667,4.8,6.0,6.0,7.0,6.5,6.0,6.333333333333333,0.6666666666666666,5.333333333333333,6.5
+AI_direct_choice_long_012,AI 决策者,0,direct_choice_long,0,0,responsibility_mistake,责任困境,negative_choice,576,True,3.5,2.0,3.4,4.0,4.5,3.5,4.0,4.0,0.0,3.6666666666666665,4.0
+HU_alternatives_018,人类决策者,1,alternatives,1,1,relationship_honesty,人际关系,mixed_choice,169,True,4.166666666666667,5.4,5.4,5.333333333333333,6.0,5.5,5.0,4.666666666666667,1.0,5.0,5.5
+AI_reasons_concise_007,AI 决策者,0,reasons_concise,2,2,team_credit,人际关系,mixed_choice,209,True,5.166666666666667,2.2,5.0,4.666666666666667,6.0,5.0,5.5,5.666666666666667,1.6666666666666667,5.333333333333333,5.5
+AI_reasons_concise_028,AI 决策者,0,reasons_concise,2,2,responsibility_mistake,责任困境,negative_choice,227,True,4.5,2.0,4.8,4.666666666666667,6.0,5.0,5.5,5.333333333333333,2.0,4.666666666666667,5.5
+HU_direct_choice_027,人类决策者,1,direct_choice,0,0,risk_project_choice,风险决策,mixed_choice,115,True,4.666666666666667,3.6,5.0,5.0,6.0,4.5,5.0,4.666666666666667,1.3333333333333333,4.666666666666667,5.166666666666667
+AI_direct_choice_long_028,AI 决策者,0,direct_choice_long,0,0,responsibility_mistake,责任困境,negative_choice,576,True,3.5,1.6,3.2,3.3333333333333335,5.0,4.0,4.5,3.6666666666666665,0.0,3.0,4.5
+AI_direct_choice_long_014,AI 决策者,0,direct_choice_long,0,0,privacy_shortcut,责任困境,negative_choice,571,True,3.3333333333333335,1.0,3.0,3.0,4.0,3.0,4.0,4.333333333333333,0.0,2.6666666666666665,3.6666666666666665
+AI_alternatives_004,AI 决策者,0,alternatives,1,1,responsibility_mistake,责任困境,negative_choice,182,True,4.5,4.2,5.0,4.666666666666667,6.0,5.5,5.0,5.333333333333333,1.3333333333333333,4.666666666666667,5.5
+HU_reasons_concise_013,人类决策者,1,reasons_concise,2,2,obedience_unfair_order,服从与自主,negative_choice,218,True,3.6666666666666665,4.6,3.0,3.0,5.0,5.0,5.0,4.333333333333333,1.3333333333333333,4.333333333333333,5.0
+HU_alternatives_023,人类决策者,1,alternatives,1,1,team_credit,人际关系,mixed_choice,161,True,4.666666666666667,6.0,5.4,4.666666666666667,6.0,5.0,4.5,5.0,1.0,4.666666666666667,5.166666666666667
+HU_reasons_011,人类决策者,1,reasons,2,2,risk_project_choice,风险决策,mixed_choice,355,True,4.833333333333333,4.8,5.0,5.0,5.0,4.0,5.0,4.666666666666667,2.0,4.666666666666667,4.666666666666667
+AI_reflection_feedback_024,AI 决策者,0,reflection_feedback,3,3,moral_friend_report,道德冲突,positive_choice,544,True,5.333333333333333,2.0,4.8,5.333333333333333,4.0,4.0,5.0,5.666666666666667,2.0,5.666666666666667,4.333333333333333
+AI_reasons_029,AI 决策者,0,reasons,2,2,obedience_unfair_order,服从与自主,negative_choice,354,True,3.5,1.0,3.8,3.6666666666666665,5.0,5.0,5.0,5.0,1.6666666666666667,4.666666666666667,5.0
+AI_direct_choice_029,AI 决策者,0,direct_choice,0,0,obedience_unfair_order,服从与自主,negative_choice,109,True,3.0,2.2,2.6,2.6666666666666665,6.0,5.5,5.5,4.666666666666667,0.0,2.3333333333333335,5.666666666666667
+AI_direct_choice_long_000,AI 决策者,0,direct_choice_long,0,0,moral_friend_report,道德冲突,positive_choice,590,True,4.333333333333333,2.0,4.0,4.333333333333333,5.0,4.0,5.0,5.333333333333333,0.0,3.3333333333333335,4.666666666666667
+AI_reflection_feedback_013,AI 决策者,0,reflection_feedback,3,3,obedience_unfair_order,服从与自主,negative_choice,515,True,5.333333333333333,1.0,4.6,4.666666666666667,5.0,4.0,5.0,5.333333333333333,2.0,5.333333333333333,4.666666666666667
+HU_reasons_concise_027,人类决策者,1,reasons_concise,2,2,risk_project_choice,风险决策,mixed_choice,223,True,4.833333333333333,3.8,5.2,5.0,6.0,4.5,5.0,5.666666666666667,1.6666666666666667,4.666666666666667,5.166666666666667
+AI_reasons_concise_019,AI 决策者,0,reasons_concise,2,2,risk_project_choice,风险决策,mixed_choice,225,True,4.666666666666667,1.4,4.6,5.0,3.0,2.0,4.0,5.666666666666667,1.3333333333333333,4.666666666666667,3.0
+AI_alternatives_009,AI 决策者,0,alternatives,1,1,self_control_deadline,自我控制,positive_choice,178,True,5.5,2.6,5.8,6.0,3.0,3.0,4.0,6.0,1.0,5.0,3.3333333333333335
+AI_reasons_concise_026,AI 决策者,0,reasons_concise,2,2,relationship_honesty,人际关系,mixed_choice,217,True,3.6666666666666665,2.4,4.2,4.333333333333333,5.0,4.0,4.5,4.666666666666667,2.0,3.6666666666666665,4.5
+HU_reasons_concise_029,人类决策者,1,reasons_concise,2,2,obedience_unfair_order,服从与自主,negative_choice,218,True,3.6666666666666665,3.0,3.0,3.0,6.0,5.0,6.0,4.333333333333333,1.3333333333333333,4.666666666666667,5.666666666666667
+HU_reasons_014,人类决策者,1,reasons,2,2,privacy_shortcut,责任困境,negative_choice,355,True,3.5,3.6,4.6,4.0,5.5,5.5,4.5,4.666666666666667,2.0,4.666666666666667,5.166666666666667
+HU_reflection_feedback_001,人类决策者,1,reflection_feedback,3,3,self_control_deadline,自我控制,positive_choice,511,True,5.833333333333333,5.0,6.0,6.0,6.0,6.0,5.0,5.666666666666667,2.0,6.0,5.666666666666667
+AI_reflection_feedback_027,AI 决策者,0,reflection_feedback,3,3,risk_project_choice,风险决策,mixed_choice,520,True,4.666666666666667,1.0,4.0,4.333333333333333,3.0,3.0,4.0,5.0,2.0,5.0,3.3333333333333335
+HU_direct_choice_long_018,人类决策者,1,direct_choice_long,0,0,relationship_honesty,人际关系,mixed_choice,564,True,3.5,4.8,5.4,4.666666666666667,6.0,5.0,4.0,4.333333333333333,0.0,3.0,5.0
+AI_alternatives_019,AI 决策者,0,alternatives,1,1,risk_project_choice,风险决策,mixed_choice,180,True,5.0,2.0,5.0,5.0,4.0,4.5,5.5,6.666666666666667,1.3333333333333333,5.0,4.666666666666667
+AI_reasons_002,AI 决策者,0,reasons,2,2,relationship_honesty,人际关系,mixed_choice,351,True,3.6666666666666665,1.0,3.2,3.6666666666666665,2.5,2.0,3.0,4.666666666666667,1.6666666666666667,4.666666666666667,2.5
+HU_alternatives_009,人类决策者,1,alternatives,1,1,self_control_deadline,自我控制,positive_choice,175,True,5.666666666666667,5.4,6.0,6.0,6.0,5.0,5.0,6.0,1.0,5.0,5.333333333333333
+HU_direct_choice_long_029,人类决策者,1,direct_choice_long,0,0,obedience_unfair_order,服从与自主,negative_choice,564,True,2.5,4.2,2.8,2.6666666666666665,6.0,5.5,5.0,4.333333333333333,0.0,2.3333333333333335,5.5
+AI_direct_choice_025,AI 决策者,0,direct_choice,0,0,self_control_deadline,自我控制,positive_choice,120,True,5.5,2.4,5.4,6.0,5.0,4.5,5.0,6.0,0.0,4.666666666666667,4.833333333333333
+HU_reasons_028,人类决策者,1,reasons,2,2,responsibility_mistake,责任困境,negative_choice,357,True,4.5,5.6,4.8,4.0,5.0,5.0,5.0,4.333333333333333,2.0,5.0,5.0
+AI_direct_choice_017,AI 决策者,0,direct_choice,0,0,self_control_deadline,自我控制,positive_choice,120,True,5.333333333333333,2.2,4.8,5.333333333333333,5.0,3.5,4.0,6.0,0.0,4.666666666666667,4.166666666666667
+AI_direct_choice_long_005,AI 决策者,0,direct_choice_long,0,0,obedience_unfair_order,服从与自主,negative_choice,567,True,1.8333333333333333,1.0,2.0,2.0,2.0,2.0,2.0,2.6666666666666665,0.0,2.3333333333333335,2.0
+AI_direct_choice_long_001,AI 决策者,0,direct_choice_long,0,0,self_control_deadline,自我控制,positive_choice,578,True,4.5,1.0,3.6,5.0,5.0,4.5,4.0,5.666666666666667,0.0,3.0,4.5
+AI_direct_choice_long_003,AI 决策者,0,direct_choice_long,0,0,risk_project_choice,风险决策,mixed_choice,575,True,2.8333333333333335,1.0,2.6,3.0,4.0,2.0,3.0,4.333333333333333,0.0,2.3333333333333335,3.0
+HU_direct_choice_long_025,人类决策者,1,direct_choice_long,0,0,self_control_deadline,自我控制,positive_choice,575,True,5.5,3.8,5.6,6.0,6.5,5.5,5.0,6.0,0.0,3.6666666666666665,5.666666666666667
+AI_reasons_017,AI 决策者,0,reasons,2,2,self_control_deadline,自我控制,positive_choice,357,True,5.333333333333333,2.0,4.8,5.333333333333333,5.0,4.0,5.0,5.666666666666667,2.0,5.0,4.666666666666667
+AI_reflection_feedback_014,AI 决策者,0,reflection_feedback,3,3,privacy_shortcut,责任困境,negative_choice,520,True,5.166666666666667,1.0,4.4,4.666666666666667,6.0,5.0,5.5,5.666666666666667,2.0,5.0,5.5
+AI_reflection_feedback_011,AI 决策者,0,reflection_feedback,3,3,risk_project_choice,风险决策,mixed_choice,520,True,5.5,1.0,4.4,5.333333333333333,3.0,2.0,4.0,5.666666666666667,2.0,5.333333333333333,3.0
+HU_reasons_concise_004,人类决策者,1,reasons_concise,2,2,responsibility_mistake,责任困境,negative_choice,225,True,4.0,3.6,4.2,4.0,6.0,5.0,5.5,4.0,1.3333333333333333,4.0,5.5
+HU_reasons_concise_026,人类决策者,1,reasons_concise,2,2,relationship_honesty,人际关系,mixed_choice,215,True,3.3333333333333335,4.8,4.0,3.3333333333333335,5.0,4.0,3.5,4.0,1.3333333333333333,4.0,4.166666666666667
+AI_reflection_feedback_005,AI 决策者,0,reflection_feedback,3,3,obedience_unfair_order,服从与自主,negative_choice,515,True,4.166666666666667,1.0,3.4,3.3333333333333335,4.0,4.0,4.5,4.666666666666667,2.0,4.666666666666667,4.166666666666667
+HU_direct_choice_002,人类决策者,1,direct_choice,0,0,relationship_honesty,人际关系,mixed_choice,107,True,3.3333333333333335,4.6,4.2,3.6666666666666665,5.0,4.0,4.0,4.0,0.0,3.0,4.333333333333333
+HU_reasons_concise_017,人类决策者,1,reasons_concise,2,2,self_control_deadline,自我控制,positive_choice,221,True,4.833333333333333,3.2,5.0,5.0,5.5,4.5,4.5,4.666666666666667,1.6666666666666667,4.666666666666667,4.833333333333333
+AI_reasons_018,AI 决策者,0,reasons,2,2,relationship_honesty,人际关系,mixed_choice,351,True,4.166666666666667,1.2,4.0,4.666666666666667,4.0,4.0,4.0,5.0,2.0,4.666666666666667,4.0
+AI_direct_choice_007,AI 决策者,0,direct_choice,0,0,team_credit,人际关系,mixed_choice,104,True,6.333333333333333,1.0,6.4,6.666666666666667,7.0,7.0,7.0,7.0,0.0,5.333333333333333,7.0
+AI_reflection_feedback_015,AI 决策者,0,reflection_feedback,3,3,team_credit,人际关系,mixed_choice,504,True,5.833333333333333,1.0,5.6,5.333333333333333,4.0,4.0,5.0,6.333333333333333,2.0,6.0,4.333333333333333
+AI_reasons_concise_027,AI 决策者,0,reasons_concise,2,2,risk_project_choice,风险决策,mixed_choice,225,True,4.333333333333333,1.0,4.6,5.0,4.0,3.0,4.0,5.666666666666667,1.6666666666666667,4.666666666666667,3.6666666666666665
+AI_reflection_feedback_020,AI 决策者,0,reflection_feedback,3,3,responsibility_mistake,责任困境,negative_choice,522,True,4.333333333333333,2.0,4.0,4.333333333333333,4.0,3.0,4.0,4.333333333333333,2.0,4.666666666666667,3.6666666666666665
+AI_alternatives_026,AI 决策者,0,alternatives,1,1,relationship_honesty,人际关系,mixed_choice,172,True,3.5,1.6,3.4,3.6666666666666665,3.0,3.0,3.0,4.0,1.3333333333333333,3.6666666666666665,3.0
+HU_reasons_concise_012,人类决策者,1,reasons_concise,2,2,responsibility_mistake,责任困境,negative_choice,225,True,4.166666666666667,3.4,4.0,3.6666666666666665,5.5,5.0,4.5,4.0,2.0,4.333333333333333,5.0
+AI_reflection_feedback_017,AI 决策者,0,reflection_feedback,3,3,self_control_deadline,自我控制,positive_choice,518,True,6.0,2.2,6.0,6.0,5.0,5.0,6.0,6.0,2.0,6.0,5.333333333333333
+AI_reflection_feedback_012,AI 决策者,0,reflection_feedback,3,3,responsibility_mistake,责任困境,negative_choice,522,True,5.166666666666667,1.6,4.8,5.0,4.0,4.0,5.0,5.333333333333333,2.0,5.0,4.333333333333333
+HU_reasons_concise_019,人类决策者,1,reasons_concise,2,2,risk_project_choice,风险决策,mixed_choice,223,True,4.833333333333333,3.6,5.4,5.666666666666667,5.5,4.5,5.0,5.666666666666667,1.3333333333333333,4.666666666666667,5.0
+AI_direct_choice_long_025,AI 决策者,0,direct_choice_long,0,0,self_control_deadline,自我控制,positive_choice,578,True,5.0,1.6,4.2,5.0,5.0,3.5,4.0,6.0,0.0,3.6666666666666665,4.166666666666667
+HU_alternatives_024,人类决策者,1,alternatives,1,1,moral_friend_report,道德冲突,positive_choice,201,True,5.0,3.4,4.4,5.0,6.0,6.0,5.0,5.333333333333333,0.6666666666666666,5.0,5.666666666666667
+HU_reasons_concise_023,人类决策者,1,reasons_concise,2,2,team_credit,人际关系,mixed_choice,207,True,5.0,3.6,4.8,4.666666666666667,6.0,5.0,5.0,5.666666666666667,1.6666666666666667,5.0,5.333333333333333
+AI_direct_choice_019,AI 决策者,0,direct_choice,0,0,risk_project_choice,风险决策,mixed_choice,117,True,4.0,1.0,3.8,4.0,3.0,2.0,3.0,5.0,0.0,3.6666666666666665,2.6666666666666665
+AI_alternatives_005,AI 决策者,0,alternatives,1,1,obedience_unfair_order,服从与自主,negative_choice,175,True,2.5,1.0,2.4,2.3333333333333335,4.0,3.0,3.0,3.6666666666666665,1.0,2.6666666666666665,3.3333333333333335
+HU_direct_choice_long_004,人类决策者,1,direct_choice_long,0,0,responsibility_mistake,责任困境,negative_choice,573,True,4.5,4.2,4.8,4.666666666666667,6.0,4.5,5.0,4.333333333333333,0.0,3.0,5.166666666666667
+AI_direct_choice_long_020,AI 决策者,0,direct_choice_long,0,0,responsibility_mistake,责任困境,negative_choice,576,True,4.0,1.4,4.4,4.333333333333333,4.0,3.0,4.0,4.0,0.0,3.0,3.6666666666666665
+AI_reasons_028,AI 决策者,0,reasons,2,2,responsibility_mistake,责任困境,negative_choice,361,True,3.6666666666666665,1.8,3.6,4.0,5.0,4.0,4.0,4.333333333333333,1.6666666666666667,4.0,4.333333333333333
+HU_reflection_feedback_019,人类决策者,1,reflection_feedback,3,3,risk_project_choice,风险决策,mixed_choice,513,True,5.666666666666667,3.2,5.4,5.666666666666667,6.0,5.0,6.0,5.666666666666667,2.0,6.0,5.666666666666667
+HU_reflection_feedback_000,人类决策者,1,reflection_feedback,3,3,moral_friend_report,道德冲突,positive_choice,537,True,6.0,3.8,5.8,5.666666666666667,7.0,6.0,6.0,6.666666666666667,2.0,6.333333333333333,6.333333333333333
+AI_direct_choice_021,AI 决策者,0,direct_choice,0,0,obedience_unfair_order,服从与自主,negative_choice,109,True,2.6666666666666665,1.0,2.2,2.3333333333333335,5.0,4.0,4.0,4.333333333333333,0.0,3.0,4.333333333333333
+HU_reflection_feedback_015,人类决策者,1,reflection_feedback,3,3,team_credit,人际关系,mixed_choice,497,True,6.166666666666667,4.0,6.2,6.0,6.0,6.0,6.0,6.666666666666667,2.0,7.0,6.0
+HU_direct_choice_020,人类决策者,1,direct_choice,0,0,responsibility_mistake,责任困境,negative_choice,116,True,4.166666666666667,4.8,4.6,4.666666666666667,5.5,4.5,4.5,4.0,0.0,3.6666666666666665,4.833333333333333
+AI_reflection_feedback_003,AI 决策者,0,reflection_feedback,3,3,risk_project_choice,风险决策,mixed_choice,520,True,5.166666666666667,1.8,4.4,5.333333333333333,4.0,3.0,5.0,5.666666666666667,2.0,6.0,4.0
+HU_direct_choice_long_003,人类决策者,1,direct_choice_long,0,0,risk_project_choice,风险决策,mixed_choice,572,True,4.333333333333333,3.8,5.0,4.666666666666667,6.0,4.5,5.0,4.666666666666667,0.0,4.0,5.166666666666667
+HU_alternatives_026,人类决策者,1,alternatives,1,1,relationship_honesty,人际关系,mixed_choice,169,True,3.8333333333333335,5.2,3.6,4.333333333333333,5.0,4.5,4.0,4.333333333333333,1.3333333333333333,4.666666666666667,4.5
+HU_reasons_009,人类决策者,1,reasons,2,2,self_control_deadline,自我控制,positive_choice,353,True,5.5,4.6,6.0,6.0,6.0,5.0,5.0,6.0,1.6666666666666667,6.0,5.333333333333333
+HU_direct_choice_017,人类决策者,1,direct_choice,0,0,self_control_deadline,自我控制,positive_choice,118,True,5.0,4.2,5.8,5.666666666666667,6.0,5.5,5.0,6.0,0.0,3.3333333333333335,5.5
+AI_direct_choice_008,AI 决策者,0,direct_choice,0,0,moral_friend_report,道德冲突,positive_choice,132,True,5.0,2.0,3.4,4.333333333333333,5.0,4.0,5.0,5.666666666666667,0.0,4.333333333333333,4.666666666666667
+HU_direct_choice_006,人类决策者,1,direct_choice,0,0,privacy_shortcut,责任困境,negative_choice,111,True,4.0,5.6,4.6,4.333333333333333,6.0,6.0,5.0,4.333333333333333,0.0,3.3333333333333335,5.666666666666667
+HU_reasons_concise_024,人类决策者,1,reasons_concise,2,2,moral_friend_report,道德冲突,positive_choice,247,True,4.833333333333333,4.4,5.0,5.0,6.0,6.0,5.0,6.0,1.6666666666666667,5.0,5.666666666666667
+HU_alternatives_025,人类决策者,1,alternatives,1,1,self_control_deadline,自我控制,positive_choice,175,True,5.5,4.2,6.0,6.0,6.0,5.0,5.0,5.666666666666667,1.3333333333333333,5.0,5.333333333333333
+AI_direct_choice_long_006,AI 决策者,0,direct_choice_long,0,0,privacy_shortcut,责任困境,negative_choice,571,True,4.0,1.0,3.6,3.6666666666666665,6.0,5.0,4.5,4.333333333333333,0.0,3.0,5.166666666666667
+HU_reasons_006,人类决策者,1,reasons,2,2,privacy_shortcut,责任困境,negative_choice,355,True,4.5,2.6,4.6,4.666666666666667,6.0,6.0,5.0,5.666666666666667,2.0,4.666666666666667,5.666666666666667
+HU_reasons_027,人类决策者,1,reasons,2,2,risk_project_choice,风险决策,mixed_choice,355,True,5.5,4.4,6.0,6.0,6.0,5.0,5.0,6.0,2.0,6.0,5.333333333333333

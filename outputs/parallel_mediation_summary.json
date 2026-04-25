@@ -1,0 +1,24 @@
+{
+  "model": "structure_level -> agency and perceived_intelligence -> free_will_attribution",
+  "controls": [
+    "identity_ordinal",
+    "char_len"
+  ],
+  "n": 360,
+  "a_agency": 0.30448161664551,
+  "b_agency": 0.8863040525782947,
+  "indirect_agency": 0.26986329076850624,
+  "a_intelligence": 0.23465937524312275,
+  "b_intelligence": 0.07831214951596988,
+  "indirect_intelligence": 0.018376680079363508,
+  "direct_c_prime": -0.0883609410469269,
+  "total_parallel_indirect": 0.28823997084786973,
+  "agency_indirect_ci_2.5": 0.19849095001984263,
+  "agency_indirect_ci_97.5": 0.350718199199972,
+  "intelligence_indirect_ci_2.5": -0.00683401098922944,
+  "intelligence_indirect_ci_97.5": 0.04419581368758236,
+  "n_boot_agency": 2000,
+  "n_boot_intelligence": 2000,
+  "absolute_intelligence_indirect_share": 0.0637547944003316,
+  "interpretation_note": "Synthetic LLM-simulated data only; this is a competing mediation diagnostic, not mechanism evidence."
+}

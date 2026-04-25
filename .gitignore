@@ -1,0 +1,27 @@
+.env
+*.env
+.env.*
+.venv/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.DS_Store
+node_modules/
+logs/
+*.log
+CODEX_TASK.md
+
+# Raw API/model outputs and local debug artifacts
+outputs/raw_simulated_responses.jsonl
+outputs/simulated_responses_wide.csv
+outputs/*raw*
+outputs/*debug*
+outputs/*request*
+outputs/*response*
+outputs/*token*
+outputs/*key*
+
+# Temporary files
+*.tmp
+*.bak

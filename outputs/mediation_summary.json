@@ -1,0 +1,12 @@
+{
+  "model": "structure_level -> agency -> free_will_attribution",
+  "control_identity": true,
+  "a_path_X_to_M": 0.30833333333333435,
+  "b_path_M_to_Y": 0.9415574230367825,
+  "indirect_ab": 0.2903135387696755,
+  "direct_c_prime": -0.09864687210300803,
+  "bootstrap_ci_2.5": 0.22241592637228216,
+  "bootstrap_ci_97.5": 0.3672078690001722,
+  "n_boot_used": 2000,
+  "note": "Exploratory mediation on synthetic AI-simulated data only."
+}

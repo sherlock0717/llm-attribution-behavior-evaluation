@@ -1,0 +1,3 @@
+﻿model,control_identity,a_path_X_to_M,b_path_M_to_Y,indirect_ab,direct_c_prime,bootstrap_ci_2.5,bootstrap_ci_97.5,n_boot_used,note,identity_label
+structure_level -> agency -> free_will_attribution,False,0.3525252525252518,0.8878593939482622,0.31299285705852814,-0.03359891766458931,0.21711309396754008,0.4197865934868023,1000,Exploratory mediation on synthetic AI-simulated data only.,AI 决策者
+structure_level -> agency -> free_will_attribution,False,0.26414141414141407,1.0010752683071908,0.2644254370326569,-0.16048604309326295,0.17009248493741744,0.35924084279535573,1000,Exploratory mediation on synthetic AI-simulated data only.,人类决策者
