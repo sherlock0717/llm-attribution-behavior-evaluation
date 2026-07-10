@@ -169,3 +169,31 @@
 - **失败/被跳过命令及处理**：内联 heredoc 的重算校验命令两次被执行器判定为长任务而跳过；改为将一次性校验脚本写入系统临时目录、并用单进程 `git cat-file --batch` 高效实现后成功；校验完成后删除临时脚本。
 - **说明**：不改写先前 FND-001 原始记录（保留“曾用工作树 hash”的事实）；不声称“从未发生过工作树 hash”。
 - **停止**：未进入 FND-002，未 commit、未 push。
+
+---
+
+## 2026-07-10 · FND-002 · Project Tooling
+
+1. **分支/HEAD**：`chore/fnd-002-project-tooling`；HEAD=`2d615dbd85c773703f5612466eed4cc4dd174f91`（`2d615db merge: complete FND-001 baseline freeze`）；开始时工作区干净。
+2. **uv 是否原本存在**：PATH 无 uv；`.venv\Scripts\uv.exe` **已存在**（未安装）。
+3. **uv 实际版本**：`uv 0.11.28 (ebf0f43d7 2026-07-07 x86_64-pc-windows-msvc)`。
+4. **新增文件**：`pyproject.toml`、`uv.lock`；修改：`AGENT_WORKLOG.md`（本条）。
+5. **pyproject 关键决策**：
+   - `version = "0.2.0.dev0"`（专业化开发版本，非正式 release）；
+   - `requires-python = ">=3.12,<3.13"`（仅声明已验证的 Python 3.12）；
+   - **未添加** `[build-system]`；`tool.uv.package = false`（本轮不构建/安装项目自身，package 与 build 配置留待 FND-005）；
+   - **未添加** license 字段（DEC-001 未决）、作者隐私信息、CLI entry point；
+   - 未升级依赖最低约束；未加 pydantic / 其他模型 SDK / 类型检查器 / pre-commit / coverage / benchmark 工具。
+6. **运行依赖（8 项，与 requirements.txt 一致）**：openai、python-dotenv、pandas、numpy、scipy、statsmodels、matplotlib、tqdm；**开发依赖（dev group）**：pytest>=8.0、ruff>=0.9.0。
+7. **uv.lock 是否成功生成**：是（`uv lock --python .venv\Scripts\python.exe` → `Resolved 40 packages in 7.75s`，无冲突）；未手工编辑。
+8. **锁文件大小**：`uv.lock` = 73042 bytes（LastWriteTime 2026/7/10 18:16）。
+9. **`uv sync --frozen`（隔离临时环境，`UV_PROJECT_ENVIRONMENT`=系统临时目录）**：成功，Prepared 39 packages（项目自身 package=false 不安装），Installed 39。
+10. **ruff**：`uv run --frozen ruff check .` → `All checks passed!`（ruff 0.15.21；未运行 `--fix`，未改 src）。
+11. **compileall**：`uv run --frozen python -m compileall -q src` → exit 0，无输出。
+12. **pytest version**：`pytest 9.1.1`（仅验证已安装；本轮无测试文件，未运行 `pytest -q`）。
+13. **import smoke**：8 个运行依赖全部导入成功（另隔离临时环境）：openai 2.45.0 / dotenv(not exposed) / pandas 3.0.3 / numpy 2.5.1 / scipy 1.18.0 / statsmodels 0.14.6 / matplotlib 3.11.0 / tqdm 4.68.4 → `dependency import smoke passed`；未调用任何 API。
+14. **临时环境是否删除**：是（两次 `UV_PROJECT_ENVIRONMENT` 临时目录均 `TempEnvRemoved: True`；临时校验/导入脚本均已删除）。
+15. **`.venv` 是否被 uv sync 重写**：否（全程使用 `UV_PROJECT_ENVIRONMENT` 指向系统临时目录，基线 `.venv` 未被改写）。
+16. **失败/被跳过命令及修复**：① 合并式 uv 检查/安装命令被执行器判为长任务跳过 → 改为先只读检查（uv 已存在，无需安装）；② TOML 校验命令一次被跳过、临时脚本一度缺失 → 重写脚本后成功（`pyproject validation passed`）；③ 多命令 `git diff` 检查被跳过 → 改用 `git diff --stat` 汇总（受保护文件无差异）。
+17. **受保护文件检查**：`git diff --stat -- requirements.txt src outputs README.md run_all.ps1 docs AGENTS.md` 为空；`requirements.txt` 未改（保留、未从 uv.lock 覆盖）。
+18. **停止**：未进入 FND-003，未 commit、未 push。
