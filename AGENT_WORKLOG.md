@@ -1,0 +1,171 @@
+# AGENT_WORKLOG · 工作日志
+
+> 只记录真实执行的操作与真实结果。不得把未执行的测试写成通过。
+
+---
+
+## 2026-07-10 · Phase 0 基线冻结与现状审计
+
+- **日期时间**：2026-07-10 16:12（本地）
+- **当前分支**：`refactor/v0.2-professionalization`
+- **当前 commit**：`00c4725`（full `00c4725dc7b891de3a7bfa11b4856be177d9d2a6`），message `Initial public portfolio version`
+- **基线 smoke test 状态**：由上游告知“已在临时 worktree 完成隔离 smoke test 并通过”；本轮**未重跑**，仅作声明记录（`未核实`具体命令与输出）。
+- **本轮目标**：完成 Phase 0 —— 现状审计、目标架构设计、实施流程规划与任务拆解；不进入 Phase 1。
+
+### 阅读文件
+- 代码：`src/stimuli.py`、`src/scales.py`、`src/run_simulated_study.py`、`src/analyze_results.py`、`src/validate_materials.py`、`src/generate_pilot_report.py`、`src/generate_n20_construct_validation_report.py`、`src/generate_n30_stability_replication_report.py`
+- 配置/入口：`README.md`、`requirements.txt`、`run_all.ps1`、`.gitignore`
+- 文档：`docs/scale_source_mapping.md`、`docs/measurement_plan.md`、`docs/research_design_blueprint.md`、`docs/paper_draft_simulated_study.md`、`docs/portfolio_research_case.md`、`docs/project_one_page_summary.md`、`docs/project_showcase_summary.md`、`docs/codex_to_chatgpt_handoff.md`、`docs/interview_explanation_script.md`
+- 输出：`outputs/reliability_summary.csv`、`outputs/parallel_mediation_summary.json`、`outputs/plots/`（列表）
+
+### 新增文件（本轮）
+- `docs/audit/current_state_v0.1.md`
+- `docs/planning/PROFESSIONALIZATION_PLAN.md`
+- `docs/planning/ARCHITECTURE_PROPOSAL.md`
+- `docs/planning/EXECUTION_BACKLOG.md`
+- `docs/planning/PHASE_GATES.md`
+- `docs/planning/RISK_REGISTER.md`
+- `docs/planning/DECISION_LOG.md`
+- `AGENTS.md`
+- `AGENT_WORKLOG.md`
+
+### 修改文件（本轮）
+- 无（未修改任何既有研究资产）。
+
+### 执行命令与结果（真实）
+| 命令 | 结果 |
+|---|---|
+| `git status` / `git status --short` | `On branch refactor/v0.2-professionalization` / `nothing to commit, working tree clean`；`--short` 为空 |
+| `git branch --show-current` | `refactor/v0.2-professionalization` |
+| `git log -1 --oneline` | `00c4725 Initial public portfolio version` |
+| `git remote -v` | `origin https://github.com/sherlock0717/llm-agent-free-will-attribution.git (fetch/push)` |
+| `git rev-parse HEAD` | `00c4725dc7b891de3a7bfa11b4856be177d9d2a6` |
+| `git ls-files | Measure-Object -Line` | 51 个已跟踪文件 |
+| `.\.venv\Scripts\python.exe --version` | `Python 3.12.10` |
+| `.\.venv\Scripts\python.exe -m pip list` | 关键：scipy 1.18.0, numpy 2.5.1, pandas 3.0.3, statsmodels 0.14.6, matplotlib 3.11.0, openai 2.45.0, pydantic 2.13.4, python-dotenv 1.2.2, tqdm 4.68.4 |
+| `python -m compileall -q src` | exit 0（通过） |
+
+> 备注：`git` 不在 PATH，使用完整路径 `C:\Program Files\Git\cmd\git.exe` 执行。
+
+### 发现问题（摘要，详见 `current_state_v0.1.md §D`）
+- **B-01（阻断）**：360 条公开结果来自真实 API 还是 mock 无法从仓库核实（原始 JSONL/宽表被 gitignore，无 manifest；信度 alpha 0.86–0.98 异常整齐）。
+- **H-01**：n=360 为单模型/单 prompt 记录数，非独立样本（伪重复风险）。
+- **H-02**：prompt 暴露构念名 + 全部题项 + 判断规则（迎合/泄露风险）。
+- **H-03**：6 水平分类与 4 级趋势编码混用（`structure_level` 压缩为 0,0,1,2,2,3）。
+- **H-05**：输出写死 `outputs/`，`--fresh` 会 unlink，无 run 隔离/manifest。
+- 其余 M/L 级见审计文件。
+
+### 未解决问题
+- B-01 数据来源需作者澄清。
+- `outputs/final_simulated_pilot_report.md` 生成脚本未定位（`未核实`）。
+- 网站数字与运行的对应关系（`未核实`）。
+
+### 人工决策点
+- 见 `docs/planning/DECISION_LOG.md`（DEC-001 ~ DEC-009，全部 Pending）。
+- 需优先澄清：B-01（数据来源）、DEC-009（项目定位）、DEC-001（许可证）。
+
+### 下一步建议
+- 人工审查本轮 9 个规划文件；批准 `ARCHITECTURE_PROPOSAL.md`。
+- 批准后从 `FND-001`（冻结并记录 v0.1 基线 hash）开始 Phase 1，单任务、单分支推进。
+- 本轮**停止**，不进入 Phase 1。
+
+---
+
+## 2026-07-10 · 作者事实补充与审计更正
+
+项目作者确认：
+当前公开的 360 条 v1 记录来自真实 DeepSeek API 调用，
+不是 mock_response() 生成的数据。
+
+因此：
+- 原 B-01 的数据来源不明判断已撤销；
+- 不再以 Alpha 或结果分布推测数据来源；
+- 当前问题重新归类为历史运行 provenance 不完整；
+- v1 保留为 DeepSeek 历史真实 API 基线；
+- 不得伪造缺失的历史运行元数据。
+
+> 说明：以上为**作者事实补充**。上文 2026-07-10 早先记录中 Agent 当时“B-01 数据来源需作者澄清”的**原始判断予以保留**（不删除），仅在此更正结论。
+
+### Phase 0.1 · 规划事实校正与路线收敛（本轮操作）
+
+- **分支**：`refactor/v0.2-professionalization`；**commit**：`00c4725`（未 commit 本轮改动）。
+- **本轮目标**：写入作者决策（定位/建设范围/v1 provenance/benchmark 战略），校正数据来源口径，收敛架构与 Phase 1 顺序，保留 benchmark 长期路线。
+- **本轮只修改规划/治理文档，未触碰代码/材料/outputs/README/网站。**
+- **修改文件**：
+  - `docs/audit/current_state_v0.1.md`（B-01 撤销→H-00；§F 移除“来源存疑”，保留历史元数据缺失；§E 增 v1 baseline 定性）；
+  - `docs/planning/PROFESSIONALIZATION_PLAN.md`（三层目标；阶段依赖含 3A/3B；Phase 1/3/4/7 调整；新增 Strategic Horizon BMK-L1..L4）；
+  - `docs/planning/ARCHITECTURE_PROPOSAL.md`（§B.1 最小 package；§B.2 保留接口/不实现清单；迁移策略改并行；RunManifest 预留 task_id/benchmark_id；§G Strategic Horizon）；
+  - `docs/planning/EXECUTION_BACKLOG.md`（FND-001..008 新顺序；CLI 口径；RUN 3A/3B；新增 Future Strategic Backlog BMK-001..006）；
+  - `docs/planning/PHASE_GATES.md`（Phase 1/3/4/5/7 退出条件收敛；新增 Strategic Benchmark Track）；
+  - `docs/planning/RISK_REGISTER.md`（R-15 重写为 provenance 不完整；新增 R-16 过早 benchmark、R-17 愿景当能力；旧重构风险改编号 R-18）；
+  - `docs/planning/DECISION_LOG.md`（DEC-008/009 → Decided；新增 DEC-010/011；DEC-001 澄清仅为许可证）；
+  - `AGENTS.md`（新增“零、不可违反的项目口径”10 条）；
+  - `AGENT_WORKLOG.md`（本条）。
+- **执行命令**：仅只读校验（见本轮汇报）；未运行任何生成脚本，未调用 API。
+- **下一步**：人工审查校正后的 9 份文档；批准后按新 FND 顺序进入 Phase 1。**本轮停止，不进入 FND-001。**
+
+### Phase 0.2 · 规划文档一致性修正（本轮操作）
+
+- **目标**：修正规划/治理文档间的残余不一致（旧 B-01 口径、任务/决策编号错配、runner 边界、FND-003/004 执行规则、预算决策引用）。
+- **本轮只修改规划/治理文档，未触碰代码/材料/outputs/README/网站。**
+- **修改文件**：
+  - `PROFESSIONALIZATION_PLAN.md`（Phase 0 风险/决策点改为 v1 provenance 口径；Phase 3A 预算引用改 DEC-012）；
+  - `DECISION_LOG.md`（标题“待决策条目”→“决策条目”；DEC-002 移除旧编号交叉引用并改影响范围；新增 DEC-012 真实 API 授权与预算上限，Pending）；
+  - `RISK_REGISTER.md`（R-05 输出隔离改 FND-004；R-09 跨平台 FND-008 / CI FND-007；R-14 许可证改 DEC-001；R-06 关联 DEC-012+RUN-003）；
+  - `ARCHITECTURE_PROPOSAL.md`（§B.1 明确 Phase 1 runner/schema 边界与 Phase 3A 交付分界，临时 manifest 标 ManifestStub）；
+  - `EXECUTION_BACKLOG.md`（FND-003 characterization 安全执行方式与 `git diff -- outputs` 校验；FND-004 显式 `--out` fail-fast、`--input`/`--out` 分离；RUN-003 预算引用改 DEC-012）；
+  - `AGENTS.md`（FND 分支示例更新为与 backlog 一致，并加“分支名以 backlog 为准”规则）；
+  - `AGENT_WORKLOG.md`（本条）。
+- **未改**：`current_state_v0.1.md`、`PHASE_GATES.md` 核心口径（PHASE_GATES 仅为预算交叉引用在 Phase 3 进入条件补 DEC-012）。
+- **执行命令**：仅只读校验（见本轮汇报）；未运行生成脚本，未调用 API。
+- **下一步**：人工审查；批准后进入 FND-001。**本轮停止，不进入 FND-001。**
+
+---
+
+## 2026-07-10 · FND-001 · 冻结 v0.1、计算 hash、建立作者 provenance 声明
+
+- **日期时间**：2026-07-10 17:30（本地）
+- **分支**：`chore/fnd-001-freeze-v01-baseline`（从 `refactor/v0.2-professionalization` 新建切出）
+- **HEAD**：`00c4725dc7b891de3a7bfa11b4856be177d9d2a6`（未 commit，工作树 HEAD 未变）
+- **本轮任务**：FND-001（仅冻结与声明，不进入 FND-002）
+- **阅读文件**：`AGENTS.md`、`AGENT_WORKLOG.md`、`docs/audit/current_state_v0.1.md`、`docs/planning/{PROFESSIONALIZATION_PLAN,ARCHITECTURE_PROPOSAL,EXECUTION_BACKLOG,PHASE_GATES,RISK_REGISTER,DECISION_LOG}.md`（口径确认：主定位=可复现大模型模拟研究原型；v1=真实 DeepSeek API 历史基线；缺失的是 provenance 元数据而非来源事实）。
+- **新增文件**：
+  - `docs/audit/baseline_hashes.txt`
+  - `docs/audit/v1_provenance_statement.md`
+- **修改文件**：`AGENT_WORKLOG.md`（本条）。
+- **执行命令（真实结果）**：
+  | 命令 | 结果 |
+  |---|---|
+  | `git status --short` | 仅未跟踪的 Phase 0/本轮新增文件；受保护资产无已跟踪修改 |
+  | `git branch --show-current` | `chore/fnd-001-freeze-v01-baseline` |
+  | `git rev-parse HEAD` | `00c4725dc7b891de3a7bfa11b4856be177d9d2a6` |
+  | `git diff -- src outputs README.md` | 空 |
+  | `git ls-tree -r --name-only <baseline>` + `Get-FileHash SHA256` | 生成 51 条 hash 行 |
+  | 重复计算并 `Compare-Object` | `REPRODUCIBLE: identical file list and SHA-256 (count=51)` |
+- **hash 文件**：算法 SHA-256；共 **51** 条（= 基线 51 个已跟踪文件，未混入 Phase 0 新增规划文件）；UTF-8 无 BOM；路径相对根、正斜杠、小写 hash。
+- **是否包含规定保护资产**：包含 `src/stimuli.py`、`src/scales.py`、`README.md`、全部 `outputs/**`（含 `outputs/plots/*.png`）、`requirements.txt`、`run_all.ps1` 及全部 docs 原文；未纳入 `.git/`、`.venv/`、`__pycache__/`、`*.pyc`、`.env`、Phase 0 未跟踪规划文件。
+- **重复计算结果**：与首次一致（51 条文件列表与 SHA-256 完全相同）。
+- **provenance 声明摘要**：v1（commit 00c4725）360 条记录=真实 DeepSeek API（非 mock），保留为 historical DeepSeek API baseline；严格区分 360 记录 ≠ 360 人类被试 ≠ 360 独立模型系统；已确认事实/机器可验证证据/历史缺失元数据三层分离；缺失元数据（服务端版本、token、费用、时间戳、prompt hash、依赖锁 hash、原始响应/宽表等）标注为“当前未完整归档或未包含在公开仓库中”，不写成“从未存在”，不伪造补写；中介=探索性路径诊断，非机制证明。
+- **失败命令及修复**：可重复性校验第一次因 `Get-Content` 未显式编码被拦截；改用 `Get-Content -Encoding UTF8` 后成功，结果一致。
+- **Git 状态**：受保护文件 diff 全空；新增两个 audit 文件为未跟踪；本轮未 commit、未 push。
+- **未解决事项**：无阻断项；provenance 措辞与 manifest 格式待人工批准。
+- **人工审查点**：① provenance statement 措辞是否批准；② hash manifest 格式是否批准。
+- **停止**：完成三文件后停止，未进入 FND-002。
+
+---
+
+## 2026-07-10 · FND-001.1 · Canonical Hash 口径更正
+
+- **分支**：`chore/fnd-001-freeze-v01-baseline`（未 commit）。
+- **背景与更正原因**：
+  1. 独立复核发现，原 `baseline_hashes.txt` 的 hash 来自 **Windows CRLF 工作树字节**（`git ls-tree` 取路径 + `Get-FileHash` 对 checkout 文件计算）；
+  2. 原“重复计算一致”**仅表示同一 Windows checkout 内可重复**，不等于 commit 中 LF Git blob 字节的 SHA-256，不能作为跨机器/跨平台 canonical baseline；
+  3. 本轮**重新基于 commit `00c4725` 的原始 Git blob bytes** 计算（`git ls-tree` + `git cat-file blob`，直接对字节做 SHA-256，不解码文本、不经 PowerShell 文本管道、不做换行转换），覆盖文本与二进制（PNG/CSV/JSON/MD/PS1）。
+- **`.gitignore` spot check**：由旧的 `36a7c1916bd35d82e3f8350bd97a980e49333b0ae5a310b077a38ee647eb9a61`（CRLF 工作树）变更为 canonical `a7d4b6707c346880c477b9999f3d2db292d4ac2c5664b18a3ff5f3024bbdc974`（Git blob bytes），与预期一致。
+- **manifest 变化**：header 增加 `hash_source=git_commit_blob_bytes` 与 `file_count=51`；共 51 条、路径唯一；仍含 `src/stimuli.py`、`src/scales.py`、`README.md`、全部 `outputs/**`。
+- **二次独立计算**：改用不同实现（`git cat-file --batch` 单进程流式读取 blob）重算到系统临时文件并逐行比较，结果 `51 个路径一致 + 51 个 SHA-256 一致`；临时脚本与临时清单已删除。
+- **provenance statement**：仅在 §4 SHA-256 清单处补充一句“该清单直接基于指定 Git commit 中的原始 blob bytes 计算，不受 Windows/Linux 换行转换或本地 checkout 配置影响”，未改其他研究口径。
+- **未修改被保护资产**：`git diff -- src outputs README.md requirements.txt run_all.ps1` 全空。
+- **失败/被跳过命令及处理**：内联 heredoc 的重算校验命令两次被执行器判定为长任务而跳过；改为将一次性校验脚本写入系统临时目录、并用单进程 `git cat-file --batch` 高效实现后成功；校验完成后删除临时脚本。
+- **说明**：不改写先前 FND-001 原始记录（保留“曾用工作树 hash”的事实）；不声称“从未发生过工作树 hash”。
+- **停止**：未进入 FND-002，未 commit、未 push。
