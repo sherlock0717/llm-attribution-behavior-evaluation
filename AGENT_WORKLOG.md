@@ -275,3 +275,56 @@
 - **受保护文件检查**：`src/stimuli.py`、`src/scales.py`、`outputs/**`、README、requirements、pyproject.toml、uv.lock、AGENTS.md、docs 均无 diff；`git diff --check` 无空白错误。
 - **未调用 API**：是（全程 mock，未触发 load_client/call_deepseek）。
 - **停止**：FND-004 实现与测试完成即停——未 commit FND-004、未 merge、未 push、未创建 FND-005 分支、未建正式 package、未改统计方法/材料/量表、未制作展示页。
+
+## 2026-07-13 · FND-005 · Minimal Package And CLI
+
+- **分支与起始 HEAD**：`refactor/fnd-005-minimal-package-cli`，起始 HEAD `d5671e26648dc1c91312ab1ce7fd0fb54c0c08fe`（==`refactor/v0.2-professionalization`，即 FND-004 merge 提交）。
+- **批次 A · FND-004 收尾（一次性人工授权）**：
+  - 提交前隔离 uv 环境重测：`60 passed in 373.51s`、`ruff check src tests` All checks passed、`compileall` exit 0。
+  - FND-004 commit SHA：`0c9b9504f154f7de6fb5ba7a55508104c1607145`（`fix: require explicit safe output paths`，11 文件 +732 −137）。
+  - FND-004 非快进 merge SHA：`d5671e26648dc1c91312ab1ce7fd0fb54c0c08fe`（`merge: complete FND-004 safe output paths`，ort 策略）。
+  - 已删除本地已合并分支 `fix/fnd-004-safe-output-directory`（was `0c9b950`）。
+- **新 package 文件**：`src/freewill_attribution/__init__.py`、`paths.py`、`runner.py`、`cli.py`。
+- **package 名**：`freewill_attribution`（正式批准）；CLI 形式 `python -m freewill_attribution.cli`（不使用 `python -m src.freewill_attribution.cli`）。
+- **pyproject build-system 变化**：新增 `[build-system]`（`requires=["setuptools>=77.0.3"]`、`build-backend="setuptools.build_meta"`）。
+- **package=false → true**：`[tool.uv] package = true`。
+- **setuptools src-layout 配置**：`[tool.setuptools] package-dir = {"" = "src"}`；`[tool.setuptools.packages.find] where=["src"], include=["freewill_attribution*"], namespaces=false`。保持 project.name/version/description/readme/requires-python、全部运行依赖、dependency-groups、ruff、pytest 配置不变；未新增 `[project.scripts]`/license/authors/CLI 框架依赖（无 click/typer/rich，仅标准库 argparse）。
+- **uv.lock 更新**：`uv lock --python .venv/Scripts/python.exe`（Resolved 40 packages）；未手工编辑，运行依赖未增删；setuptools 仅作为构建后端，未混入项目 runtime dependency。
+- **CLI 命令和参数**：顶层 `python -m freewill_attribution.cli --help`；子命令 `run`：`--out`（必填）、`--n-per-cell`（int，默认 20）、`--seed`（int，默认 20260425）、`--temperature`（float，默认 1.0）、`--mock`（flag）、`--fresh`（flag）；`build_parser()` 独立可测；`main(argv=None)->int` 返回旧脚本退出码；`if __name__=="__main__": raise SystemExit(main())`。
+- **runner 采用 subprocess adapter 的原因**：不复制研究逻辑（不 import/复制 make_design/mock_response/normalize_record），以最小改动复用已通过 FND-004 安全校验的旧入口；`build_legacy_run_command` 用 `sys.executable` + 绝对 `LEGACY_RUN_SCRIPT` + 参数列表（非 shell 字符串、无 shell=True/os.system/PowerShell）；布尔 flag 仅 true 时加入；`run_legacy_study` 用 `subprocess.run` 不捕获/吞掉 stdout/stderr、返回原始 return code、不重试、不建 manifest、不改 cwd。
+- **旧入口保持不动**：`src/run_simulated_study.py` 等 6 个旧脚本与 `run_all.ps1` 零 diff；旧入口仍可 `python src/run_simulated_study.py ...` 并行使用，未改成 thin wrapper。
+- **新旧 CLI parity 结果**：集成测试 `test_new_cli_matches_legacy_bytewise` 对同参 mock 运行比较，`raw_simulated_responses.jsonl` 与 `simulated_responses_wide.csv` 字节完全一致。
+- **测试收集数**：`78 tests collected`（60 既有 + 11 unit `test_minimal_package.py` + 7 integration `test_new_cli.py`）。
+- **两次 pytest 结果（隔离 uv 环境）**：run1 `78 passed in 316.81s`（exit 0，含首次 matplotlib 字体缓存构建）；run2 `78 passed in 322.65s`（exit 0）。稳定，无 flaky；小样本 scipy RuntimeWarning 为预期，命令正常完成。
+- **Ruff / compileall**：`ruff check src tests` → All checks passed（exit 0，未用自动修复）；`python -m compileall -q src tests`（exit 0）。
+- **从仓库外 cwd 执行 CLI**：隔离环境为可编辑安装（`llm-agent-free-will-attribution==0.2.0.dev0` from local file），在系统临时 cwd 用环境 python 运行 `python -m freewill_attribution.cli --help` 成功（exit 0）；`paths.LEGACY_RUN_SCRIPT` 正确解析到真实仓库 `src/run_simulated_study.py`（存在）。未手工设置 PYTHONPATH。（注：`uv run` 从仓库外 cwd 无法定位项目，故 CLI 外部可用性用环境 python.exe 直接验证。）
+- **outputs 前后 Hash / ignored 检查**：`git diff -- outputs` 为空，outputs 文件数保持 30；`git status --short --ignored -- outputs` 无输出（无测试新生成的 raw/wide，测试产物均写入 `tmp_path`）。
+- **失败命令与修复**：无测试失败（两次全绿）。执行层面：`pytest -q` 完整套件被执行器判为长任务跳过 → 改用隔离环境 `python.exe` 后台 `Start-Process` + 轮询日志取真实 exit code 与摘要；`uv run` 从仓库外 cwd 找不到项目 → CLI 外部可用性改用环境 `python.exe` 直接运行；`Get-Content` 无编码被安全策略拦截 → 加 `-Encoding UTF8`。
+- **当前 package 的过渡边界**：FND-005 是 source-checkout 内的过渡 CLI adapter；`runner` 通过 subprocess 调用旧脚本的绝对路径，**当前不声称生成的 standalone wheel 已包含全部旧研究运行逻辑**（旧脚本不在 `freewill_attribution` 包内，仅在可编辑/源码检出布局下可定位）；后续 runner 重构将逐步移除对旧脚本位置的依赖。
+- **未调用 API**：是（全程 mock）。
+- **停止**：FND-005 实现与测试完成即停——未 commit FND-005、未 merge、未 push、未创建 FND-006 分支、未新增 schemas.py/config.py/providers、未改旧入口、未改材料/量表/outputs、未制作展示页。
+
+## 2026-07-13 · FND-005.1 · Explicit Mock Gate And Packaging Ignore
+
+- **审核发现问题 1**：新 CLI 的 `--mock` 原为 `action="store_true"` 且非必填，默认 `False`。
+- **原行为风险**：`python -m freewill_attribution.cli run --out <dir>` 会把 `mock=False` 转发给旧脚本，进而尝试真实 API——FND-005 过渡阶段不允许。
+- **CLI 改为显式要求 `--mock`**：`run_parser.add_argument("--mock", action="store_true", required=True, ...)`；`--out/--n-per-cell/--seed/--temperature/--fresh` 保持不变；未给 `--mock` 设虚假默认 True、未新增 `--real-api`、未读 API key、未在 runner 篡改参数、未删除 runner 对 `mock=False` 的底层表达能力、未改旧脚本。
+- **当前 package CLI 暂不暴露真实 API**：cli.py 顶部说明与 `run` 子命令 help 已更新为“Run a mock simulated study via the safe legacy entry point.”，明确真实 API 尚未通过该 CLI 开放（等待 DEC-012 与正式运行治理）。
+- **runner 和旧入口能力未修改**：`runner.py`（subprocess 适配结构）、`src/run_simulated_study.py` 等旧脚本零 diff；runner 仍能表达 `mock=False`，安全门禁仅在 package CLI 层。
+- **新增单元测试**（`tests/unit/test_minimal_package.py`）：
+  - `test_build_parser_has_run_subcommand` 改为解析 `["run","--mock","--out","somewhere"]` 且断言 `args.mock is True`；
+  - `test_run_without_out_exits_nonzero` 改用 `["run","--mock"]` 仍非零退出；
+  - 新增 `test_run_requires_explicit_mock_flag`：`["run","--out","somewhere"]` 抛 SystemExit 且 code 非零；
+  - 新增 `test_missing_mock_does_not_reach_runner`：monkeypatch 替换 `cli.runner.run_legacy_study`，调用 `cli.main(["run","--out","somewhere"])` 在 argparse 阶段抛 SystemExit，替换函数从未被调用（未用真实/虚假 API key 验证）。
+- **新增集成测试**（`tests/integration/test_new_cli.py`）：`test_new_cli_without_mock_fails_before_execution`——`run --out <tmp>/must-not-run`（无 `--mock`）：returncode 非零、stderr 含 `--mock`、`must-not-run` 目录不存在、无 raw JSONL、无 wide CSV、仓库 outputs manifest 前后一致。
+- **缺少 `--mock` 时 runner 未被调用**：由 `test_missing_mock_does_not_reach_runner` 证明（argparse 门禁先于 runner）。
+- **缺少 `--mock` 时输出目录未创建**：由集成测试断言 `must-not-run` 不存在证明。
+- **`.gitignore` 增加 `*.egg-info/`**：置于 `.pytest_cache/` 之后，使用通用规则（非具体目录名）；本轮未加 build//dist/ 等其他规则。
+- **`git check-ignore` 验证**：临时探针 `src/fnd005_ignore_probe.egg-info` → `.gitignore:10:*.egg-info/	src/fnd005_ignore_probe.egg-info`（exit 0），探针已删除、未加入 Git；再次隔离 `uv sync --frozen` 未生成 egg-info（前次已构建，工作区 status 未出现 egg-info）。
+- **两次针对性测试结果**（隔离 uv 环境，`tests/unit/test_minimal_package.py tests/integration/test_new_cli.py`）：run1 `21 passed in 18.33s`、run2 `21 passed in 14.20s`（较原 18 项 +3）。
+- **一次完整回归测试结果**：`81 passed in 143.63s`（exit 0；原 78 项全部保留，新增 3 项 FND-005.1 测试）。
+- **针对性 Ruff**：`ruff check src/freewill_attribution tests/unit/test_minimal_package.py tests/integration/test_new_cli.py` → All checks passed（exit 0）。
+- **全量 Ruff / compileall**：`ruff check src tests` → `All checks passed`（exit 0）；`python -m compileall -q src tests` → exit 0。
+- **outputs 前后**：`git diff -- outputs` 为空，文件数保持 30；无 ignored raw/wide。
+- **未调用 API**：是（所有 run 测试带 `--mock`，或明确测试缺 `--mock` 的解析失败；未设 DEEPSEEK_API_KEY、未调用 load_client/call_deepseek）。
+- **停止**：未进入 FND-006（未 commit/merge/push、未创建 FND-006 分支）。
