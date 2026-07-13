@@ -328,3 +328,56 @@
 - **outputs 前后**：`git diff -- outputs` 为空，文件数保持 30；无 ignored raw/wide。
 - **未调用 API**：是（所有 run 测试带 `--mock`，或明确测试缺 `--mock` 的解析失败；未设 DEEPSEEK_API_KEY、未调用 load_client/call_deepseek）。
 - **停止**：未进入 FND-006（未 commit/merge/push、未创建 FND-006 分支）。
+
+## 2026-07-13 · FND-006 · Minimal Schema And Config
+
+1. **分支与起始 HEAD**：`refactor/fnd-006-minimal-schema-config`，起始 HEAD `ed3a7fc5a28f073408718361473a4f1ec645253e`（== `refactor/v0.2-professionalization`，即 FND-005 merge 提交）；开始时工作区干净；已校验 `HEAD == refactor/v0.2-professionalization`。
+2. **新增 schema/config 文件**：`src/freewill_attribution/schemas.py`、`src/freewill_attribution/config.py`（均位于既有 package 内，非新建子包）。
+3. **新增 YAML 配置**：`configs/study.default.yaml`、`configs/model.mock.yaml`、`configs/prompt.v1.yaml`（当前 schema/config 基础设施的可验证样例，尚未接入 CLI/runner）。
+4. **新增直接运行依赖**：`pyproject.toml` 与 `requirements.txt` 均增加 `pydantic>=2.12,<3` 与 `PyYAML>=6.0,<7`；未增加 pydantic-settings / ruamel.yaml / jsonschema / dataclasses-json / CLI 框架 / provider SDK；未改动其他依赖下限；`setuptools` 仍仅作为 `[build-system]` 后端。
+5. **ExtensibleModel 的 extra allow 策略**：`ConfigDict(extra="allow", str_strip_whitespace=True, validate_by_alias=True, validate_by_name=True, protected_namespaces=())`。未识别的扩展字段被保留且在 `model_dump()`/`model_dump_json()` 中可见；未使用 `populate_by_name`；未启用全局 `strict=True`；未使用 `arbitrary_types_allowed`。**补充说明**：额外加入 `protected_namespaces=()` 仅用于消除 Pydantic 对合法配置引用字段（`model_config_ref`、`model_version_snapshot`）的 `model_` 保护命名空间告警，不改变校验行为；四项必需设置均已应用（实测两次针对性测试 `52 passed` 无告警输出）。
+6. **所有枚举**（均继承 `str, Enum`，JSON 序列化稳定）：`ErrorType`=api/parse/schema/range/missing/runtime；`ErrorSeverity`=warn/error；`ParseStatus`=ok/repaired/failed；`ItemsBatching`=all/by_scale/single。
+7. **ValidationError 与 PydanticValidationError 的命名区分**：`from pydantic import ValidationError as PydanticValidationError`；项目自有模型仍名为 `class ValidationError(ExtensibleModel)`（type/item_id/message/severity=ERROR/context，context 用 `default_factory=dict`）。
+8. **NormalizedResponse 的最小字段和宽松边界**：participant_id / stimulus_ref(StimulusReference) / ratings(`dict[str, int | None]`) / attention_check="" / short_reason="" / parse_status=OK / errors=`default_factory=list` / metadata=`default_factory=dict`；ratings 允许为空（表缺失/解析失败），键不得为空（field_validator 拒绝空键），值只允许 int 或 None（list/dict/非整数 float 被拒）；**未绑定具体题项名称、未绑定 0–2 或 1–7 范围**（范围校验留给后续 normalization 层）。
+9. **RunManifest 的字段**：run_id / git_commit_sha / study_config_ref / model(alias) / prompt_config / stimuli_version / scales_version / schema_version(默认 "0.1") / python_version / dependency_lock_hash / seed / started_at / finished_at(可空)；计数字段 n_records(默认0,≥0) / n_runs(默认1,≥0) / n_prompt_configs(默认1,≥0) / n_models(默认1,≥0) / n_independent_model_systems(默认0,≥0) / n_human_subjects(默认0,≥0)；可空资源字段 token_usage_total / estimated_cost_usd（若提供则 ≥0）；汇总字段 retry_summary / failure_summary / data_checksums（均 `default_factory=dict`）；预留 task_id / benchmark_id。不要求 git SHA 40 位、不要求 checksum 已存在、不要求 cost 已提供、不要求历史 provenance 完整。
+10. **model_config alias 处理**：因 Pydantic 保留 `model_config` 为类配置属性，字段命名为 `model`，用 `Field(alias="model_config", serialization_alias="model_config")`；输入 YAML/JSON 可用 `model_config` 键（validate_by_alias），`model_dump(by_alias=True)` 输出 `model_config`（测试 19/20 验证）。
+11. **task_id / benchmark_id 仅为预留**：默认 None，可为字符串，当前不启用、不接入任何运行流程（为未来多任务/benchmark 保留）。
+12. **Pydantic 错误分类规则**（`validation_errors_from_pydantic` 纯函数）：`missing`→MISSING；前缀 `greater_than`/`less_than`/`multiple_of`→RANGE（含 `greater_than_equal`/`less_than_equal`）；`json_invalid`/`json_type`→PARSE；其余结构/类型错误→SCHEMA。item_id：loc 中含 `ratings, <item_id>` 时提取该题项名，否则 None；message 取 Pydantic 的 msg；severity 默认 error；保留全部错误（不丢位置、不只留第一条）；不凭空生成 api/runtime 错误。`validate_normalized_response` 成功返回 `(model, [])`、失败返回 `(None, 分类错误列表)`，不吞非 Pydantic 编程异常、不写日志/文件。
+13. **config safe_load**：`load_yaml_mapping` 用 `expanduser().resolve()`+`yaml.safe_load`；文件必须存在且为文件；空 YAML 返回 `{}`；顶层非 mapping 拒绝；malformed YAML 包装为 `ConfigLoadError`；错误信息含路径但不含完整文件正文（实测 secret 行不泄漏）；不返回 None。`load_study/model/prompt_config` 校验失败包装为 `ConfigLoadError` 并 `raise ... from exc` 保留原因链、含路径与 Pydantic 摘要。
+14. **config 引用路径逃逸防护**（`_resolve_config_ref`）：ref 必须相对（拒绝绝对路径 / drive / root）；resolve 后必须位于 base_dir 内（`relative_to` 校验，拒绝 `../` 逃逸）；不创建文件/目录；不把路径写回 model extra。`load_config_bundle` 以 study config 所在目录为 base 安全解析 model/prompt 引用后加载。
+15. **当前配置尚未接入 CLI/runner**：schemas.py 与 config.py 为可验证基础设施；未修改 `cli.py`/`runner.py`/`paths.py`/`__init__.py`/旧脚本；未生成正式 RunManifest 文件；未实现 provider 抽象。
+16. **prompt.v1 的 expose_construct_names=true 只记录 v1 当前行为**：记录当前 v1 的暴露事实（H-02），**不代表 v2 推荐默认值**（schema 默认仍为 False）。
+17. **model.mock 不含 API key**：`configs/model.mock.yaml` 仅 provider=mock / model=rule-based-v1 / 温度 / seed / max_tokens / response_format，无 DeepSeek 配置或密钥；schema 亦不定义 deepseek_api_key/base_url/request_id 等专有字段（测试 27 验证 JSON 与 schema 均不含）。
+18. **uv.lock 更新**：`uv lock --python .venv\Scripts\python.exe` → `Resolved 41 packages`，Added pyyaml v6.0.3（pydantic 原为间接依赖，现为直接依赖）；未手工编辑；根项目 `dependencies` 与 `requires-dist` 均列出 pydantic 与 pyyaml；setuptools 仅在 build-system。
+19. **针对性测试两次结果**（隔离 uv 环境 `UV_PROJECT_ENVIRONMENT` 指向系统临时目录）：`test_schemas.py`+`test_config.py` run1 `52 passed in 1.91s`（SECONDS=5，含环境冷启动）、run2 `52 passed in 0.99s`（SECONDS=2），exit 0，无 flaky、无 pydantic 告警。
+20. **完整回归结果**（新隔离环境）：`pytest -q` → `133 passed in 173.24s`（exit 0，SECONDS=176，含首次 matplotlib 字体缓存构建）；原 81 项全部保留，新增 52 项（27 schema 相关，含参数化展开；21 config，含 subprocess 导入副作用测试）→ 81+52=133。未调用真实 API、未写历史 outputs、未改 mock 输出、未改 CLI 行为。
+21. **Ruff / compileall**：针对性 `ruff check`（4 文件）→ All checks passed；全量 `ruff check src tests` → All checks passed（exit 0）；`compileall -q src/freewill_attribution tests/unit` 与 `compileall -q src tests` 均 exit 0。
+22. **仓库外 cwd 加载**：隔离环境为可编辑安装，在系统临时 cwd 用环境 python 运行 `load_config_bundle(<Root>/configs/study.default.yaml)`（绝对路径）→ `outside-cwd config load passed`（provider==mock、n_per_cell==20），exit 0；单测 `test_load_from_outside_cwd_with_absolute_path` 亦用 `monkeypatch.chdir` 覆盖。
+23. **outputs 前后 Hash**：before 30 文件 / after 30 文件；固定清单（相对路径|大小|SHA-256）`Compare-Object` `OUTPUTS_IDENTICAL=YES`（针对性与完整回归两次均一致）；PowerShell 5.1 用 `Substring` 生成相对路径（未用 `GetRelativePath`）；比较完成后删除临时清单。
+24. **ignored 文件检查**：`git status --short --ignored -- outputs` 空；工作区无 `.env`/`*.egg-info/`/`artifacts/`/`manifest.json`/`config.resolved.yaml`/日志/临时测试文件；`git diff --check` 仅 uv.lock 的 CRLF 换行信息性 warning（非空白错误）。`git status --short` 仅：`M pyproject.toml`、`M requirements.txt`、`M uv.lock`、`M AGENT_WORKLOG.md`、`?? configs/`、`?? src/freewill_attribution/{config,schemas}.py`、`?? tests/unit/test_{config,schemas}.py`。
+25. **失败命令与修复**：首次针对性脚本在 `$ErrorActionPreference="Stop"` 下，`uv sync` 的进度 stderr 被 PowerShell 转为终止错误，脚本在记录 `UV_SYNC_EXIT` 前退出 → 改为 `$ErrorActionPreference="Continue"` 并以 `$LASTEXITCODE` 手动判定后成功；完整 `pytest -q` 被执行器判为长任务 → 用隔离环境 `python.exe` 后台 `Start-Process` + 轮询日志取真实 exit code/passed 数/耗时；`Get-Content` 加 `-Encoding UTF8`。无测试失败（针对性两次、完整一次均全绿），无需为通过测试修改受保护源码。
+26. **未调用 API**：是（schemas/config 无任何网络/subprocess/密钥读取；`test_loading_does_not_read_deepseek_api_key` 设置 DEEPSEEK_API_KEY sentinel 后加载，断言其不出现在配置序列化输出中且不被使用）。
+27. **未进入 FND-007**：FND-006 实现、测试、日志完成即停——未 commit/merge/push、未创建 FND-007 分支、未修改 CLI/runner、未把 schema/config 接入运行流程、未生成正式 manifest、未创建 provider/task registry/benchmark、未制作展示页。
+
+## 2026-07-13 · FND-006.1 · Strict Ratings And Preserved Error Locations
+
+> 本轮仅修复 FND-006 代码审核发现的三个问题，未改写原 FND-006 记录。仅修改 `src/freewill_attribution/schemas.py`、`tests/unit/test_schemas.py`、`AGENT_WORKLOG.md`。
+
+1. **审核发现 `protected_namespaces=()` 关闭了全局保护**：原 `ExtensibleModel.model_config` 含 `protected_namespaces=()`，等于全局关闭 Pydantic 的 `model_` 命名空间保护（含对 `model_dump`/`model_validate` 等真实成员的冲突检测）。
+2. **已恢复 Pydantic 默认保护**：删除 `protected_namespaces=()` 及“仅用于消除告警、不改变行为”的说明；未另设任何 protected_namespaces；`ExtensibleModel.model_config` 仅保留四项必需设置（extra=allow / str_strip_whitespace / validate_by_alias / validate_by_name）。
+3. **`model_config_ref` 和 `model_version_snapshot` 仍正常工作**：恢复默认保护后，这两个非冲突 `model_` 前缀字段照常校验（实测针对性 `39 passed`、完整 `141 passed`，均无报错）；RunManifest 的 `model`（alias `model_config`）不受影响（字段名为 `model`，保护基于字段名而非 alias）。
+4. **审核发现 ratings 会转换 `"3"`、`3.0`**：原 `ratings: dict[str, int | None]` 在 Pydantic lax 模式下会把数字串 `"3"` 与整值浮点 `3.0` 强转为 int。
+5. **ratings 改为 `StrictInt | None`**：新增 `from pydantic import StrictInt`；`ratings: dict[str, StrictInt | None]`。接受 3/0/-1/None；拒绝 `"3"`/`3.0`/`1.5`/`[1]`/`{"value":1}`（均 `int_type`）。未开启全局 strict、未对其他数字字段用 StrictInt、未在 validator 中手工 `int(...)`、未自动修复/转换 rating。
+6. **未绑定具体题项范围**：本层仍不校验量表范围，负整数（如 -1）可通过；范围校验仍留给后续 normalization 层。
+7. **审核发现结构化错误丢失完整 loc**：原 `validation_errors_from_pydantic` 仅从 loc 提取 `item_id`，未保留完整位置与原始 Pydantic error type。
+8. **context 现保存 loc 和 pydantic_type**：每条错误 `context={"loc": list(loc), "pydantic_type": pydantic_type}`；保留完整 loc（数字索引保持为 int）、保留原始 type、多个错误逐项转换、`item_id` 提取行为不变、API/runtime 不凭空生成；函数说明同步改为“完整 loc 与原始 type 已保存”。
+9. **不保存原始 input 或完整 payload**：context 只存 loc 与 pydantic_type；未保存 `raw["input"]`、未保存完整 payload、未保存异常对象、未原样保存 `raw["ctx"]`（避免不可序列化对象）。
+10. **新增测试**（`tests/unit/test_schemas.py`）：导入 `ExtensibleModel`；ratings 非整数参数化加入 `"3"`、`3.0`（保留 `1.5`/`[1,2]`/`{"nested":1}`）；`test_ratings_do_not_coerce_numeric_string`（断言含 `int_type`）；`test_ratings_do_not_coerce_integral_float`（断言含 `int_type`）；`test_ratings_accept_int_none_and_negative`；`test_structured_error_preserves_full_location`（ratings `{"q1":"3"}` → item_id `q1`、context loc `["ratings","q1"]`、pydantic_type `int_type`）；`test_missing_error_preserves_field_location`（缺 participant_id → loc `["participant_id"]`、type `missing`）；`test_extensible_model_keeps_pydantic_protected_namespaces`（定义 `model_dump: str` 子类 → `pytest.raises(ValueError, match="model_dump")`，防止再次关闭保护）。既有测试（extra 保留 / model_config alias / task_id·benchmark_id / 时间顺序 / 错误分类 / 配置 schema / 无 DeepSeek 专有字段）继续通过。
+11. **两次针对性测试结果**（隔离 uv 环境）：`pytest tests/unit/test_schemas.py -q` run1 `39 passed in 0.66s`、run2 `39 passed in 0.20s`（exit 0，较 FND-006 的 31 项 +8：+2 参数化 +6 新函数）。
+12. **strict ratings 行为探针结果**：`"3"`/`3.0`/`1.5`/`[1]`/`{"value":1}` 全部被拒 → `strict ratings probe passed`；合法 `{"q1":3,"q2":None,"q3":-1}` 通过并保持原值 → `legal ratings accepted`（exit 0）。（说明：探针最初以内联多行 `-c` 传入时被 PowerShell 拆断为语法错误；改写入临时 `.py` 并以 `PYTHONPATH=src` 运行后成功，临时文件已删除。）
+13. **一次完整回归结果**（新隔离环境）：`pytest -q` → `141 passed in 165.70s`（exit 0，SECONDS=169）；原 133 项全部保留，新增 8 项被收集并通过；未调用真实 API、未写历史 outputs。
+14. **Ruff / compileall**：针对性 `ruff check schemas.py test_schemas.py` → All checks passed；全量 `ruff check src tests` → All checks passed（exit 0）；`compileall` 针对性与全量均 exit 0。
+15. **outputs 前后 Hash**：before 30 / after 30，`OUTPUTS_IDENTICAL=YES`（针对性与完整回归两次均一致）；`git status --short --ignored -- outputs` 空，无 ignored raw/wide。
+16. **其他 FND-006 文件 Hash 未变化**：开始前记录 8 个文件 SHA-256，结束时逐一比对全部 `UNCHANGED`：`config.py`(530EAB90…) / `study.default.yaml`(53E22A33…) / `model.mock.yaml`(51B7D190…) / `prompt.v1.yaml`(8D8B26E0…) / `test_config.py`(6FB22AB4…) / `pyproject.toml`(814D821B…) / `requirements.txt`(F3572E90…) / `uv.lock`(5BFDAA70…)。旧源码/CLI/runner/旧脚本/outputs/docs/既有测试零 diff。
+17. **未调用 API**：是（仅 schema 校验与本地探针；未设/未读 API key、未 subprocess、未网络）。
+18. **未进入 FND-007**：修复、测试、日志完成即停——未 commit/merge/push、未创建 FND-007 分支、未修改 config/YAML/依赖、未重生成 uv.lock、未修改 CLI/runner/旧脚本、未接入运行流程、未生成正式 manifest。
