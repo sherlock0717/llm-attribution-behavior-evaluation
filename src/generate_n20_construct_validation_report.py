@@ -1,3 +1,4 @@
+import argparse
 import json
 import os
 import re
@@ -7,11 +8,11 @@ from typing import Iterable
 import pandas as pd
 
 from scales import ITEMS
+from path_safety import resolve_input_dir, resolve_output_dir
 
 
 ROOT = Path(__file__).resolve().parents[1]
-OUT = ROOT / "outputs"
-REPORT_PATH = OUT / "n20_construct_validation_report.md"
+REPORT_FILENAME = "n20_construct_validation_report.md"
 PROCESS_ORDER = [
     "direct_choice",
     "direct_choice_long",
@@ -45,8 +46,8 @@ def fmt(value) -> str:
         return str(value)
 
 
-def read_raw() -> list[dict]:
-    path = OUT / "raw_simulated_responses.jsonl"
+def read_raw(input_dir: Path) -> list[dict]:
+    path = input_dir / "raw_simulated_responses.jsonl"
     return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
 
 
@@ -73,12 +74,31 @@ def iter_scan_files(root: Path, exts: set[str], skip: set[str]) -> Iterable[Path
 
 
 def main() -> None:
-    raw = read_raw()
-    wide = pd.read_csv(OUT / "simulated_responses_wide.csv")
-    scores = pd.read_csv(OUT / "scale_scores.csv")
-    controlled = pd.read_csv(OUT / "controlled_regression_summary.csv")
-    contrasts = pd.read_csv(OUT / "planned_contrasts.csv")
-    parallel = json.loads((OUT / "parallel_mediation_summary.json").read_text(encoding="utf-8"))
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--input",
+        required=True,
+        help="Explicit input directory containing the generated run/analysis "
+        "artifacts. Fail fast if omitted.",
+    )
+    parser.add_argument(
+        "--out",
+        required=True,
+        help="Explicit output directory for the report. Must not be the "
+        "repository outputs/ directory. Fail fast if omitted.",
+    )
+    args = parser.parse_args()
+
+    input_dir = resolve_input_dir(args.input)
+    out_dir = resolve_output_dir(args.out)
+    report_path = out_dir / REPORT_FILENAME
+
+    raw = read_raw(input_dir)
+    wide = pd.read_csv(input_dir / "simulated_responses_wide.csv")
+    scores = pd.read_csv(input_dir / "scale_scores.csv")
+    controlled = pd.read_csv(input_dir / "controlled_regression_summary.csv")
+    contrasts = pd.read_csv(input_dir / "planned_contrasts.csv")
+    parallel = json.loads((input_dir / "parallel_mediation_summary.json").read_text(encoding="utf-8"))
 
     factual_items = [item.item_id for item in ITEMS if item.scale == "factual_manipulation_check"]
     other_items = [item.item_id for item in ITEMS if item.scale != "factual_manipulation_check"]
@@ -240,8 +260,8 @@ absolute intelligence indirect share: {fmt(intel_share)}
 
 本报告基于 LLM-simulated respondents，仅用于材料预演和流程验证，不是正式心理学实验结果。
 """
-    REPORT_PATH.write_text(report, encoding="utf-8")
-    print(f"Saved report: {REPORT_PATH}")
+    report_path.write_text(report, encoding="utf-8")
+    print(f"Saved report: {report_path}")
     print(f"suspicious leak found: {leak_status}")
 
 

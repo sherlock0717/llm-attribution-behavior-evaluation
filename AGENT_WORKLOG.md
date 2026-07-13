@@ -234,3 +234,44 @@
 - **受保护文件检查**：`src/**`、`outputs/**`、README、requirements、run_all.ps1、pyproject.toml、uv.lock、docs、AGENTS.md 均无 diff。
 - **未调用 API**：是（未调用 main/load_client/call_deepseek，未运行旧 CLI）。
 - **停止**：未进入 FND-004，未 commit、未 push。
+
+## 2026-07-13 · FND-004 · Explicit Safe Output Paths
+
+- **分支与起始 HEAD**：`fix/fnd-004-safe-output-directory`，起始 HEAD `590e43698cadae32b09faf91ae515028d0866bb3`（==`refactor/v0.2-professionalization`）。
+- **批次 A 收尾（一次性人工授权）**：
+  - FND-003 commit SHA：`fcc0aa25329958508b51848b8b77c2ad2742a2ff`（`test: add v0.1 characterization coverage`，8 文件 +553）。
+  - FND-003 非快进 merge SHA：`590e43698cadae32b09faf91ae515028d0866bb3`（`merge: complete FND-003 characterization tests`，ort 策略）。
+  - 已删除本地已合并分支 `test/fnd-003-characterization-tests`（was `fcc0aa2`）。
+  - 收尾前隔离 uv 环境重跑 FND-003：`28 passed`、`ruff check tests` → All checks passed；暂存仅 8 个允许文件，受保护文件暂存检查为空、`diff --cached --check` 无空白错误。
+- **搜索发现的固定输出脚本（初始匹配 26 处 / src）**：
+  - `run_simulated_study.py`：`OUT = ROOT/"outputs"`、导入期 `OUT.mkdir`、`RAW_PATH`/`WIDE_PATH` 全局、`to_csv(wide_path)`。
+  - `analyze_results.py`：`OUT`、导入期 `PLOTS.mkdir`、`WIDE_PATH` 与 15 个 `*_PATH` 全局、`savefig(PLOTS/...)`、多处 `to_csv`/`write_text` 使用全局路径。
+  - `validate_materials.py`：导入期 `OUT.mkdir` + 模块级 `to_csv(OUT/...)`（导入即写 CSV）。
+  - `generate_pilot_report.py`：`OUT`、`main` 内 `OUT.mkdir` + 读 `OUT/*` + 写 `REPORT_PATH`。
+  - `generate_n20_construct_validation_report.py`、`generate_n30_stability_replication_report.py`：`OUT` + `read_raw()` 读 `OUT` + 写 `REPORT_PATH`。
+  - `run_all.ps1`：无 `--out`，末尾打印 `Done. Check outputs/.`。
+- **新路径安全规则（`src/path_safety.py`，仅路径逻辑，导入无副作用）**：
+  - `PROJECT_ROOT`、`LEGACY_OUTPUT_DIR` 常量；`UnsafeOutputPathError`/`InputPathError`。
+  - `resolve_output_dir(raw, create=True)`：必须显式提供；`expanduser().resolve()`；拒绝仓库根；拒绝等于或位于 `outputs/`、`.git/`、`.venv/`、`src/`、`docs/`、`tests/` 内部；仅在校验通过后 `mkdir(parents=True, exist_ok=True)`；错误含明确路径与原因。允许系统临时目录、未来 `artifacts/`、用户指定安全目录。
+  - `resolve_input_dir(raw)`：必须显式提供、必须存在、必须是目录；只读输入可指向历史 `outputs/`；不创建目录、不修改输入。
+- **每个脚本的新参数与输出位置**：
+  - `run_simulated_study.py`：新增必填 `--out`；删除导入期 `OUT.mkdir` 与固定全局；运行时 `raw_path`/`wide_path` 为 `<out>/raw_simulated_responses.jsonl`、`<out>/simulated_responses_wide.csv` 局部变量；`--fresh` 只删这两个已知文件。make_design/persona/prompt/mock/DeepSeek/normalize/文件名字段全部不变。
+  - `analyze_results.py`：新增必填 `--input` 与 `--out`；删除导入期 `PLOTS.mkdir` 与全部固定 `*_PATH` 全局；`<input>/simulated_responses_wide.csv` 缺失时明确报错；全部产物（15 个文件 + `plots/**`）写入 `<out>`；`plot_means`/`generate_method_report`/`generate_measurement_report` 改为接收显式路径参数，不用可变全局覆盖；统计公式/目标变量/报告文本/图表含义不变。
+  - `validate_materials.py`：改为 `main()` + `if __name__=="__main__"` 结构；新增必填 `--out`；输出 `<out>/materials_preview.csv`；导入时不建目录/不构 DataFrame/不写 CSV/不打印。材料构造与字段不变。
+  - 三个报告脚本（pilot/n20/n30）：均新增必填 `--input` 与 `--out`；输入全部从 `<input>` 读取，报告写入 `<out>`；文件名不变；导入不写文件；缺输入文件时报错；报告统计内容/结论逻辑不变；泄漏扫描逻辑不变（不读 `.env` 内容、只列文件名、不输出 key）；无真实 API。
+  - `run_all.ps1`：新增 `[Parameter(Mandatory=$true)][string]$OutDir`；分别传 `validate_materials.py --out $OutDir`、`run_simulated_study.py --out $OutDir`、`analyze_results.py --input $OutDir --out $OutDir`；保留 `NPerCell`/`Mock`/`Fresh`；未提供 `OutDir` 时参数绑定 fail fast；末尾改为打印解析后的实际输出路径，不再打印 `Done. Check outputs/.`。
+- **import 副作用如何消除**：所有 `OUT.mkdir`/模块级写 CSV/固定 `*_PATH` 均移入 `main()` 或改为函数参数；集成测试 `test_import_has_no_filesystem_side_effects` 在独立 cwd 的 subprocess 中导入 7 个模块，断言 cwd 与 `outputs/` 前后无新增文件/目录。
+- **--fresh 行为**：仅删除显式 `<out>` 中的 `raw_simulated_responses.jsonl` 与 `simulated_responses_wide.csv`；不删目录、不递归、不删 sentinel、不触碰历史 `outputs/`。集成测试用 `sentinel.txt` 验证再次 `--fresh` 后 raw/wide 重生成而 sentinel 保留。
+- **新增测试**：
+  - `tests/characterization/test_output_path_safety.py`（18 项，含参数化）：安全临时目录接受并创建；缺路径拒绝；仓库根拒绝；历史 `outputs/` 拒绝；`outputs/` 子目录拒绝；`src/`/`docs/`/`tests/`/`.git/`/`.venv/` 及其内部拒绝；被拒路径不被创建；`create=False` 不创建；输入不存在/非目录/缺失拒绝；已存在输入解析成功；只读输入可指向 `outputs/`；导入不建目录。
+  - `tests/integration/test_explicit_output_pipeline.py`（14 项，subprocess + tmp_path）：生成缺 `--out` 非零退出且不写仓库 outputs；生成拒绝 `--out=<repo>/outputs`；mock 生成写显式目录、raw/wide 存在、12 条记录、全 synthetic 无 API；`--fresh` 保留 sentinel；材料校验写 `materials_preview.csv`；分析写关键产物与 `plots/**`；分析缺 `--out` 非零；导入无副作用；三个报告脚本 `--help` 成功且含 `--input/--out`；报告脚本缺参数 fail fast 且不写仓库 outputs。
+- **测试数量**：collect-only `60 tests collected`（28 原 characterization + 18 路径安全 + 14 集成）。
+- **两次 pytest 结果（隔离 uv 环境）**：run1 `60 passed in 281.85s`（exit 0，含首次 matplotlib 字体缓存构建）；run2 `60 passed in 168.68s`（exit 0）——稳定，无 flaky。小样本下出现 scipy `RuntimeWarning: catastrophic cancellation`（预期，命令仍正常完成）。
+- **Ruff / compileall**：`ruff check src tests` → All checks passed（exit 0，未用自动修复）；`python -m compileall -q src tests`（exit 0）。
+- **固定输出路径复搜（最终剩余匹配，全部安全）**：src 22 处、run_all.ps1 5 处，均为——函数内基于显式解析目录的 `mkdir`（`analyze_results` 的 `plots_dir.mkdir`、`path_safety` 校验后的 `candidate.mkdir`）、基于函数参数的 `to_csv`/`write_text`/`savefig`；`path_safety.LEGACY_OUTPUT_DIR=(PROJECT_ROOT/"outputs").resolve()` 与 docstring 仅为拒绝用常量/注释，非写目标；无 import 阶段写入、无默认历史 outputs、无无参固定输出路径。
+- **outputs 前后 Hash 比较**：before 30 文件 / after 30 文件；固定临时清单（相对路径|大小|SHA-256）经 `Compare-Object` 完全一致（文件数/路径/大小/SHA-256 全部匹配）；`git status --short --ignored -- outputs` 无输出（无测试新生成 raw/wide）；比较完成后删除临时清单。PowerShell 5.1 用 `Substring` 生成相对路径（未用 `GetRelativePath`）。
+- **临时环境清理**：隔离 uv 环境 `UV_PROJECT_ENVIRONMENT` 指向系统临时目录 `llm-fnd004-env`；基线 `.venv` 未被 sync 重写；测试临时数据仅位于 `%TEMP%`/`tmp_path`。
+- **失败命令与修复**：无测试失败（两次全绿）；无需为通过测试修改 `src/**` 逻辑。执行层面：组合/长命令与 `pytest -q`/重分析被执行器判为长任务跳过 → 拆分为小命令，完整 pytest 改用隔离环境 `python.exe` 后台 `Start-Process` + 轮询日志获取真实结果；`Get-Content` 无编码被安全策略拦截 → 加 `-Encoding UTF8`。
+- **受保护文件检查**：`src/stimuli.py`、`src/scales.py`、`outputs/**`、README、requirements、pyproject.toml、uv.lock、AGENTS.md、docs 均无 diff；`git diff --check` 无空白错误。
+- **未调用 API**：是（全程 mock，未触发 load_client/call_deepseek）。
+- **停止**：FND-004 实现与测试完成即停——未 commit FND-004、未 merge、未 push、未创建 FND-005 分支、未建正式 package、未改统计方法/材料/量表、未制作展示页。
