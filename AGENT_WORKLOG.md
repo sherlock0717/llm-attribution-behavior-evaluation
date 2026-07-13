@@ -197,3 +197,40 @@
 16. **失败/被跳过命令及修复**：① 合并式 uv 检查/安装命令被执行器判为长任务跳过 → 改为先只读检查（uv 已存在，无需安装）；② TOML 校验命令一次被跳过、临时脚本一度缺失 → 重写脚本后成功（`pyproject validation passed`）；③ 多命令 `git diff` 检查被跳过 → 改用 `git diff --stat` 汇总（受保护文件无差异）。
 17. **受保护文件检查**：`git diff --stat -- requirements.txt src outputs README.md run_all.ps1 docs AGENTS.md` 为空；`requirements.txt` 未改（保留、未从 uv.lock 覆盖）。
 18. **停止**：未进入 FND-003，未 commit、未 push。
+
+---
+
+## 2026-07-10 · FND-003 · Characterization Tests
+
+- **分支/HEAD**：`test/fnd-003-characterization-tests`；HEAD=`1ddaa3ae6ddf37f5da1043d91762ca1107fce95c`（== `refactor/v0.2-professionalization`；log 含 FND-001、FND-002）；开始时工作区干净。
+- **性质**：本轮只新增测试，记录 v0.1 代码**当前行为**作为回归基准；未修复源码、未改材料/题项、未运行旧 CLI、未写 outputs、未调用 API。characterization 不代表现有设计已合理，也不把现有行为定为永久规范。
+- **新增测试文件**：
+  - `tests/conftest.py`（把 `src` 临时加入 sys.path；设 `MPLBACKEND=Agg`）
+  - `tests/characterization/test_stimuli_contract.py`
+  - `tests/characterization/test_scales_contract.py`
+  - `tests/characterization/test_design_contract.py`
+  - `tests/characterization/test_prompt_mock_contract.py`
+  - `tests/characterization/test_normalization_io_contract.py`
+  - `tests/characterization/test_analysis_contract.py`
+- **修改文件**：`AGENT_WORKLOG.md`（本条）。
+- **测试覆盖的当前行为**：
+  - stimuli：PROCESS_CONDITIONS/PROCESS_ORDINAL/IDENTITY 映射；8 情境结构（fixed_choice∈{option_a,option_b}、valence 三类、非空）；`all_materials()` 96 行、组合唯一、char_len、synthetic、三个中文标记、structure_level 一致；未知条件抛 ValueError。
+  - scales：34 题、唯一；各量表题项数精确；factual 0–2、其余 1–7；ITEM_RESPONSE_RANGES / ITEM_TEXT 一致。
+  - design：`make_design(2)` 24 行、12 格各 2、pid 唯一、ordinal/structure/char_len/persona 一致；固定种子两次调用完全相同；`make_design(8)` 每格 8 情境各一次。
+  - prompt：2 条 message（system/user）；user JSON 含 7 个键；items 34、id 集合==ITEMS；output_schema.participant_id 一致。
+  - extract_json：纯 JSON / ```json fenced / 内嵌文本 / 无效抛 `json.JSONDecodeError`。
+  - mock：同 `random.Random(12345)` 两次结果相同；34 题在各自范围；participant_id/attention_check/short_reason 固定值。
+  - normalization：合法值保留、数字串转 int、越界/无效/缺失→None、34 键齐全、metadata 复制、error 保留、synthetic True。
+  - 临时 I/O：`write_jsonl` 追加、`existing_ids` 跳过空行/坏行、`export_wide` 展开 ratings 与 persona_ 前缀（persona 内 participant_id 不重复展开），全部写 `tmp_path`。
+  - 分析纯函数：`cronbach_alpha`（<2 题/<3 行/零方差→NaN，非退化→有限 float）、`scale_scores`（量表行均值、responsibility_total=三子维度均值、metadata 保留）、`char_len_summary`（按 PROCESS_CONDITIONS 重排）。
+- **未被测试认可为“正确”的已知方法问题**：测试仅记录现状，**不背书**以下当前设计——6 条件压成 4 级 structure_level（H-03）、prompt 一次暴露全部题项+构念名+判断规则（H-02）、`SCENARIOS[n % len]` 确定性情境分配（M-07）、responsibility_total 合并三子维度（M-05）、factual check 计入 alpha 的适当性（M-04）。这些留待 v2/后续阶段处理。
+- **测试收集数量**：28（`--collect-only` 12.32s）。
+- **两次 pytest 结果**：run1 `28 passed in 5.93s`（exit 0）；run2 `28 passed in 5.78s`（exit 0）——稳定，无 flaky。
+- **Ruff**：`ruff check tests` → `All checks passed!`（exit 0）。
+- **outputs 前后比较**：测试前清单 30 个文件；测试后 30 个文件；git tracked `diff --stat -- outputs` 为空、`status --short -- outputs` 为空；`git status --short --ignored` 未出现 `outputs/raw_simulated_responses.jsonl` 或 `outputs/simulated_responses_wide.csv`。（注：中途 PowerShell 临时 before-manifest 文件被系统临时目录清理，改用 git 跟踪比较 + ignored 检查 + 文件计数三重方式确认 outputs 未变。）
+- **是否出现 ignored 新文件**：否。
+- **临时环境是否清除**：是（隔离 uv 环境 `UV_PROJECT_ENVIRONMENT` 指向系统临时目录，`TempEnvRemoved: True`；基线 `.venv` 未被 sync 重写）。
+- **失败测试与修正**：无测试失败（首次即全绿）；无需修改测试或源码。执行层面：多条组合/长命令被执行器判为长任务而跳过 → 拆成更小的独立命令逐步执行；`[System.IO.Path]::GetRelativePath` 在 PowerShell 5.1 不可用 → 改用 `Substring` 取相对路径。
+- **受保护文件检查**：`src/**`、`outputs/**`、README、requirements、run_all.ps1、pyproject.toml、uv.lock、docs、AGENTS.md 均无 diff。
+- **未调用 API**：是（未调用 main/load_client/call_deepseek，未运行旧 CLI）。
+- **停止**：未进入 FND-004，未 commit、未 push。
