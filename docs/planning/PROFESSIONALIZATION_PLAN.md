@@ -40,7 +40,80 @@
 
 ---
 
-## 阶段依赖总览
+## 阶段结构（PLAN-001 重定基线 · 2026-07-13）
+
+> 本节为**当前权威阶段结构**，依据 `docs/audit/repository_rebaseline_assessment.md`（`AUDIT_GATE=PASS`）重设。
+> 本节之下的"阶段依赖总览 / Phase 0–Phase 7 详表 / Strategic Horizon"为**历史阶段细节（部分被本节取代）**，仅作背景与字段模板参考；冲突时以本节为准。
+> 起始主分支 HEAD：`0aa8919d49af4d709dc2640385094e2e00731b00`（FND-001~FND-008 已本地实现、测试、提交并合并）。
+
+### 阶段总览
+
+```text
+Phase 1  Engineering Foundation And Historical Baseline   [Local complete / Release verification pending]
+Phase 2  Research Protocol Definition
+Phase 3A Reproducible V1 Run
+Phase 3B Improved V2 Protocol And Run
+Phase 4  Providers And Multi-Model Execution
+Phase 5  Analysis And Reporting
+Phase 6  Benchmark Track                                    [不得写成当前能力]
+Phase 7  Release And Audit                                  [统一远程/发布验证]
+
+Track S  Public Showcase（与研究开发并行，不被 Phase 1 远程 CI 阻塞）
+  S1 Content And Data Contract      [当前任务：PLAN-001 + SITE-001]
+  S2 Site Data Export
+  S3 Static Showcase MVP
+  S4 Local Content Validation
+  S5 Deployment（并入 Phase 7）
+```
+
+### Phase 1 · Engineering Foundation And Historical Baseline
+- **当前状态**：Local implementation complete；Release verification pending。
+- **已完成**：baseline freeze；dependency locking；characterization tests；safe path handling；package；mock-only CLI；schema/config；CI configuration；cross-platform wrappers。
+- **尚未完成**：GitHub-hosted Windows job；GitHub-hosted Ubuntu job；remote release verification。
+- **说明**：本地实现完成**不等于** Phase 1 正式退出；正式退出以 GitHub-hosted 双平台 CI 实际变绿为准（并入 Phase 7 统一验证）。
+
+### Phase 2 · Research Protocol Definition
+- **交付**：v1 protocol；v2 protocol；research questions；hypotheses；condition definitions；stimuli/scales version；prompt exposure strategy；parsing contract；analysis plan；success/failure criteria。
+- 本阶段**不要求**真实 API 调用。
+
+### Phase 3A · Reproducible V1 Run
+- **交付**：正式 runner；RunManifest；resolved config；prompt snapshot；hashes；artifacts；structured failures；token/cost 可空记录；v1 mock/real 同结构。
+
+### Phase 3B · Improved V2 Protocol And Run
+- **交付**：blind construct names；improved prompt；revised batching；retry/repair；v1/v2 comparison。
+
+### Phase 4 · Providers And Multi-Model Execution
+- **交付**：provider abstraction；model matrix；concurrency；retry；rate limit；cost/token；model snapshot。
+
+### Phase 5 · Analysis And Reporting
+- **交付**：standardized analysis input；automated report；figures；v1/v2 comparison；robustness；failure analysis；site-ready summary。
+
+### Phase 6 · Benchmark Track
+- **交付**：task registry；benchmark_id；task_id；multi-task；multi-model；multi-run；BMK-L1~BMK-L4。
+- **纪律**：不得将 Phase 6 写成当前能力（防 R-16/R-17）。
+
+### Phase 7 · Release And Audit
+- **统一执行**：full regression；GitHub-hosted Windows/Linux CI；provenance audit；release tag；GitHub Release；Pages deployment；online link validation；phase exit records。
+
+### Track S · Public Showcase（并行展示主线）
+- **S1 · Content And Data Contract（本轮）**：information architecture；page copy；evidence boundaries；asset inventory；site data contract。
+- **S2 · Site Data Export（未来）**：`scripts/build_site_data.py`；`site_summary.json`；`roadmap.json`；`version_history.json`。
+- **S3 · Static Showcase MVP（未来）**：HTML；CSS；JavaScript；responsive design；research + engineering sections。
+- **S4 · Local Content Validation（未来）**：local static server；JSON validation；path validation；mobile layout；evidence checks。
+- **S5 · Deployment（Phase 7 统一执行）**：Pages；remote CI；final URLs；release evidence。
+- **纪律**：Track S 不被 Phase 1 远程 CI 阻塞；展示页可在本地持续建设；远程发布验证集中在 Phase 7。
+- 详见 `docs/planning/SHOWCASE_PLAN.md` 与 `docs/showcase/*`。
+
+### 三级测试策略
+
+- **Level 1 · Local Targeted Validation**：适用单模块 / 文档契约 / 页面数据 / 静态页面。执行 relevant tests、parser、link check、focused smoke。
+- **Level 2 · Milestone Merge Validation**：适用完整任务分支准备合并。执行 targeted tests + 一次完整 pytest + 必要 smoke。
+- **Level 3 · Release Validation**：适用 push / Pages / release / phase exit。执行完整 pytest + Windows/Linux CI + provenance + site links + deployment checks。
+- **明确**：以下修改**不执行**完整 186 项回归——规划文档、展示页文案、静态样式、图片排列、roadmap 状态、站点说明。
+
+---
+
+## 阶段依赖总览（历史细节 · 部分被"阶段结构（PLAN-001）"取代）
 
 ```text
 Phase 0   基线冻结+审计

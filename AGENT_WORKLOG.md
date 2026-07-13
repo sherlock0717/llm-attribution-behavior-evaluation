@@ -462,3 +462,41 @@
 17. **未进入后续阶段**：修复、测试、验收、日志、审核文件夹完成即停——未 commit/merge/push、未创建后续分支、未修改 CLI/runner/CI/依赖/根 `run_all.ps1`、未进入 Phase 2、未制作展示页。
 18. **失败命令与修复**：① 负 seed 测试初版断言 `returncode==0` 过严（numpy 拒绝 -1）→ 改为断言“未被 wrapper 判为缺值 + 已进入 CLI（打印 OUTPUT_DIR，CLI 内部报 seed 错）”；② 伪 uv 探针初版把 Windows 路径 `C:/...` 放入以 `:` 分隔的 PATH 被 bash 拆断，导致回退到真实 uv → 改用 `cygpath -u` 转 MSYS 路径；③ 探针内联 `$([ -f ] && echo yes || echo no)` 嵌套引号求值失真、`reached_uv` 假阳性 → 改用清晰 helper/`if` 判断，得干净全绿结果。
 
+## 2026-07-13 · PLAN-001 + SITE-001 · Repository Rebaseline And Showcase Content Contract
+
+1. **分支与起始 HEAD**：任务分支 `docs/phase-and-showcase-plan`，基于 `refactor/v0.2-professionalization`，起始/当前 HEAD `0aa8919d49af4d709dc2640385094e2e00731b00`；创建时干净、与基线一致。
+2. **全仓审计范围**：91 个 Git 跟踪文件；6 规划 + 3 审计文档全部实际阅读；15 个 `src/` Python + 14 测试文件分类；3 configs + 1 CI（YAML 全部解析通过）；30 个历史 outputs 全部程序化扫描。排除 `.git/.venv/__pycache__/.pytest_cache/.ruff_cache`。未读取任何 secret；仓库无 `.env` 且 `.env` 已 gitignore。
+3. **跟踪文件数量**：91（`git ls-files`）。
+4. **outputs 扫描情况**：11 CSV + 11 PNG + 6 MD + 2 JSON = 30；`scale_scores.csv` 恰 **360 行、22 列、12 单元格（6 过程 × 2 身份）× 30**，6×2×30 由文件直接验证；`reliability_summary.csv` 10 量表 n=360，备注“Synthetic AI-simulated data; not formal human psychometric evidence.”；9 张图 1760×800，`mean_manipulation_check.png` 为 1440×800（旧命名遗留）。
+5. **测试收集数量**：见本轮 §轻量验证（仅 `pytest --collect-only`，未运行完整回归）。
+6. **当前真实能力**：历史基线=Historical only；package/CLI(mock-only)/安全输出/wrapper=Complete（本地）；schema+config=Partial（未接入运行）；CI=Configured but unverified（无 GitHub-hosted 运行）；provider/正式 RunManifest 产出/benchmark=Planned。`runner.py` 为转调旧脚本的 subprocess adapter，不生成 manifest。
+7. **发现的规划冲突**：Phase 1 门禁含“CI 双平台绿”但 CI 仅配置未远程运行；SITE-001 旧义为 Phase 6 JSON 导出、展示被排到末阶段；FND-001~008 已完成却未标记；测试策略要求逐次完整回归；README 仍为 v0.1 口径（本轮不改，记录为冲突）。
+8. **是否存在阻断问题**：无。360 记录存在且为真实 DeepSeek API（非 mock）；分支与基线一致；无被跟踪真实 secret（23 处命中均为环境变量名/`api_key` 字样）；规划冲突均可裁决；公开资产已分级。
+9. **AUDIT_GATE**：PASS（终端已输出 `AUDIT_GATE=PASS`）。新增 `docs/audit/repository_rebaseline_assessment.md`（先于修改任何旧规划）。
+10. **修改的规划文档**：`docs/planning/PROFESSIONALIZATION_PLAN.md`（新增 PLAN-001 权威阶段结构 + 三级测试策略，旧阶段标为历史细节）、`docs/planning/PHASE_GATES.md`（新增重定基线门禁 + Phase 1 双态）、`docs/planning/EXECUTION_BACKLOG.md`（新增重定基线 backlog）、`docs/planning/DECISION_LOG.md`（新增 DEC-013~DEC-020）、`AGENT_WORKLOG.md`（本条）。
+11. **新阶段结构**：Phase 1 Engineering Foundation And Historical Baseline（Local complete / Release verification pending）→ Phase 2 Research Protocol Definition → Phase 3A Reproducible V1 Run → Phase 3B Improved V2 → Phase 4 Providers And Multi-Model → Phase 5 Analysis And Reporting → Phase 6 Benchmark Track（Planned，非当前能力）→ Phase 7 Release And Audit（统一远程/发布验证）。
+12. **Showcase Track**：新增并行 Track S（S1 内容与数据契约=本轮 / S2 站点数据导出 / S3 静态 MVP / S4 本地校验 / S5 部署并入 Phase 7），明确不被 Phase 1 远程 CI 阻塞。
+13. **测试策略调整**：三级——Level 1 本地针对性（文档/文案/页面/单模块，不跑完整回归）、Level 2 里程碑合并（+一次完整 pytest）、Level 3 发布验证（完整 pytest + 双平台 CI + provenance + 链接 + 部署）。
+14. **新增展示文档**：`docs/planning/SHOWCASE_PLAN.md`、`docs/showcase/SHOWCASE_CONTENT.md`、`docs/showcase/SITE_DATA_CONTRACT.md`、`docs/showcase/PUBLIC_ASSET_INVENTORY.md`。
+15. **页面定位**：“一个用于研究和评估大语言模型自由意志归因行为的可复现实验与模型行为评测原型”；10 栏目（Hero/Research Question/Experimental Design/Pipeline/Historical Results/Evidence And Limitations/Reproducibility/Version History/Roadmap/Repository Links）；状态系统 Completed/Current/Planned/Historical/Pending verification。
+16. **公开资产分类**：A 可直接公开（定位文案、设计数字、版本、阶段状态）、B 转换后公开（聚合 CSV 派生数字、9 张一致图、报告摘要）、C 内部（工作日志、审计、规划、审核文件夹）、D 排除（.env/credential/原始 raw jsonl 与 wide csv/调试文件）。含 SHA-256、无第三方版权图片。
+17. **数据契约**：定义 `site_summary.json`/`roadmap.json`/`version_history.json` 逐字段（path/type/required/source/derivation/null policy/display rule/evidence level）+ roadmap/version/figure/source citation schema + status/evidence enum；未知值 null，不编造 token/cost/模型快照/时间，未来由 `build_site_data.py` 派生。
+18. **没有运行完整 pytest**：是（仅 `pytest --collect-only -q`）。
+19. **没有修改代码或 outputs**：是（未改 Python/PowerShell/Bash/YAML/CI/运行逻辑；未改 `outputs/**`；未创建 `site/`、HTML/CSS/JS、`build_site_data.py`）。
+20. **没有调用 API**：是。
+21. **下一步**：`feat/showcase-v1`（建设静态展示页 MVP，SITE-002/003/004）。
+22. **未 push**：是（未 commit/merge/push；未创建后续分支；未进入 Phase 2）。
+
+### PLAN-001.1 · Showcase Contract Corrections
+
+1. **DEC-007 superseded**：由 Pending 改为 Superseded，注明由 DEC-013/DEC-018 与 `SITE_DATA_CONTRACT.md` 取代（页面读版本化静态 JSON、由本地 `build_site_data.py` 生成、非 CI 推送、不手工维护动态数字、部署留 Phase 7）；历史内容保留未删。
+2. **backlog 状态更新**：PLAN-001、SITE-001 → Complete（local documentation and contract）；SITE-002/003/004 → Current，注明在同一 `feat/showcase-v1` 分支连续完成。
+3. **页面能力状态修正**：Hero "本地工程实施完成" → "Phase 1 本地工程基础完成"；定位改为"一个面向可复现研究的大语言模型自由意志归因实验与模型行为评测原型"（SHOWCASE_CONTENT 与 SHOWCASE_PLAN 一致）；Pipeline 末步改为"静态展示页（Current）"、删除"报告与展示 (Completed/Planned)"；工程底座拆为 Completed（依赖锁定/mock-only CLI/安全输出/wrapper/测试/CI 配置）、Partial（schema/config 未接入正式 runner）、Planned（正式 runner/RunManifest 产出/provider abstraction）；"理由结构非长度效应"段明确对应 **agency**（非 free_will_attribution）。
+4. **双状态 roadmap**：`SITE_DATA_CONTRACT.md` roadmap item schema 增加 `local_status`/`release_status`，Phase 1 = current + completed + pending_verification，两个状态标签并列。
+5. **site_summary 契约修正**：移除不属 enum 的 `local_complete_release_pending`；改用 `project_stage`/`local_engineering_status`/`release_verification_status`；新增 `source_commit`（git rev-parse HEAD）、`data_as_of_date`（源明确日期/提交日期，不用随机构建时间）、`generated_at`（仅构建信息）。
+6. **historical_results.json 契约**：新增，含 claims（factual check / agency 均值 / agency 回归 / agency 计划对比 / free_will 回归 / 并行中介固定 exploratory_path_diagnostic / 责任归因探索性）+ figures；每 metric 必带 source_file+source_field，未找到精确字段 build 必须失败、不猜测，数字不在 HTML 硬编码。
+7. **资产完整 Hash**：补齐 `pyproject.toml`、`configs/prompt.v1.yaml`、`configs/model.mock.yaml` 完整 64 位 SHA-256；图片改为逐项分类（首版选用 3 张 / 可选 6 张 / 旧命名默认排除 2 张：mean_manipulation_check、mean_responsibility）；删除"其余 8 张按需纳入"与固定"6 份"计数。
+8. **本地预览与公开发布批准分离**：新增 `local_preview_status=approved`、`public_release_status=pending_user_approval`。
+9. **未运行完整 pytest**：是（仅 collect-only）。
+10. **未修改代码和 outputs**：是。
+
