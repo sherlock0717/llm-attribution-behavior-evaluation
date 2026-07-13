@@ -8,6 +8,34 @@
 
 ---
 
+## 重定基线 Backlog（PLAN-001 · 2026-07-13）
+
+> 本节为**当前权威任务清单**，依据 `docs/audit/repository_rebaseline_assessment.md`（`AUDIT_GATE=PASS`）。
+> 本节之下的历史 backlog 条目保留作背景；SITE-001 的语义已由本节重定义（旧 SITE-001「版本化 JSON 导出」下移为 SITE-002）。冲突时以本节为准。
+
+### 已完成（Phase 1 本地实现）
+- **FND-001 ~ FND-008**：状态 **Complete（本地实现、测试、提交、合并均完成）**。远程 GitHub-hosted CI 验证单列，属 Phase 7 / Level 3。
+
+### 已完成（规划与契约里程碑）
+- **PLAN-001 · Rebaseline Phases And Showcase Track** — 状态：**Complete（local documentation and contract）**。已重设 Phase 1–7、加入并行 Track S、三级测试策略、更新 backlog 与决策日志。
+- **SITE-001 · Showcase Content And Data Contract** — 状态：**Complete（local documentation and contract）**。已产出 information architecture、page copy、evidence boundaries、asset inventory、site data contract（见 `docs/planning/SHOWCASE_PLAN.md`、`docs/showcase/*`）。
+
+### 下一里程碑（同一 `feat/showcase-v1` 分支连续完成，不再拆成三个小分支）
+- **SITE-002 · Site Data Export** — 状态：**Current**。产出 `scripts/build_site_data.py`、`site/data/site_summary.json`、`roadmap.json`、`version_history.json`、`historical_results.json`。
+- **SITE-003 · Static Showcase MVP** — 状态：**Current**。产出原生 HTML/CSS/JS 静态展示页（`site/`）。
+- **SITE-004 · Local Showcase Validation** — 状态：**Current**。本地静态服务、JSON/路径校验、移动端布局、证据检查。
+
+### 研究与运行主线
+- **RES-001 · Freeze V1 And V2 Research Protocols** — 依赖：PLAN-001。冻结 v1/v2 研究协议（RQ、假设、条件、prompt 暴露策略、解析契约、分析计划、成败判据）。
+- **RUN-001 · Reproducible V1 Runner** — 依赖：RES-001。正式 runner + RunManifest + resolved config + prompt snapshot + hashes + 结构化失败 + token/cost 可空。
+
+### 发布
+- **REL-001 · Push, CI And Pages Release** — 依赖：SITE-004、Phase 1 local implementation、**用户 push 授权**。统一执行完整回归、GitHub-hosted Windows/Linux CI、Pages 部署、在线链接校验、release。
+
+> 纪律：SITE 任务**不推迟到最后阶段**，与研究开发并行；REL-001 之前不得 push、不得声称 CI 已绿。
+
+---
+
 ## 第一批（Phase 1 工程基础，严格按序 · 2026-07-10 收敛后）
 
 > 新顺序原则：**先固定旧行为 → 先解决输出覆盖风险 → 新 CLI 与旧入口并行（不立即改 thin wrapper）→ 不在 Phase 1 拆分完整分析模块、不接入多模型、不实现 benchmark**。

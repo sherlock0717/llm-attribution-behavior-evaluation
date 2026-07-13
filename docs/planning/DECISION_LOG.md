@@ -85,7 +85,8 @@
 - 影响范围：数字一致性与可追溯性（关联 R-10）。
 - 是否可逆：可逆。
 - 何时复审：Phase 6。
-- 状态：Pending
+- 状态：Superseded
+- 取代说明（2026-07-13，PLAN-001.1）：本条已由 DEC-013、DEC-018 与 `docs/showcase/SITE_DATA_CONTRACT.md` 取代。当前决定为：页面读取版本化静态 JSON；JSON 由本地 `scripts/build_site_data.py` 从明确仓库源文件生成；不由 CI 自动推送；不手工维护动态研究数字；部署统一留到 Phase 7。（上述历史备选与原始表述保留，不删除。）
 
 ### DEC-008 · 是否将 v1 结果作为 baseline 固化
 - 日期：2026-07-10
@@ -156,3 +157,87 @@
 - 状态：Pending
 
 > 注：当前不需要作者立即决定 DEC-012；仅在 Phase 3A 真实调用前决策即可。
+
+---
+
+## PLAN-001 重定基线决策（2026-07-13）
+
+### DEC-013 · Showcase 改为并行开发主线
+- 日期：2026-07-13
+- 问题：展示页应排在最后阶段，还是与研究开发并行？
+- 备选方案：末阶段一次性建设 / 并行主线（Track S）。
+- 最终决定：**将 Showcase 设为与研究开发并行的展示主线（Track S），S1–S4 本地建设，S5 部署并入 Phase 7。**
+- Context：旧 backlog 把 SITE-* 排到 Phase 6/末尾；审计（§6/§9）表明展示可在本地并行、不依赖远程 CI。
+- Consequences：SITE-001 重定义为内容与数据契约；下一分支 `feat/showcase-v1` 可立即建设静态页。
+- Revisit condition：Track S 完成或研究主线优先级重大调整时。
+- 状态：Decided
+
+### DEC-014 · Phase 1 本地完成与正式退出分开记录
+- 日期：2026-07-13
+- 问题：Phase 1 是否可在本地实现完成后即宣布退出？
+- 备选方案：本地完成即退出 / 本地完成与正式退出分离。
+- 最终决定：**Phase 1 记为"Local implementation complete / Release verification pending"；正式退出以 GitHub-hosted 双平台 CI 实际变绿为准。**
+- Context：CI 仅配置完成，无 GitHub-hosted 运行记录（审计 §3）。
+- Consequences：文档不得声称 Phase 1 已正式退出。
+- Revisit condition：获 push 授权并完成远程 CI 后。
+- 状态：Decided
+
+### DEC-015 · GitHub-hosted CI 推迟到统一发布验证
+- 日期：2026-07-13
+- 问题：远程 CI 验证应在 Phase 1 还是统一发布阶段？
+- 备选方案：Phase 1 内验证 / 统一 Phase 7 验证。
+- 最终决定：**GitHub-hosted Windows/Linux CI 与远程发布验证统一集中在 Phase 7（Release And Audit），并作为 Level 3 测试。**
+- Context：无 push 授权，Track S 不应被远程 CI 阻塞。
+- Consequences：本地开发可持续推进；不得声称 CI 已绿。
+- Revisit condition：REL-001 执行时。
+- 状态：Decided
+
+### DEC-016 · 采用三级测试策略
+- 日期：2026-07-13
+- 问题：每类改动应执行何种测试强度？
+- 备选方案：一律完整回归 / 分级测试。
+- 最终决定：**采用 Level 1（本地针对性）/ Level 2（里程碑合并）/ Level 3（发布验证）三级策略；文档、文案、样式、图片排列、roadmap 状态、站点说明类改动不执行完整回归。**
+- Context：文档/文案改动不需 186 项回归（审计 §6）。
+- Consequences：降低文档类任务成本，保留合并/发布强校验。
+- Revisit condition：测试体系重大变化时。
+- 状态：Decided
+
+### DEC-017 · 展示页区分 completed/current/planned
+- 日期：2026-07-13
+- 问题：展示页如何标注能力成熟度？
+- 备选方案：统一"已完成" / 分状态标注。
+- 最终决定：**展示页统一使用状态系统 Completed / Current / Planned / Historical / Pending verification，禁止将 Planned/Configured 写成 Completed/Verified。**
+- Context：防 R-17（把未来写成当前能力）。
+- Consequences：所有页面数字与能力必须带状态与来源。
+- Revisit condition：能力状态变化时。
+- 状态：Decided
+
+### DEC-018 · 静态页面首版使用原生 HTML/CSS/JS
+- 日期：2026-07-13
+- 问题：展示页首版技术栈？
+- 备选方案：React/Vite/npm 前端 / 原生 HTML+CSS+JS+静态 JSON。
+- 最终决定：**首版使用原生 HTML/CSS/JavaScript + 静态 JSON + GitHub Pages，不引入 React/Vite/npm/后端/数据库/远程 API。**
+- Context：研究可信度优先、部署简单、可复现。
+- Consequences：SITE-003 以原生静态实现。
+- Revisit condition：交互复杂度显著上升时。
+- 状态：Decided
+
+### DEC-019 · 项目定位为研究与模型行为评测原型（不声称成熟 benchmark）
+- 日期：2026-07-13
+- 问题：对外定位如何表述（在 DEC-009 基础上细化到展示层）？
+- 备选方案：成熟 benchmark / 研究与模型行为评测原型。
+- 最终决定：**对外定位为"用于研究和评估大语言模型自由意志归因行为的可复现实验与模型行为评测原型"；benchmark 为长期方向，不声称已完成。**
+- Context：承接 DEC-009/011，用于展示文案统一口径。
+- Consequences：README/网站/release 分开写当前能力与未来方向。
+- Revisit condition：Strategic Benchmark Track 启动时。
+- 状态：Decided
+
+### DEC-020 · 历史 DeepSeek 结果真实性与 provenance 完整性分开表述
+- 日期：2026-07-13
+- 问题：展示页如何表述历史数据的真实性与可复现性？
+- 备选方案：合并表述 / 分层表述。
+- 最终决定：**明确区分：数据真实性（已确认，真实 DeepSeek API）/ 运行可审计性（历史元数据不完整）/ 完全复现能力（受限）；缺失元数据不得推测补写。**
+- Context：承接 H-00/R-15/DEC-008 与审计 §5。
+- Consequences：展示页 Evidence 栏与数据契约 provenance_status 字段据此表述。
+- Revisit condition：新可追溯运行产生后。
+- 状态：Decided

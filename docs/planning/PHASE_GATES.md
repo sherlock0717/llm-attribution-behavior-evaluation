@@ -9,7 +9,30 @@
 
 ---
 
-## Phase 0 · 基线冻结与现状审计
+## 重定基线门禁（PLAN-001 · 2026-07-13）
+
+> 本节为**当前权威门禁**，依据 `docs/audit/repository_rebaseline_assessment.md`（`AUDIT_GATE=PASS`）。
+> 本节之下的 Phase 0–Phase 7 旧门禁为历史细节，冲突时以本节为准。
+
+**Phase 1 · Engineering Foundation And Historical Baseline**
+- 状态：**Local implementation complete / Release verification pending**。
+- 本地退出（已满足）：`uv sync --frozen` 通过；`ruff check` 通过；characterization/unit/integration 测试通过；输出隔离生效（永不写 `outputs/`）；mock-only CLI 可用；schema/config 单测通过；跨平台 wrapper 一致；`outputs/`、`stimuli.py`/`scales.py` 文本 hash 未变。
+- **正式退出（尚未满足）**：GitHub-hosted Windows job 变绿 + GitHub-hosted Ubuntu job 变绿 + remote release verification（并入 Phase 7）。
+- **纪律**：不得声称 Phase 1 已正式退出；不得声称 GitHub-hosted CI 已通过 / Ubuntu 或 Windows GitHub-hosted job 已通过（当前无 push 授权，未触发该 CI）。
+
+**Phase 2–Phase 7 与 Track S**：阶段定义见 `PROFESSIONALIZATION_PLAN.md` §"阶段结构（PLAN-001 重定基线）"。
+- **CI 绿 / 远程发布验证统一集中在 Phase 7**（Release And Audit）。
+- **Track S（Public Showcase）不被 Phase 1 远程 CI 阻塞**：S1–S4 可在本地并行完成，S5 部署并入 Phase 7。
+- **Phase 6 · Benchmark Track** 保持"未来方向"，不得写成当前能力。
+
+**三级测试策略门禁映射**：
+- Level 1（本地针对性）：文档/文案/页面数据/静态页面/单模块 → relevant tests + parser + link check + focused smoke，**不跑完整 186 项回归**。
+- Level 2（里程碑合并）：完整任务分支合并 → targeted + 一次完整 pytest + 必要 smoke。
+- Level 3（发布验证）：push / Pages / release / phase exit → 完整 pytest + Windows/Linux CI + provenance + site links + deployment。
+
+---
+
+## Phase 0 · 基线冻结与现状审计（历史细节）
 
 **进入条件**
 - 仓库已克隆、分支为 `refactor/v0.2-professionalization`；
