@@ -408,3 +408,57 @@
 22. **失败命令与修复**：① 用仓库基线 `.venv` 直接跑 workflow 校验脚本报 `ModuleNotFoundError: yaml`（基线 .venv 未装 PyYAML）→ 改在隔离 uv 环境（含锁定 PyYAML）内运行校验，未改动基线 `.venv`；② 完整 pytest 被执行器判长任务 → 隔离环境后台 `Start-Process` + 轮询日志取真实 exit/passed/时长；③ `git status --short` 以目录粒度显示 `?? .github/` → 用 `--untracked-files=all` 确认其下仅 `ci.yml`。
 23. **未调用 API**：是（全程 mock/静态校验；workflow 不含 secrets/API key；本地 smoke 带 `--mock`）。
 24. **未进入 FND-008**：FND-007 workflow、验证、日志完成即停——未 commit/merge/push FND-007、未创建 FND-008 分支、未开始跨平台脚本任务、未修改 workflow 之外的工程文件、未制作展示页。
+
+## 2026-07-13 · FND-008 · Cross-Platform Run Scripts
+
+1. **分支与起始 HEAD**：`chore/fnd-008-cross-platform-scripts`，起始 HEAD `686cbf8fc63f14510d6d0639ce86111ff824986c`（== `refactor/v0.2-professionalization`，即 FND-007 merge 提交）；创建时基线一致、工作区干净。
+2. **FND-007 commit / merge SHA**（批次 A 一次性人工授权）：commit `3682087e370694c43b9fb88bca14e1108d16142b`（`ci: add Windows and Linux validation workflow`，2 文件 +131）；非快进 merge `686cbf8fc63f14510d6d0639ce86111ff824986c`（`merge: complete FND-007 GitHub Actions CI`，ort）；已 `git branch -d` 删除 `ci/fnd-007-github-actions`（was 3682087）。提交前隔离环境重验：workflow 契约验证通过、ruff/compileall 通过、`141 passed in 193.37s`、outputs 干净。
+3. **新增两个脚本和测试**：`scripts/run_all.ps1`、`scripts/run_all.sh`、`tests/integration/test_cross_platform_scripts.py`（本轮唯一新增）；另修改 `AGENT_WORKLOG.md`。
+4. **根目录 run_all.ps1 保持不变**：未触碰根 `run_all.ps1`（受保护文件哈希前后一致）。
+5. **两脚本参数**：PowerShell `-Mock/-OutDir/-NPerCell(默认20)/-Seed(默认20260425)/-Temperature(默认1.0)/-Fresh/-Help`；Bash `--mock/--out[=]PATH/--n-per-cell[=]N/--seed[=]N/--temperature[=]VALUE/--fresh/--help`。两者统一转调 `python -m freewill_attribution.cli run`。
+6. **显式 mock 门禁**：缺 `-Mock`/`--mock` → stderr 明确错误 + exit 2，不创建输出目录、不进入 CLI；无真实 API 模式、不读 API key。
+7. **默认系统临时输出**：未提供输出目录时写唯一临时路径——PS `<%TEMP%>\freewill-attribution\run-<UTCstamp>-<GUID>`（`GetTempPath`）；Bash `${TMPDIR:-/tmp}/freewill-attribution/run-<UTCstamp>-<pid>-<rand>`；绝不以仓库目录为默认。
+8. **显式输出相对路径处理**：在改变 cwd 前按调用者当前目录解析——PS 先记录 `CallerCwd`，展开环境变量，相对路径 `Join-Path $CallerCwd`，转绝对 `GetFullPath`，不预建目录；Bash 先存 `caller_pwd=$PWD`，绝对路径原样、相对路径 `$caller_pwd/$out_arg`，允许空格，不预建目录；最终安全性由现有 CLI/path_safety 校验。
+9. **uv 查找顺序**：PATH `uv` → `<repo>\.venv\Scripts\uv.exe` → `<repo>\.venv\bin\uv`（Bash 依次 `command -v uv` → `.venv/bin/uv` → `.venv/Scripts/uv.exe`）；均无则明确错误 + exit 127；不下载/安装 uv。
+10. **数组执行、无 shell eval**：PS 用 `& $UvExecutable @UvArgs`（数组，无 Invoke-Expression/Start-Process/shell 字符串）；Bash 用 `uv_args=(...)` 数组 + 子 shell `( cd -- "$repo_root"; exec "$uv_bin" "${uv_args[@]}" )`（无 eval、无字符串拼接、不 source .env）。均用 invariant/字面量传数字（PS `InvariantCulture`）。
+11. **CLI 参数转发**：完整转发 `--n-per-cell/--seed/--temperature`，`--mock` 恒定加入，`--fresh` 仅在 fresh 时加入；不复制研究逻辑、不调用旧 `src/run_simulated_study.py`、不调用根 `run_all.ps1`。
+12. **退出码转发**：PS 保存 `$LASTEXITCODE` 并 `exit $code`；Bash `exec` 保留 CLI 退出码。
+13. **路径含空格验证**：集成测试 `test_explicit_safe_output_with_spaces` 用含空格目录（`safe out dir`）验证成功、raw/wide 存在、12 条、全 synthetic、short_reason 正确。
+14. **wrapper 与直接 CLI 字节一致**：集成测试 `test_wrapper_matches_direct_cli_bytewise` + 本机三方比较（见 18）证明 raw JSONL 与 wide CSV 字节一致。
+15. **fresh sentinel**：`test_fresh_preserves_sentinel` 首次运行→加 sentinel.txt→再次 `--fresh`→raw/wide 重建且 sentinel 保留。
+16. **历史 outputs 拒绝**：`test_wrapper_rejects_repo_outputs` 将 `<repo>/outputs` 作为输出 → 非零退出、历史 outputs manifest 前后一致。
+17. **PowerShell 本地结果**：`scripts/run_all.ps1 -Mock -NPerCell 1 -Seed 20260425 -OutDir <temp>` exit 0；raw 12 条（`PS_RAW_COUNT=12`）；`-Help` exit 0 且不产出。
+18. **Git Bash compatibility 结果**：本机 `C:\Program Files\Git\bin\bash.exe` 存在；`bash -n scripts/run_all.sh` exit 0；`bash scripts/run_all.sh --mock --n-per-cell 1 --seed 20260425 --out <temp>` exit 0。三方字节比较：PowerShell wrapper / Git Bash wrapper / 直接 package CLI 的 `raw_simulated_responses.jsonl`（SHA-256 `2DF3A75E…`）与 `simulated_responses_wide.csv`（`70E31B71…`）三者完全一致（`PARITY_MATCH=True`）。此项仅为 **Git Bash compatibility validation**，非真实 Linux 验证。
+19. **是否有真实 Linux 验证**：无。本机未安装 Linux 发行版，按纪律未安装；真实 Ubuntu 验证由后续获准 push 后的 GitHub-hosted CI 完成。
+20. **针对性测试两次结果**（隔离 uv 环境）：`pytest tests/integration/test_cross_platform_scripts.py -q` run1 `30 passed in 30.31s`、run2 `30 passed in 21.39s`（exit 0）。
+21. **完整 pytest 结果**（隔离 uv 环境）：`pytest -q` `171 passed in 212.06s`（exit 0）；原 141 项全部保留，新增 30 项被收集并通过；未调用真实 API、未写历史 outputs。
+22. **Ruff / compileall**：`ruff check src tests` All checks passed；`compileall -q src tests` exit 0；另 `bash -n` exit 0、PS `-Help` exit 0。
+23. **outputs 前后 Hash**：before 30 / after 30，固定清单（相对路径|大小|SHA-256）`OUTPUTS_IDENTICAL=True`；`git status --porcelain --ignored -- outputs` 空，无 ignored raw/wide。
+24. **保护文件 Hash**：`run_all.ps1`、`.github/workflows/ci.yml`、`src/freewill_attribution/{cli,runner,paths}.py`、`src/path_safety.py`、`pyproject.toml`、`requirements.txt`、`uv.lock` 前后哈希 `PROTECTED_IDENTICAL=True`。
+25. **失败命令与修复**：① `run_all.sh` 初次写入后规范化为 UTF-8 无 BOM + LF（去除潜在 CR），校验 `HAS_BOM=False/HAS_CR=False/首行 shebang`；② 完整 pytest 与多脚本运行被执行器判长任务 → 隔离环境后台 `Start-Process` + 轮询日志取真实结果；③ Git Bash 传路径用正斜杠形式避免转义歧义。无测试失败。
+26. **未调用 API**：是（全程 mock；测试 subprocess 均删除 `DEEPSEEK_API_KEY`、设 `MPLBACKEND=Agg`、不设 PYTHONPATH、cwd 位于仓库外；wrapper 不读 key、无真实 API 模式）。
+27. **未进入下一阶段**：FND-008 脚本、测试、验收、日志完成即停——未 commit/merge/push FND-008、未修改 CI、未创建 FND-009 或后续分支、未进入 Phase 2/provider/正式 manifest/benchmark、未制作展示页。
+
+## 2026-07-13 · FND-008.1 · Wrapper Missing-Value Guards
+
+分支 `chore/fnd-008-cross-platform-scripts`，起始/结束 HEAD `686cbf8fc63f14510d6d0639ce86111ff824986c`（未提交）。本轮只修复审核发现的参数解析边界，改动文件仅 `scripts/run_all.sh`、`scripts/run_all.ps1`、`tests/integration/test_cross_platform_scripts.py`、`AGENT_WORKLOG.md`。
+
+1. **审核发现**：Bash 旧 `require_value()` 只检查“剩余参数数量”是否为 0，无法识别下一个 token 本身是另一个 option，也不拒绝等号形式的空值。
+2. **`--out --fresh --mock` 缺陷**：旧实现把 `--fresh` 当作 `--out` 的值转发，wrapper 返回 0 并在调用者 cwd 下写文件（危险）。
+3. **`--out=` 缺陷**：旧实现空值退化为 `$caller_pwd/`，即调用者当前目录。
+4. **新增 separated/equal 检查**：以 `require_separate_value(option, $#, ${2-})`（`$#<2` 或下一个值以 `--` 开头 → `missing value`；下一个值为空 → `empty value`）替换旧 `require_value`；新增 `require_equal_value(option, value)`（等号形式空值 → `empty value`）。四个分离形式（`--out/--n-per-cell/--seed/--temperature`）与四个等号形式全部改用新检查。合法参数转发行为不变。
+5. **所有缺值输入在 uv 前 exit 2**：伪 uv 探针（见 9）确认 12 个案例全部 `exit=2`、`reached_uv=no`、无 `OUTPUT_DIR=`、cwd 无新增文件。
+6. **PowerShell 空 OutDir**：在 mock/数字检查后、查找 uv 前新增 `ContainsKey("OutDir") -and IsNullOrWhiteSpace($OutDir) → stderr + exit 2`；输出目录分支简化为仅按 `ContainsKey("OutDir")` 判定。`-OutDir ""` 与 `-OutDir "   "` 均 exit 2、不查 uv、不打印 `OUTPUT_DIR`、不建默认临时目录；未提供 `-OutDir` 时默认临时输出行为不变。
+7. **合法负 seed 未被误拒绝**：`--seed -1`（单连字符，不以 `--` 开头）仍被转发进入 CLI；伪 uv 收到完整数组含 `--seed -1`；直接执行时由 numpy（CLI 内部，`Seed must be between 0 and 2**32 - 1`）拒绝，证明确已进入 CLI 而非被 wrapper 判为缺值。
+8. **新增测试数量**：集成测试由 30 增至 45（新增 15）：Bash 参数化缺值/空值 12 条（`test_bash_rejects_missing_or_empty_option_values`）、Bash 合法负 seed 1 条（`test_bash_accepts_negative_seed`）、PowerShell 空 OutDir 参数化 2 条（`test_powershell_rejects_empty_outdir`）。原 30 项全部保留通过。
+9. **伪 uv pre-uv gate（独立于 pytest）**：系统临时目录建伪 `uv`（仅记录 `"$@"` 到文件并 exit 0），置于 PATH 首位（`cygpath -u` 转 MSYS 路径）。合法调用 `--mock --out "relative path" --n-per-cell 1 --seed -1 --temperature 0.5 --fresh` → `RESOLVED_UV` 命中伪 uv、`LEGAL_EXIT=0`、伪 uv 收到完整数组（`run --frozen python -m freewill_attribution.cli run --mock --n-per-cell 1 --seed -1 --temperature 0.5 --out <cwd>/relative path --fresh`，相对路径按调用者 cwd 解析、含空格仍为单个参数）。随后 12 个缺值/空值案例逐个执行：全部 `exit=2`、伪 uv 记录文件不存在（`reached_uv=no`、`REACHED_ANY=0`）、无 `OUTPUT_DIR`、`WORK_FILE_COUNT=0` → 输出 `bash malformed-value pre-uv gate passed`。
+10. **两次针对性测试**（隔离 uv 环境）：`pytest tests/integration/test_cross_platform_scripts.py -q` run1 `45 passed in 26.46s`、run2 `45 passed in 25.32s`（exit 0）。
+11. **完整回归**（隔离 uv 环境）：`pytest -q` `186 passed in 210.24s`（exit 0）；原 171 项全部保留，新增 15 项被收集并通过。
+12. **三方字节一致性**：PowerShell wrapper / Git Bash wrapper / 直接 package CLI（`--mock --n-per-cell 1 --seed 20260425`）三者 exit 0；`raw_simulated_responses.jsonl` SHA-256 `2DF3A75EDC3267AD44575B95227E1CBD074366FB8E1849CC0749FDDA41BE5AF3`、`simulated_responses_wide.csv` `70E31B71385FC38613239567D03CC096691B8F2710EEC7A814509D31907587FC`，三方完全一致（`MATCH=True`），与 FND-008 一致。
+13. **Ruff / compileall / bash -n / -Help**：`ruff check src tests` All checks passed；`compileall -q src tests` exit 0；`bash -n scripts/run_all.sh` exit 0；`run_all.ps1 -Help` exit 0。
+14. **outputs 前后 Hash**：before 30 / after 30，路径|大小|SHA-256 固定清单完全一致；无 ignored raw/wide。
+15. **保护文件 Hash（前后一致）**：`run_all.ps1` `18D8436D…`、`.github/workflows/ci.yml` `3B3393F2…`、`src/freewill_attribution/cli.py` `71019220…`、`runner.py` `1CABEAC4…`、`paths.py` `155299C1…`、`src/path_safety.py` `A8194387…`、`pyproject.toml` `814D821B…`、`requirements.txt` `F3572E90…`、`uv.lock` `643F9256…`，全部与开始前一致。
+16. **未调用 API**：是（全程 mock/静态；测试 subprocess 删除 `DEEPSEEK_API_KEY`、设 `MPLBACKEND=Agg`、不设 PYTHONPATH、cwd 在仓库外；wrapper 不读 key、无真实 API 模式；伪 uv 探针不进入真实 CLI）。
+17. **未进入后续阶段**：修复、测试、验收、日志、审核文件夹完成即停——未 commit/merge/push、未创建后续分支、未修改 CLI/runner/CI/依赖/根 `run_all.ps1`、未进入 Phase 2、未制作展示页。
+18. **失败命令与修复**：① 负 seed 测试初版断言 `returncode==0` 过严（numpy 拒绝 -1）→ 改为断言“未被 wrapper 判为缺值 + 已进入 CLI（打印 OUTPUT_DIR，CLI 内部报 seed 错）”；② 伪 uv 探针初版把 Windows 路径 `C:/...` 放入以 `:` 分隔的 PATH 被 bash 拆断，导致回退到真实 uv → 改用 `cygpath -u` 转 MSYS 路径；③ 探针内联 `$([ -f ] && echo yes || echo no)` 嵌套引号求值失真、`reached_uv` 假阳性 → 改用清晰 helper/`if` 判断，得干净全绿结果。
+
