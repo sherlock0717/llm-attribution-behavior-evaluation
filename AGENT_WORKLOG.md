@@ -381,3 +381,30 @@
 16. **其他 FND-006 文件 Hash 未变化**：开始前记录 8 个文件 SHA-256，结束时逐一比对全部 `UNCHANGED`：`config.py`(530EAB90…) / `study.default.yaml`(53E22A33…) / `model.mock.yaml`(51B7D190…) / `prompt.v1.yaml`(8D8B26E0…) / `test_config.py`(6FB22AB4…) / `pyproject.toml`(814D821B…) / `requirements.txt`(F3572E90…) / `uv.lock`(5BFDAA70…)。旧源码/CLI/runner/旧脚本/outputs/docs/既有测试零 diff。
 17. **未调用 API**：是（仅 schema 校验与本地探针；未设/未读 API key、未 subprocess、未网络）。
 18. **未进入 FND-007**：修复、测试、日志完成即停——未 commit/merge/push、未创建 FND-007 分支、未修改 config/YAML/依赖、未重生成 uv.lock、未修改 CLI/runner/旧脚本、未接入运行流程、未生成正式 manifest。
+
+## 2026-07-13 · FND-007 · GitHub Actions CI
+
+1. **分支与起始 HEAD**：`ci/fnd-007-github-actions`，起始 HEAD `f3ad07169ddd515b82b78dbb460bb542a00ce7be`（== `refactor/v0.2-professionalization`，即 FND-006 merge 提交）；分支创建前工作区干净、基线一致。
+2. **FND-006 commit SHA**（批次 A 一次性人工授权）：`a347bdb1845e56fa3fed3e6c64fed511524b84fc`（`feat: add minimal schemas and config loading`，11 文件 +1180）；提交前隔离环境重测：针对性 `60 passed`、完整 `141 passed in 196.53s`、ruff All checks passed、compileall exit 0、`git diff -- outputs` 空、无 ignored outputs。
+3. **FND-006 merge SHA**：`f3ad07169ddd515b82b78dbb460bb542a00ce7be`（`merge: complete FND-006 minimal schemas and config`，ort 非快进策略）；合并后工作区干净；已 `git branch -d` 删除本地已合并分支 `refactor/fnd-006-minimal-schema-config`（was a347bdb）。
+4. **新增 workflow**：`.github/workflows/ci.yml`（本轮唯一新增源文件）；除此与 `AGENT_WORKLOG.md` 外不改任何文件。
+5. **触发条件**：`push`、`pull_request`、`workflow_dispatch`（`"on"` 加引号，避免本地 PyYAML 按 YAML 1.1 解析为布尔）。
+6. **只读 permissions**：`permissions.contents: read`；checkout 设 `persist-credentials: false`。
+7. **Windows/Linux 矩阵**：`os = [ubuntu-latest, windows-latest]`，`fail-fast: false`，`timeout-minutes: 30`，`concurrency` 取消同 ref 在途运行；唯一 job 为 `test`。
+8. **Python 3.12**：`matrix.python-version = ["3.12"]`（单版本）。
+9. **Action 版本**：`actions/checkout@v7`、`actions/setup-python@v6`、`astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990`（v8.3.2，锁定 SHA）。
+10. **uv 版本**：`0.11.28`，`enable-cache: true`，`cache-dependency-glob` 为 `pyproject.toml` + `uv.lock`。
+11. **sync/Ruff/compileall/pytest**：`uv sync --frozen` → `uv run --frozen ruff check src tests` → `uv run --frozen python -m compileall -q src tests` → `uv run --frozen pytest -q`。
+12. **mock smoke 参数**：`uv run --frozen python -m freewill_attribution.cli run --mock --n-per-cell 1 --seed 20260425 --out "${{ env.SMOKE_OUT }}"`（含必填 `--mock`）。
+13. **smoke 输出位于 runner.temp**：`SMOKE_OUT = ${{ runner.temp }}/freewill-attribution-smoke`，绝不写仓库 `outputs/`。
+14. **smoke 12 条结果验证**：CI 步骤断言 raw JSONL 恰 12 行、全部 `synthetic is True`、`short_reason == "mock synthetic response"`、wide CSV 存在。
+15. **outputs 保护**：CI 末步 `git diff --exit-code` + `git status --porcelain --untracked-files=all` 为空 + `git status --porcelain --ignored -- outputs` 为空，确保仓库与历史 outputs 未变。
+16. **不使用 secrets/API key**：workflow 无 `secrets.`、无 `DEEPSEEK_API_KEY`、无 provider matrix、无 benchmark、无 artifact 上传、无 push/commit。
+17. **workflow 静态契约验证**：一次性临时脚本（系统临时目录、未入仓、`yaml.safe_load`、23 项检查：name/on 三触发/只读 permissions/单 test job/os 矩阵/py3.12/checkout v7/setup-python v6/setup-uv SHA/sync/ruff/compileall/pytest/CLI/--mock/runner.temp/无 secrets/无 DEEPSEEK/无 provider matrix/无 benchmark/无 --out outputs/无 artifact upload/无 push-commit）→ `workflow contract validation passed`（exit 0），脚本已删除。
+18. **Windows 本地等价结果**（隔离 uv 环境）：`uv sync --frozen` exit 0；ruff All checks passed；compileall exit 0；`pytest -q` `141 passed in 216.63s`（exit 0）；mock smoke `run --mock --n-per-cell 1 --seed 20260425 --out <temp>` exit 0；smoke 校验 `local mock smoke validated`（12 条、全 synthetic、short_reason 正确、wide 存在）。临时环境与 smoke 目录已清理，基线 `.venv` 未被 sync 重写。
+19. **完整 pytest 数量与时间**：`141 passed`，本地隔离环境 216.63s（批次 A 提交前另一次隔离环境为 196.53s）。
+20. **是否执行 WSL 等价验证**：否。本机 `wsl` 可执行程序存在，但**未安装任何 Linux 发行版**（`wsl -e bash` 返回“未安装适用于 Linux 的 Windows 子系统”）；按纪律不得为此安装软件，故未运行 Linux 等价命令。
+21. **GitHub-hosted 双平台实际运行尚待 push**：本轮未 push，GitHub Actions 尚未真正运行。**未声称 CI 已绿 / Ubuntu job 通过 / Windows GitHub-hosted job 通过**。已完成：workflow 静态契约验证通过、Windows 本地等价命令通过、workflow 已配置 Ubuntu + Windows 矩阵；两平台真实 GitHub-hosted 验证需在后续获准 push 后完成。
+22. **失败命令与修复**：① 用仓库基线 `.venv` 直接跑 workflow 校验脚本报 `ModuleNotFoundError: yaml`（基线 .venv 未装 PyYAML）→ 改在隔离 uv 环境（含锁定 PyYAML）内运行校验，未改动基线 `.venv`；② 完整 pytest 被执行器判长任务 → 隔离环境后台 `Start-Process` + 轮询日志取真实 exit/passed/时长；③ `git status --short` 以目录粒度显示 `?? .github/` → 用 `--untracked-files=all` 确认其下仅 `ci.yml`。
+23. **未调用 API**：是（全程 mock/静态校验；workflow 不含 secrets/API key；本地 smoke 带 `--mock`）。
+24. **未进入 FND-008**：FND-007 workflow、验证、日志完成即停——未 commit/merge/push FND-007、未创建 FND-008 分支、未开始跨平台脚本任务、未修改 workflow 之外的工程文件、未制作展示页。
