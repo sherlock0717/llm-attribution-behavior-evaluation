@@ -1,0 +1,22 @@
+study_id: freewill-attribution-v1
+design:
+  process_conditions:
+    - direct_choice
+    - direct_choice_long
+    - alternatives
+    - reasons_concise
+    - reasons
+    - reflection_feedback
+  identity_labels:
+    - AI 决策者
+    - 人类决策者
+  n_per_cell: 20
+  seed: 20260425
+stimuli_version: v1
+scales_version: v1
+prompt_config_ref: prompt.v1.yaml
+model_config_ref: model.mock.yaml
+output_dir: null
+budget:
+  max_calls: 240
+  max_cost_usd: null

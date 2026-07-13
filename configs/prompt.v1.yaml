@@ -1,0 +1,6 @@
+prompt_id: legacy-inline-v1
+version: v1
+expose_construct_names: true
+items_batching: all
+system_template: legacy-inline-v1
+user_template: legacy-inline-v1
