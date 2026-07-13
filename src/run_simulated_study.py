@@ -21,13 +21,13 @@ from stimuli import (
     SCENARIOS,
     build_decision_text,
 )
+from path_safety import resolve_output_dir
 
 
 ROOT = Path(__file__).resolve().parents[1]
-OUT = ROOT / "outputs"
-OUT.mkdir(exist_ok=True)
-RAW_PATH = OUT / "raw_simulated_responses.jsonl"
-WIDE_PATH = OUT / "simulated_responses_wide.csv"
+
+RAW_FILENAME = "raw_simulated_responses.jsonl"
+WIDE_FILENAME = "simulated_responses_wide.csv"
 
 
 def load_client():
@@ -289,19 +289,30 @@ def main() -> None:
     parser.add_argument("--mock", action="store_true", help="Generate rule-based synthetic data without API calls.")
     parser.add_argument("--fresh", action="store_true", help="Remove previous raw/wide response files before running.")
     parser.add_argument("--temperature", type=float, default=1.0)
+    parser.add_argument(
+        "--out",
+        required=True,
+        help="Explicit output directory for generated files. Must not be the "
+        "repository outputs/ directory. Fail fast if omitted.",
+    )
     args = parser.parse_args()
 
     if args.n_per_cell < 1:
         raise ValueError("--n-per-cell must be at least 1.")
+
+    out_dir = resolve_output_dir(args.out)
+    raw_path = out_dir / RAW_FILENAME
+    wide_path = out_dir / WIDE_FILENAME
+
     if args.fresh:
-        for path in [RAW_PATH, WIDE_PATH]:
+        for path in [raw_path, wide_path]:
             if path.exists():
                 path.unlink()
 
     rng = random.Random(args.seed)
     np.random.seed(args.seed)
     design = make_design(args.n_per_cell, args.seed)
-    done = existing_ids(RAW_PATH)
+    done = existing_ids(raw_path)
 
     client = None
     load_dotenv(ROOT / ".env")
@@ -321,12 +332,12 @@ def main() -> None:
                 record = normalize_record(row, response)
             except Exception as exc:
                 record = normalize_record(row, {}, error=str(exc))
-        write_jsonl(RAW_PATH, record)
+        write_jsonl(raw_path, record)
         done.add(row["participant_id"])
 
-    export_wide(RAW_PATH, WIDE_PATH)
-    print(f"Saved raw synthetic responses: {RAW_PATH}")
-    print(f"Saved wide synthetic responses: {WIDE_PATH}")
+    export_wide(raw_path, wide_path)
+    print(f"Saved raw synthetic responses: {raw_path}")
+    print(f"Saved wide synthetic responses: {wide_path}")
 
 
 if __name__ == "__main__":

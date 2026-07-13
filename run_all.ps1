@@ -1,4 +1,6 @@
 param(
+    [Parameter(Mandatory = $true)]
+    [string]$OutDir,
     [int]$NPerCell = 20,
     [switch]$Mock,
     [switch]$Fresh
@@ -18,10 +20,10 @@ Write-Host "[2/5] Activating environment and installing requirements..."
 pip install -r requirements.txt
 
 Write-Host "[3/5] Validating synthetic materials..."
-python .\src\validate_materials.py
+python .\src\validate_materials.py --out $OutDir
 
 Write-Host "[4/5] Running simulated study..."
-$argsList = @(".\src\run_simulated_study.py", "--n-per-cell", "$NPerCell")
+$argsList = @(".\src\run_simulated_study.py", "--n-per-cell", "$NPerCell", "--out", $OutDir)
 if ($Mock) {
     $argsList += "--mock"
 }
@@ -31,6 +33,7 @@ if ($Fresh) {
 python @argsList
 
 Write-Host "[5/5] Analyzing results..."
-python .\src\analyze_results.py
+python .\src\analyze_results.py --input $OutDir --out $OutDir
 
-Write-Host "Done. Check outputs/."
+$ResolvedOutDir = (Resolve-Path -LiteralPath $OutDir).Path
+Write-Host "Done. Output written to: $ResolvedOutDir"
