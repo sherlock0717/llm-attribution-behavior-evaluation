@@ -215,7 +215,7 @@ wheels = [
 [[package]]
 name = "llm-agent-free-will-attribution"
 version = "0.2.0.dev0"
-source = { virtual = "." }
+source = { editable = "." }
 dependencies = [
     { name = "matplotlib" },
     { name = "numpy" },
