@@ -317,6 +317,8 @@ Strategic Benchmark Track（长期，独立于 v0.2 门禁）
 
 > 本章节只做**路线设计**，不做当前实现。对应 DEC-011。以下四个成熟度等级**不属于 v0.2 必做，也不属于 Phase 1—Phase 7 退出条件**。
 
+> **RES-001 + BMK-001 进展（2026-07-14，契约层）**：已完成 benchmark-first 垂直切片的**契约层**（DEC-021~030）——研究事实来源映射（`PROTOCOL_SOURCE_GATE=PASS`）、v1 历史协议（historical_reconstructed，不可执行）、v2 协议草案（draft_specification，不可执行）、BenchmarkSpec/MetricSpec/FailureTaxonomy、四份 YAML 契约与契约测试。当前成熟度目标仍为 **BMK-L1**；**未实现** runner/provider/真实 RunManifest，**未调用** API。下一任务 **RUN-001 · Reproducible Run Core**（需单独授权与 v2 Open Questions 人工裁决）。
+
 ### BMK-L1 · 单研究可复现（= 当前项目目标）
 - 单一研究任务；DeepSeek + mock；固定材料和量表；run manifest；可重复运行；可追溯结果。
 

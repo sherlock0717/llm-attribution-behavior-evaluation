@@ -1,0 +1,62 @@
+# Metric registry (metadata + status only; no computed values, no fabricated results).
+# RBC-001.1: split vague parse/schema/repair metrics; add first/final + repair split +
+# response length; construct_name_exposure -> construct_label_exposure; estimated_cost ->
+# estimated_cost_usd. Registry COUNT is authoritative and must be computed dynamically.
+metric_set_id: attribution-metrics-v1
+metric_set_version: "0.2-draft"
+spec_ref: ../../docs/benchmark/METRIC_SPEC.md
+
+metrics:
+  # A. Execution Integrity
+  - {metric_id: planned_record_count, category: execution_integrity, status: planned, direction: context}
+  - {metric_id: completed_record_count, category: execution_integrity, status: planned, direction: higher_better}
+  - {metric_id: failed_record_count, category: execution_integrity, status: planned, direction: lower_better}
+  - {metric_id: completion_rate, category: execution_integrity, status: planned, direction: higher_better}
+  - {metric_id: retry_rate, category: execution_integrity, status: planned, direction: lower_better}
+  - {metric_id: resume_count, category: execution_integrity, status: planned, direction: context}
+  - {metric_id: latency_ms, category: execution_integrity, status: planned, direction: lower_better}
+  - {metric_id: prompt_tokens, category: execution_integrity, status: planned, direction: context}
+  - {metric_id: completion_tokens, category: execution_integrity, status: planned, direction: context}
+  - {metric_id: total_tokens, category: execution_integrity, status: planned, direction: context}
+  - {metric_id: estimated_cost_usd, category: execution_integrity, status: planned, direction: lower_better}
+  # B. Output Quality (parse/schema/repair split; first-attempt vs final)
+  - {metric_id: first_attempt_parse_success_rate, category: output_quality, status: planned, direction: higher_better}
+  - {metric_id: final_parse_success_rate, category: output_quality, status: planned, direction: higher_better}
+  - {metric_id: first_attempt_schema_compliance_rate, category: output_quality, status: planned, direction: higher_better}
+  - {metric_id: final_schema_compliance_rate, category: output_quality, status: planned, direction: higher_better}
+  - {metric_id: missing_item_rate, category: output_quality, status: derived, direction: lower_better, v1_historical_status: unknown}
+  - {metric_id: range_validity_rate, category: output_quality, status: planned, direction: higher_better}
+  - {metric_id: repair_trigger_rate, category: output_quality, status: planned, direction: context}
+  - {metric_id: repair_success_rate, category: output_quality, status: planned, direction: higher_better}
+  - {metric_id: empty_response_rate, category: output_quality, status: planned, direction: lower_better}
+  - {metric_id: duplicate_response_suspected_rate, category: output_quality, status: planned, direction: context}
+  - {metric_id: response_length_chars, category: output_quality, status: planned, direction: context}
+  - {metric_id: response_length_tokens, category: output_quality, status: planned, direction: context}
+  # compatibility aliases (defined semantics; point to granular metrics)
+  - {metric_id: parse_success_rate, category: output_quality, status: alias, alias_of: final_parse_success_rate, direction: higher_better}
+  - {metric_id: schema_compliance_rate, category: output_quality, status: alias, alias_of: final_schema_compliance_rate, direction: higher_better}
+  - {metric_id: repair_rate, category: output_quality, status: alias, alias_of: repair_trigger_rate, direction: context}
+  # C. Task Metrics
+  - {metric_id: factual_process_check, category: task_metric, status: historical_available, direction: context}
+  - {metric_id: subjective_process_completeness, category: task_metric, status: historical_available, direction: context}
+  - {metric_id: agency, category: task_metric, status: historical_available, direction: context}
+  - {metric_id: free_will_attribution, category: task_metric, status: historical_available, direction: context}
+  - {metric_id: responsibility, category: task_metric, status: historical_available, direction: context}
+  - {metric_id: perceived_intelligence, category: task_metric, status: historical_available, direction: context}
+  - {metric_id: condition_sensitivity, category: task_metric, status: planned_without_formula, direction: context}
+  - {metric_id: identity_effect, category: task_metric, status: planned_without_formula, direction: context}
+  # D. Reliability
+  - {metric_id: repeat_run_stability, category: reliability, status: planned_without_formula, direction: higher_better}
+  - {metric_id: seed_sensitivity, category: reliability, status: planned, direction: lower_better}
+  - {metric_id: prompt_version_sensitivity, category: reliability, status: planned, direction: context}
+  - {metric_id: model_version_sensitivity, category: reliability, status: planned, direction: context}
+  - {metric_id: cell_variance, category: reliability, status: planned, direction: context}
+  - {metric_id: rank_stability, category: reliability, status: planned, direction: higher_better}
+  # E. Benchmark Quality Audit
+  - {metric_id: construct_coverage, category: benchmark_quality_audit, status: planned_without_formula, direction: higher_better}
+  - {metric_id: condition_balance, category: benchmark_quality_audit, status: planned_without_formula, direction: higher_better}
+  - {metric_id: item_leakage, category: benchmark_quality_audit, status: planned, direction: lower_better}
+  - {metric_id: construct_label_exposure, category: benchmark_quality_audit, status: direct, direction: lower_better}
+  - {metric_id: missingness_bias, category: benchmark_quality_audit, status: planned, direction: lower_better}
+  - {metric_id: metric_dependency, category: benchmark_quality_audit, status: planned, direction: context}
+  - {metric_id: provenance_completeness, category: benchmark_quality_audit, status: planned_without_formula, direction: higher_better}

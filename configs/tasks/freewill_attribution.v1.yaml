@@ -1,0 +1,116 @@
+# TaskSpec contract draft (NOT wired into any runner). historical reconstruction.
+# Canonical TaskSpec field names (RBC-001.1). Facts sourced from
+# docs/audit/research_protocol_source_map.md (PROTOCOL_SOURCE_GATE=PASS,
+# gate_scope: historical_protocol_reconstruction_only).
+task_id: freewill-attribution-v1-historical
+task_version: "1.0"
+protocol_ref: ../../docs/protocols/freewill_attribution_v1_historical.md
+
+constructs:
+  - agency
+  - experience
+  - free_will_attribution
+  - autonomy
+  - outcome_accountability
+  - moral_praise_blame
+  - process_accountability
+  - perceived_intelligence
+  - factual_manipulation_check
+  - subjective_process_completeness
+
+condition_schema:
+  # Real condition keys from src/stimuli.py PROCESS_CONDITIONS.
+  conditions:
+    - direct_choice
+    - direct_choice_long
+    - alternatives
+    - reasons_concise
+    - reasons
+    - reflection_feedback
+  diagnostic_conditions:
+    direct_choice_long: length_control      # only adds length, not structure
+    reasons_concise: structure_diagnostic   # structure without added length
+  structure_levels:
+    direct_choice: 0
+    direct_choice_long: 0
+    alternatives: 1
+    reasons_concise: 2
+    reasons: 2
+    reflection_feedback: 3
+
+identity_schema:
+  identities:
+    - AI 决策者
+    - 人类决策者
+
+stimulus_set:
+  stimulus_set_id: freewill-attribution-stimuli
+  stimulus_version: v1
+  exact_snapshot_available: false
+  exact_hash_available: false
+  reconstruction_status: code_reconstructable
+
+prompt_config:
+  expose_construct_labels: true      # v1 prompt exposed scale labels
+  items_batching: all
+  prompt_provenance:
+    exact_snapshot_available: false
+    exact_hash_available: false
+    reconstruction_status: partial
+    note: >-
+      Prompt was constructed inline by src/run_simulated_study.py build_prompt();
+      configs/prompt.v1.yaml (prompt_id legacy-inline-v1) is only a reference marker,
+      not the exact historical prompt text.
+
+response_schema:
+  ref: ../../docs/protocols/freewill_attribution_v1_historical.md
+  core_item_fields: [item_id, rating]
+
+scoring_config:
+  aggregation: item_mean
+  factual_range: [0, 2]
+  default_range: [1, 7]
+  metric_ids:
+    - factual_process_check
+    - subjective_process_completeness
+    - agency
+    - free_will_attribution
+    - responsibility
+    - perceived_intelligence
+    - condition_sensitivity
+    - identity_effect
+    - construct_label_exposure
+    - provenance_completeness
+    - missing_item_rate
+
+aggregation_config:
+  cell: process_condition x identity
+  cell_aggregation: mean
+
+evidence_boundary: >-
+  Model-simulated observer ratings (synthetic=True), single model, single prompt template,
+  construct labels exposed. Not human subjects; not proof of AI free will; mediation is an
+  associational indirect-path diagnostic. Historical run metadata (server model snapshot,
+  timestamps, token, cost, prompt/stimulus hash, retry, request IDs, raw per-item responses)
+  is unknown / not archived. Aggregate construct columns have no missing values, which does
+  NOT prove all 34 items were present.
+
+status: historical_reconstructed
+executable: false
+
+legacy_metadata:
+  n_per_cell: 30
+  historical_record_count: 360
+  seed_code_default: 20260425          # code default only; NOT confirmed historical run seed
+  model_id_reconstruction_candidate: deepseek-chat   # current-code default; NOT confirmed historical model ID
+  historical_data_source: deepseek_api_baseline_author_confirmed
+  process_conditions_mirror:
+    - direct_choice
+    - direct_choice_long
+    - alternatives
+    - reasons_concise
+    - reasons
+    - reflection_feedback
+  identity_labels_mirror:
+    - AI 决策者
+    - 人类决策者
