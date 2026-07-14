@@ -30,9 +30,10 @@
 - **REL-001 · Push, CI And Pages Release** — 状态：**Planned / requires push authorization**。统一发布验证（完整回归、GitHub-hosted Windows/Linux CI、Pages 部署、在线链接校验），需用户 push 授权（Phase 7）。
 
 ### 研究与运行主线（活动 ID 见下方权威表）
-- **RES-001 · Research Protocol And Benchmark Contract** — 状态：**Ready for review after RBC-001.1**。产出 `docs/audit/research_protocol_source_map.md`（`PROTOCOL_SOURCE_GATE=PASS`，`gate_scope: historical_protocol_reconstruction_only`）、v1 历史协议（historical_reconstructed, executable=false）、v2 协议（draft_specification, executable=false）。
-- **BMK-001 · Benchmark, Metric And Failure Contract** — 状态：**Ready for review after RBC-001.1**。产出 `BENCHMARK_SPEC.md`（benchmark_id=llm-attribution-behavior，current_maturity=pre-BMK-L1，target_maturity=BMK-L1，release_status=planned）、`METRIC_SPEC.md`、`FAILURE_TAXONOMY.md`、四份 YAML、契约测试。**current maturity: pre-BMK-L1；target maturity: BMK-L1**（不得写 BMK-L1 achieved）。不实现 runner/provider，不调用 API。
-- **RUN-001 · Reproducible Mock Run Core** — 状态：**Blocked pending contract approval**。范围：TaskSpec → Runner → Mock Provider → Raw Response → Parser → Validation → Score → RunManifest → Aggregate Report（仅 mock；真实 DeepSeek provider/budget/retry/resume/concurrency/真实 API 门禁属 RUN-003）。依赖：RES-001、BMK-001 审核通过 + v2 Open Questions 人工裁决 + 运行授权。
+- **RES-001 · Research Protocol And Benchmark Contract** — 状态：**Committed & merged**（提交 `53f3d85`，`--no-ff` 合并 `04b023d` 入 `refactor/v0.2-professionalization`，已推送）。产出 source map（`PROTOCOL_SOURCE_GATE=PASS`）、v1 历史协议、v2 协议。
+- **BMK-001 · Benchmark, Metric And Failure Contract** — 状态：**Committed & merged**（同 `04b023d`）。产出 BENCHMARK_SPEC/METRIC_SPEC/FAILURE_TAXONOMY + 四份 YAML + 契约测试。**current maturity: pre-BMK-L1；target maturity: BMK-L1**（不写 BMK-L1 achieved）。
+- **FAST-001 · Benchmark Vertical Slice And Showcase Data Layer** — 状态：**Current（feat/benchmark-vertical-slice，未合并）**。实现 benchmark 对象模型 + 确定性 mock provider + runner 生命周期 + artifacts + 指标/AggregateReport + 公共报告数据层 + 展示页工程核心区块。mock smoke(12)/acceptance(24) 全 completed；v2=implemented_mock（mock only）。未调用真实 API、未部署 Pages、未改 outputs。
+- **RUN-001 · Reproducible Mock Run Core** — 状态：**Mock run core implemented via FAST-001**（`src/freewill_attribution/{benchmark,providers,tasks,runner.py,reporting.py,cli.py}`）。范围已交付：TaskSpec → Runner → Mock Provider → Raw → Parser → Validation → Score → RunManifest → Aggregate。真实 DeepSeek provider/budget/retry/resume/concurrency/真实 API 门禁属 **RUN-003**（需单独授权）。
 
 <!-- ACTIVE_TASK_IDS_START -->
 RES-001 | Research Protocol And Benchmark Contract

@@ -1,7 +1,9 @@
-# TaskSpec contract draft (NOT wired into any runner). draft specification only.
-# Canonical TaskSpec field names (RBC-001.1).
+# FAST-001.1: this TaskSpec DRIVES the mock benchmark runner (contract-driven).
+# It is loaded + validated against the implemented task pack on every run; the
+# recorded task_spec.json and task_spec_hash come from this file. Canonical
+# TaskSpec field names (RBC-001.1). Mock provider only; real run is RUN-003.
 task_id: freewill-attribution-v2
-task_version: "2.0-draft"
+task_version: "2.0-mock"
 protocol_ref: ../../docs/protocols/freewill_attribution_v2.md
 
 constructs:
@@ -23,7 +25,9 @@ condition_schema:
   diagnostic_conditions:
     direct_choice_long: length_control
     reasons_concise: structure_diagnostic
-  decision_status: candidate   # retain/merge decisions unresolved (see open_questions)
+  # FAST-001.1: frozen for the first mock v2 run (Q-COND-1). The 6 conditions
+  # are fixed; no new conditions are added; alternatives is retained.
+  decision_status: frozen_for_mock_v2
 
 identity_schema:
   identities:
@@ -46,12 +50,16 @@ prompt_config:
       these concepts. by_construct grouping could partially re-expose construct structure.
     exposed_variant_is_separate_control: true
   batching:
-    decision_status: unresolved
-    candidates:
-      - all_items
+    # FAST-001.1: frozen for the first mock v2 run (Q-BATCH-1).
+    decision_status: frozen_for_mock_v2
+    core: all_items
+    recommended_core_default: all_items
+    max_repair_attempts: 1          # Q-REPAIR-1 frozen
+    future_variants:
       - by_construct
       - single_item
-    recommended_core_default: all_items
+      - construct_label_exposed
+      - explanation_variant
     methodological_constraint: >-
       Core mediation-compatible runs must collect agency and free_will_attribution in the
       same model response record. by_construct and single_item modes are separate prompt
@@ -109,24 +117,46 @@ aggregation_config:
   required_effects: [scenario_fixed_effects_or_stratification]
 
 evidence_boundary: >-
-  Draft specification only. Not implemented, not executable, no results. Construct labels
-  blinded by default (semantics still present). Core run must not stitch separate API calls
-  into one participant. Mediation is an associational indirect-path diagnostic.
+  Implemented against the deterministic MOCK provider only (executable via mock; no real
+  model run exists and BMK-L1 is not achieved). Mock outputs are engineering-validation
+  signals, never research findings. Construct labels blinded by default (semantics still
+  present). Core run must not stitch separate API calls into one participant. Mediation is
+  an associational indirect-path diagnostic.
 
-status: draft_specification
-executable: false
+# FAST-001: v2 is now implemented against the deterministic MOCK provider only.
+# executable=true means "runnable with the mock provider", NOT that a real-model
+# run exists and NOT that BMK-L1 is achieved (benchmark current_maturity stays
+# pre-BMK-L1). Real provider execution remains RUN-003 (separate authorization).
+status: implemented_mock
+executable: true
+supported_providers:
+  - mock
+
+# FAST-001: the eight v2 Open Questions are frozen into implementation decisions
+# for the first mock vertical slice. The design space is preserved for future
+# robustness variants, but the CORE mock run uses the decisions below.
+implementation_decisions:
+  Q-COND-1: keep the existing 6 conditions; add none; retain alternatives;
+    direct_choice_long and reasons_concise stay diagnostic conditions.
+  Q-ID-1: keep only "AI 决策者" / "人类决策者"; no neutral identity in first v2.
+  Q-OUT-1: core response emits no short_reason; explanation variant deferred.
+  Q-BATCH-1: core_batching = all_items; by_construct / single_item are future
+    robustness variants only (not part of the core run).
+  Q-REPAIR-1: max_repair_attempts = 1.
+  Q-EXPOSE-1: first core run has no construct-label-exposed control (that is BMK-002).
+  Q-MODEL-1: mock vertical slice is not bound to a real model; real provider/model
+    is a RUN-003 run configuration.
+  Q-N-1:
+    mock_smoke_n_per_cell: 1
+    mock_acceptance_n_per_cell: 2
+    real_smoke_n_per_cell: 1
+    real_pilot_n_per_cell: 5
+    formal_bmk_l1_sample_size: frozen_after_pilot
 
 failure_taxonomy_ref: ../../docs/benchmark/FAILURE_TAXONOMY.md
 analysis_plan_ref: ../../docs/protocols/freewill_attribution_v2.md
 
-open_questions:
-  - Q-COND-1
-  - Q-ID-1
-  - Q-OUT-1
-  - Q-BATCH-1
-  - Q-REPAIR-1
-  - Q-EXPOSE-1
-  - Q-MODEL-1
-  - Q-N-1
+# All eight Q-* Open Questions are now frozen (see implementation_decisions).
+open_questions: []
 
 legacy_metadata: {}

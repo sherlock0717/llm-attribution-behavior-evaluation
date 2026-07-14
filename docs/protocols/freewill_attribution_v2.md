@@ -2,13 +2,15 @@
 
 ```
 protocol_id: freewill-attribution-v2
-protocol_version: "2.0-draft"
-status: draft_specification
-executable: false
+protocol_version: "2.0-mock"
+status: implemented_mock
+executable: true
+supported_providers: [mock]
 ```
 
-> 本阶段**只定义，不实现运行器**。所有修订目标针对 v1 已确认的问题（见 source map），不添加无依据的问题。
-> 未决事项一律进入 §19 Open Questions，**不擅自定案**。
+> **FAST-001 状态更新**：v2 现已针对**确定性 mock provider** 实现（`executable: true` 仅表示"可用 mock 运行"）。
+> 这**不代表**存在真实模型运行，也**不代表** BMK-L1 已达成（benchmark `current_maturity_level` 仍为 `pre-BMK-L1`）。
+> 真实 provider 运行属 RUN-003（需单独授权）。§19 的八个 Open Questions 已冻结为实现决定（见 §19）。
 
 ## 1. 修订目标
 
@@ -195,15 +197,20 @@ batching:
 - Failure Taxonomy 就绪；
 - 构念盲化确认（默认盲化，暴露版本单列）。
 
-## 19. Open Questions（未决，需人工裁决）
+## 19. Open Questions → 冻结实现决定（FAST-001）
 
-- Q-COND-1：是否合并/删除 `alternatives`？是否新增更高结构层？
-- Q-ID-1：是否新增中性/无身份对照？
-- Q-OUT-1：`short_reason` 逐题 vs 整体？
-- Q-BATCH-1：最终 batching（all / by_construct / single）？
-- Q-REPAIR-1：repair 最多次数（1 vs 2）？
-- Q-EXPOSE-1：construct-exposed 对照协议是否纳入首个 v2 运行？
-- Q-MODEL-1：BMK-L1 首个可执行运行使用哪个 provider/model？
+以下八个问题在 FAST-001 已**冻结为首个 mock 垂直切片的实现决定**（保留设计空间用于未来稳健性变体）：
+
+- **Q-COND-1**：保留现有 6 个条件，不新增；`alternatives` 保留；`direct_choice_long` / `reasons_concise` 继续作为诊断条件。
+- **Q-ID-1**：只保留 `AI 决策者` / `人类决策者`，首个 v2 不加中性身份。
+- **Q-OUT-1**：核心响应不生成 `short_reason`；explanation variant 延后。
+- **Q-BATCH-1**：核心 batching = `all_items`；`by_construct` / `single_item` 仅为未来稳健性变体，不进入核心运行。
+- **Q-REPAIR-1**：`max_repair_attempts = 1`。
+- **Q-EXPOSE-1**：首个核心运行不含 construct-label-exposed 对照（属 BMK-002）。
+- **Q-MODEL-1**：mock 垂直切片不绑定真实模型；真实 provider/model 属 RUN-003 运行配置。
+- **Q-N-1**：mock smoke `n_per_cell=1`；mock acceptance `n_per_cell=2`；real smoke `n_per_cell=1`；real pilot `n_per_cell=5`；正式 BMK-L1 样本量在 pilot 后冻结。
+
+> 仍需人工裁决的**真实运行**事项（provider/model 选择、预算、正式样本量）留待 RUN-003。
 - Q-N-1：v2 每格 n 与总量？
 
 > 以上均为**未决**，不得在本轮写成决定。

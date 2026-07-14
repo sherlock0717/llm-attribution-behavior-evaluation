@@ -22,6 +22,7 @@
           <li><a href="#experimental-design">实验设计</a></li>
           <li><a href="#pipeline">流程</a></li>
           <li><a href="#historical-results">历史结果</a></li>
+          <li><a href="#engineering-core">工程核心</a></li>
           <li><a href="#evidence-limitations">证据与局限</a></li>
           <li><a href="#reproducibility">可复现性</a></li>
           <li><a href="#version-history">版本</a></li>
@@ -275,6 +276,44 @@
         <noscript>
           <p>主路径：过程结构 → 行动者感 → 自由意志归因；次路径：过程结构 → 感知智能 → 自由意志归因。均为探索性估计，非机制证明。</p>
         </noscript>
+      </div>
+    </section>
+
+    <!-- 5b. Engineering Core And Validation (FAST-001) -->
+    <section id="engineering-core" class="section">
+      <div class="wrap">
+        <h2>工程核心与验证</h2>
+        <p class="reading">
+          除了历史研究结果，这个仓库还有一条可复现的工程主线。下面把公开演进讲清楚：
+          从<strong>历史研究基线</strong>，到<strong>可复现工程核心</strong>，再到<strong>确定性 mock 验证</strong>，
+          最后才是<strong>真实模型试点（尚未运行）</strong>。这里展示的所有 mock 指标都只用于验证工程链路，
+          <strong>不是真实模型结果</strong>，也不代表已完成任何公开基准。
+        </p>
+
+        <h3>公开演进</h3>
+        <ol class="evolution" data-slot="engineering-evolution" aria-label="公开演进阶段"></ol>
+        <noscript>
+          <p>公开演进：历史研究基线 → 可复现工程核心 → 确定性 mock 验证 → 真实模型试点（未运行）。</p>
+        </noscript>
+
+        <h3>Mock 执行质量</h3>
+        <p class="note">
+          下列比率来自确定性 mock 验收运行（每格 2 条、共 24 条），用于验证解析、schema 校验与运行产物链路。
+          确定性 mock：非真实模型输出，不进入研究结论。
+        </p>
+        <div class="mock-quality" data-slot="mock-quality" aria-label="mock 执行质量指标"></div>
+
+        <h3>Provenance 完整性</h3>
+        <p class="note">
+          每个维度标注是否可由仓库内容独立验证；标为 unknown 的维度不会被补写成确定事实。
+        </p>
+        <div class="prov-matrix" data-slot="provenance-matrix" aria-label="provenance 完整性矩阵"></div>
+
+        <h3>运行产物链</h3>
+        <p class="note">
+          每次 mock 运行按固定顺序产出以下带哈希的产物，写入 <code>artifacts/runs/&lt;run_id&gt;/</code>；历史 <code>outputs/</code> 永久只读、互不覆盖。
+        </p>
+        <ol class="artifact-chain" data-slot="artifact-chain" aria-label="运行产物链"></ol>
       </div>
     </section>
 

@@ -1,19 +1,20 @@
-"""Transitional command-line interface (FND-005 / FND-005.1).
+"""Command-line interface (FND-005 legacy ``run`` + FAST-001 ``benchmark-run``).
 
 Usage:
 
     python -m freewill_attribution.cli --help
     python -m freewill_attribution.cli run --mock --n-per-cell 2 --out <dir>
+    python -m freewill_attribution.cli benchmark-run --mock --n-per-cell 2 \
+        --artifact-root <dir>
 
-This CLI uses only the Python standard library (argparse). The ``run`` command
-delegates to the safe legacy entry point via ``runner.run_legacy_study`` and
-returns the legacy process exit code.
+Two subcommands:
 
-Current transitional scope: this package CLI only exposes **mock** runs. The
-``--mock`` flag is therefore required; real API execution is not exposed by
-this CLI yet (it awaits DEC-012 and formal run governance). The CLI does not
-read API keys and does not default to writing the repository ``outputs/``
-directory (the legacy script enforces a safe --out).
+- ``run`` (legacy / historical workflow): delegates to the safe legacy entry
+  point via ``runner.run_legacy_study`` and returns the legacy exit code. It
+  still requires ``--mock`` and an explicit ``--out``.
+- ``benchmark-run`` (FAST-001): the new reproducible mock benchmark vertical
+  slice. It writes artifacts under ``artifacts/runs/<run_id>/`` and requires the
+  ``--mock`` flag (no real provider is available; no API key is read).
 """
 
 from __future__ import annotations
@@ -21,13 +22,14 @@ from __future__ import annotations
 import argparse
 
 from . import runner
+from .benchmark import registry
 
 
 def build_parser() -> argparse.ArgumentParser:
     """Build the argparse parser (separated for testability)."""
     parser = argparse.ArgumentParser(
         prog="python -m freewill_attribution.cli",
-        description="Transitional CLI over the safe legacy run entry point.",
+        description="Attribution study CLI: legacy run + benchmark vertical slice.",
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
 
@@ -59,6 +61,41 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Remove previous raw/wide response files in the output directory.",
     )
+
+    bench = subparsers.add_parser(
+        "benchmark-run",
+        help="Run the mock benchmark vertical slice (writes artifacts/runs/<run_id>/).",
+    )
+    bench.add_argument(
+        "--artifact-root",
+        required=True,
+        help="Root directory for run artifacts. A runs/<run_id>/ subtree is "
+        "created here. Must not be the repository outputs/ directory.",
+    )
+    bench.add_argument("--n-per-cell", type=int, default=1)
+    bench.add_argument("--seed", type=int, default=20260425)
+    bench.add_argument("--max-repair-attempts", type=int, default=1)
+    bench.add_argument(
+        "--task-config",
+        default=str(registry.TASK_V2_YAML),
+        help="TaskSpec contract YAML that drives the run "
+        "(default: configs/tasks/freewill_attribution.v2.yaml).",
+    )
+    bench.add_argument(
+        "--model-config",
+        default=str(registry.MODEL_MOCK_YAML),
+        help="Model config YAML (default: configs/model.mock.yaml). Mock only.",
+    )
+    bench.add_argument("--run-id", default=None)
+    bench.add_argument("--fresh", action="store_true", help="Remove prior artifacts in the run dir.")
+    bench.add_argument("--resume", action="store_true", help="Resume: skip already-completed records.")
+    bench.add_argument(
+        "--mock",
+        action="store_true",
+        required=True,
+        help="Required. Only the deterministic mock provider is available; no "
+        "real API is called and no API key is read.",
+    )
     return parser
 
 
@@ -75,6 +112,26 @@ def main(argv: list[str] | None = None) -> int:
             mock=args.mock,
             fresh=args.fresh,
         )
+
+    if args.command == "benchmark-run":
+        result = runner.run_benchmark(
+            seed=args.seed,
+            n_per_cell=args.n_per_cell,
+            artifact_root=args.artifact_root,
+            task_config=args.task_config,
+            model_config=args.model_config,
+            max_repair_attempts=args.max_repair_attempts,
+            fresh=args.fresh,
+            resume=args.resume,
+            run_id=args.run_id,
+        )
+        manifest = result.manifest
+        print(f"run_id={result.run_id}")
+        print(f"status={manifest.status.value}")
+        print(f"planned={manifest.planned_records} completed={manifest.completed_records} "
+              f"failed={manifest.failed_records}")
+        print(f"run_dir={result.run_dir}")
+        return 0 if manifest.status.value in ("completed", "partial") else 1
 
     # argparse enforces a required subcommand, so this is defensive only.
     parser.error("No command provided.")

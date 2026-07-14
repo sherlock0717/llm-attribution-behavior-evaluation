@@ -24,6 +24,10 @@ outputs/*response*
 outputs/*token*
 outputs/*key*
 
+# New benchmark run artifacts (never committed; historical outputs/ stays separate & read-only)
+artifacts/
+artifacts/runs/
+
 # Temporary files
 *.tmp
 *.bak

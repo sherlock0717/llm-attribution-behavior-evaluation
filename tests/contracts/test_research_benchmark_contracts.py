@@ -146,10 +146,12 @@ def test_v1_seed_and_model_are_reconstruction_only():
 
 
 # ---- v2 ----
-def test_v2_executable_false_and_status():
+def test_v2_mock_executable_status():
+    # FAST-001: v2 is implemented against the MOCK provider only.
     d = load(TASK_V2)
-    assert d["executable"] is False
-    assert d["status"] == "draft_specification"
+    assert d["executable"] is True
+    assert d["status"] == "implemented_mock"
+    assert d["supported_providers"] == ["mock"]
 
 
 def test_v2_response_schema_no_runner_owned_metadata():
@@ -167,9 +169,30 @@ def test_v2_response_schema_no_runner_owned_metadata():
 
 def test_v2_core_batching_not_by_construct():
     b = load(TASK_V2)["prompt_config"]["batching"]
-    assert b["decision_status"] == "unresolved"
+    # FAST-001.1: frozen for the first mock v2 run (no longer "unresolved").
+    assert b["decision_status"] == "frozen_for_mock_v2"
+    assert b["core"] == "all_items"
     assert b["recommended_core_default"] == "all_items"
     assert b["recommended_core_default"] != "by_construct"
+
+
+def test_v2_frozen_decisions_are_not_unresolved():
+    # FAST-001.1 §7: a frozen v2 item must NOT simultaneously be candidate/unresolved.
+    d = load(TASK_V2)
+    assert d["condition_schema"]["decision_status"] == "frozen_for_mock_v2"
+    assert d["prompt_config"]["batching"]["decision_status"] == "frozen_for_mock_v2"
+    assert d["prompt_config"]["batching"]["max_repair_attempts"] == 1
+    assert d["open_questions"] == []
+    # future (unimplemented) robustness variants may still be listed.
+    assert "by_construct" in d["prompt_config"]["batching"]["future_variants"]
+
+
+def test_v2_version_is_unified():
+    # FAST-001.1 §3: task_version unified to 2.0-mock across contract + protocol.
+    assert load(TASK_V2)["task_version"] == "2.0-mock"
+    proto = V2_PROTO.read_text(encoding="utf-8")
+    assert 'protocol_version: "2.0-mock"' in proto
+    assert "2.0-draft" not in proto
 
 
 def test_v2_construct_label_blinding_name_accurate():
@@ -178,9 +201,14 @@ def test_v2_construct_label_blinding_name_accurate():
     assert "construct_blinding" not in pc
 
 
-def test_v2_not_claimed_implemented():
+def test_v2_mock_only_not_real_and_open_questions_frozen():
+    # Mock-implemented, but must NOT claim a real provider or a real run.
     d = load(TASK_V2)
-    assert d["executable"] is False and d["status"] == "draft_specification"
+    assert d["supported_providers"] == ["mock"]
+    assert "implementation_decisions" in d
+    assert d["open_questions"] == []  # eight Q-* frozen into decisions
+    # benchmark maturity must remain pre-BMK-L1 (no BMK-L1 achieved claim)
+    assert load(BENCH)["current_maturity_level"] == "pre-BMK-L1"
 
 
 # ---- benchmark maturity / fields ----
@@ -210,9 +238,13 @@ def test_current_maturity_is_not_target_maturity():
     assert "maturity_level" not in d  # the old single field must be gone
 
 
-def test_benchmark_has_no_executable_task_yet():
+def test_executable_state_v1_historical_v2_mock_only():
+    # v1 stays a non-executable historical reconstruction.
     assert load(TASK_V1)["executable"] is False
-    assert load(TASK_V2)["executable"] is False
+    # v2 is executable ONLY via the mock provider; benchmark maturity unchanged.
+    assert load(TASK_V2)["executable"] is True
+    assert load(TASK_V2)["supported_providers"] == ["mock"]
+    assert load(BENCH)["current_maturity_level"] == "pre-BMK-L1"
 
 
 def test_maturity_not_claimed_achieved():

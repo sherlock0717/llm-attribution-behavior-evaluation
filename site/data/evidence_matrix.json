@@ -1,0 +1,132 @@
+{
+  "benchmark_object_model": {
+    "count": 10,
+    "data_source": "contract_and_mock_implementation",
+    "implemented_objects": [
+      "BenchmarkSpec",
+      "TaskSpec",
+      "ModelSpec",
+      "RunSpec",
+      "RunManifest",
+      "ResponseRecord",
+      "ScoreRecord",
+      "AggregateReport",
+      "ArtifactRef",
+      "FailureRecord"
+    ]
+  },
+  "generated_at": "2026-07-14T08:18:59+00:00",
+  "historical_evidence_levels": [
+    {
+      "evidence_level": "descriptive",
+      "id": "factual-check",
+      "title": "操纵检验反映出低结构与高结构条件的整体差异"
+    },
+    {
+      "evidence_level": "descriptive",
+      "id": "agency-condition-means",
+      "title": "行动者感（agency）按条件的均值"
+    },
+    {
+      "evidence_level": "derived",
+      "id": "agency-controlled-regression",
+      "title": "控制感知智能与文本长度后，决策过程对 agency 仍显著"
+    },
+    {
+      "evidence_level": "planned_contrast",
+      "id": "agency-planned-contrasts",
+      "title": "理由结构不是单纯的文本长度效应（agency 计划对比）"
+    },
+    {
+      "evidence_level": "derived",
+      "id": "freewill-controlled-regression",
+      "title": "自由意志归因：直接 process 效应不稳定"
+    },
+    {
+      "evidence_level": "exploratory_path_diagnostic",
+      "id": "parallel-mediation",
+      "title": "间接路径：process → agency → free_will_attribution"
+    },
+    {
+      "evidence_level": "exploratory_path_diagnostic",
+      "id": "responsibility-exploratory",
+      "title": "责任归因（仅探索性）"
+    }
+  ],
+  "provenance_completeness": {
+    "author_attested_count": 1,
+    "dimensions": [
+      {
+        "dimension": "record_count",
+        "verification_status": "repository_verified"
+      },
+      {
+        "dimension": "condition_design_6x2x30",
+        "verification_status": "repository_verified"
+      },
+      {
+        "dimension": "scale_item_definitions",
+        "verification_status": "repository_verified"
+      },
+      {
+        "dimension": "historical_provider_is_deepseek",
+        "verification_status": "author_attested"
+      },
+      {
+        "dimension": "exact_model_server_snapshot",
+        "verification_status": "unknown"
+      },
+      {
+        "dimension": "exact_prompt_snapshot",
+        "verification_status": "unknown"
+      },
+      {
+        "dimension": "historical_stimulus_hash",
+        "verification_status": "unknown"
+      },
+      {
+        "dimension": "current_stimulus_definition",
+        "verification_status": "reconstructed"
+      },
+      {
+        "dimension": "request_timestamp",
+        "verification_status": "unknown"
+      },
+      {
+        "dimension": "provider_request_id",
+        "verification_status": "unknown"
+      },
+      {
+        "dimension": "token_usage",
+        "verification_status": "unknown"
+      },
+      {
+        "dimension": "estimated_cost_usd",
+        "verification_status": "unknown"
+      },
+      {
+        "dimension": "retry_information",
+        "verification_status": "unknown"
+      },
+      {
+        "dimension": "item_level_missingness",
+        "verification_status": "unknown"
+      },
+      {
+        "dimension": "raw_response_public_availability",
+        "verification_status": "unknown"
+      }
+    ],
+    "note": "四种状态互不等价；author_attested / reconstructed 不得显示为已验证。",
+    "reconstructed_count": 1,
+    "repository_verified_count": 3,
+    "status_legend": {
+      "author_attested": "作者说明，仓库无法独立验证",
+      "reconstructed": "由当前代码重建，非历史运行产物",
+      "repository_verified": "可由仓库内容直接验证",
+      "unknown": "无证据；不得补写为确定事实（source map §11）"
+    },
+    "total_count": 15,
+    "unknown_count": 10
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "artifact_lifecycle": [
+    "aggregate_report",
+    "failures",
+    "model_spec",
+    "normalized_responses",
+    "prompt_snapshots",
+    "prompt_template",
+    "raw_responses",
+    "resolved_config",
+    "response_records",
+    "scores",
+    "scoring_spec",
+    "stimuli_snapshot",
+    "task_spec"
+  ],
+  "benchmark_id": "llm-attribution-behavior",
+  "current_maturity_level": "pre-BMK-L1",
+  "data_source": "mock_engineering_validation",
+  "generated_at": "2026-07-14T08:19:00+00:00",
+  "mock_execution_quality": {
+    "completed_record_count": 24,
+    "completion_rate": 1.0,
+    "failed_record_count": 0,
+    "planned_record_count": 24
+  },
+  "mock_output_quality": {
+    "final_parse_success_rate": 1.0,
+    "final_schema_compliance_rate": 1.0,
+    "first_attempt_parse_success_rate": 1.0,
+    "first_attempt_schema_compliance_rate": 1.0,
+    "missing_item_rate": 0.0,
+    "range_validity_rate": 1.0,
+    "repair_success_rate": null,
+    "repair_trigger_rate": 0.0,
+    "response_length_chars": 1830
+  },
+  "pages_deployed": false,
+  "project_version": "0.2.0.dev0",
+  "real_model_pilot": "planned_not_run",
+  "release_status": "planned",
+  "reproducible_core": "implemented_mock",
+  "target_maturity_level": "BMK-L1",
+  "v2_executable_scope": "mock_provider_only",
+  "v2_task_status": "implemented_mock"
+}
