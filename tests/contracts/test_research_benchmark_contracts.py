@@ -146,10 +146,12 @@ def test_v1_seed_and_model_are_reconstruction_only():
 
 
 # ---- v2 ----
-def test_v2_executable_false_and_status():
+def test_v2_mock_executable_status():
+    # FAST-001: v2 is implemented against the MOCK provider only.
     d = load(TASK_V2)
-    assert d["executable"] is False
-    assert d["status"] == "draft_specification"
+    assert d["executable"] is True
+    assert d["status"] == "implemented_mock"
+    assert d["supported_providers"] == ["mock"]
 
 
 def test_v2_response_schema_no_runner_owned_metadata():
@@ -178,9 +180,14 @@ def test_v2_construct_label_blinding_name_accurate():
     assert "construct_blinding" not in pc
 
 
-def test_v2_not_claimed_implemented():
+def test_v2_mock_only_not_real_and_open_questions_frozen():
+    # Mock-implemented, but must NOT claim a real provider or a real run.
     d = load(TASK_V2)
-    assert d["executable"] is False and d["status"] == "draft_specification"
+    assert d["supported_providers"] == ["mock"]
+    assert "implementation_decisions" in d
+    assert d["open_questions"] == []  # eight Q-* frozen into decisions
+    # benchmark maturity must remain pre-BMK-L1 (no BMK-L1 achieved claim)
+    assert load(BENCH)["current_maturity_level"] == "pre-BMK-L1"
 
 
 # ---- benchmark maturity / fields ----
@@ -210,9 +217,13 @@ def test_current_maturity_is_not_target_maturity():
     assert "maturity_level" not in d  # the old single field must be gone
 
 
-def test_benchmark_has_no_executable_task_yet():
+def test_executable_state_v1_historical_v2_mock_only():
+    # v1 stays a non-executable historical reconstruction.
     assert load(TASK_V1)["executable"] is False
-    assert load(TASK_V2)["executable"] is False
+    # v2 is executable ONLY via the mock provider; benchmark maturity unchanged.
+    assert load(TASK_V2)["executable"] is True
+    assert load(TASK_V2)["supported_providers"] == ["mock"]
+    assert load(BENCH)["current_maturity_level"] == "pre-BMK-L1"
 
 
 def test_maturity_not_claimed_achieved():

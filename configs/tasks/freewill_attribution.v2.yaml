@@ -113,20 +113,40 @@ evidence_boundary: >-
   blinded by default (semantics still present). Core run must not stitch separate API calls
   into one participant. Mediation is an associational indirect-path diagnostic.
 
-status: draft_specification
-executable: false
+# FAST-001: v2 is now implemented against the deterministic MOCK provider only.
+# executable=true means "runnable with the mock provider", NOT that a real-model
+# run exists and NOT that BMK-L1 is achieved (benchmark current_maturity stays
+# pre-BMK-L1). Real provider execution remains RUN-003 (separate authorization).
+status: implemented_mock
+executable: true
+supported_providers:
+  - mock
+
+# FAST-001: the eight v2 Open Questions are frozen into implementation decisions
+# for the first mock vertical slice. The design space is preserved for future
+# robustness variants, but the CORE mock run uses the decisions below.
+implementation_decisions:
+  Q-COND-1: keep the existing 6 conditions; add none; retain alternatives;
+    direct_choice_long and reasons_concise stay diagnostic conditions.
+  Q-ID-1: keep only "AI 决策者" / "人类决策者"; no neutral identity in first v2.
+  Q-OUT-1: core response emits no short_reason; explanation variant deferred.
+  Q-BATCH-1: core_batching = all_items; by_construct / single_item are future
+    robustness variants only (not part of the core run).
+  Q-REPAIR-1: max_repair_attempts = 1.
+  Q-EXPOSE-1: first core run has no construct-label-exposed control (that is BMK-002).
+  Q-MODEL-1: mock vertical slice is not bound to a real model; real provider/model
+    is a RUN-003 run configuration.
+  Q-N-1:
+    mock_smoke_n_per_cell: 1
+    mock_acceptance_n_per_cell: 2
+    real_smoke_n_per_cell: 1
+    real_pilot_n_per_cell: 5
+    formal_bmk_l1_sample_size: frozen_after_pilot
 
 failure_taxonomy_ref: ../../docs/benchmark/FAILURE_TAXONOMY.md
 analysis_plan_ref: ../../docs/protocols/freewill_attribution_v2.md
 
-open_questions:
-  - Q-COND-1
-  - Q-ID-1
-  - Q-OUT-1
-  - Q-BATCH-1
-  - Q-REPAIR-1
-  - Q-EXPOSE-1
-  - Q-MODEL-1
-  - Q-N-1
+# All eight Q-* Open Questions are now frozen (see implementation_decisions).
+open_questions: []
 
 legacy_metadata: {}
