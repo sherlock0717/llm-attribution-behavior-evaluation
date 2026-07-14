@@ -500,3 +500,98 @@
 9. **未运行完整 pytest**：是（仅 collect-only）。
 10. **未修改代码和 outputs**：是。
 
+## 2026-07-13 · SITE-002/003/004 · Static Showcase V1
+
+1. **分支与起始 HEAD**：`feat/showcase-v1`，起始 HEAD `8fc1d6a7f9678b3bbb707fbb2e70731214163e5d`（= PLAN/SITE merge），从 `refactor/v0.2-professionalization` 创建，工作区干净。
+2. **PLAN/SITE commit 与 merge**：commit `f4dc5f3f889544d8db13705870c26a49e999291d`（docs: rebaseline phases and define showcase contract）；非快进 merge `8fc1d6a7f9678b3bbb707fbb2e70731214163e5d`（merge: complete PLAN-001 and SITE-001）；已 `git branch -d docs/phase-and-showcase-plan`（was f4dc5f3）。
+3. **manifest**：`docs/showcase/site_manifest.yaml` 仅存人工维护静态信息（名称/定位/Hero/导航/研究问题/设计文案/流程/版本历史/roadmap 阶段名与状态/选用图表/边界/仓库相对链接）；不含任何可计算动态数字（360/6/2/30/回归 F/p/中介/图表 Hash/版本/Git SHA）。
+4. **build script**：`scripts/build_site_data.py`，只读源文件、不写 outputs、不联网、不调 API、不跑研究脚本、不重估模型；缺文件/列/指标/单元格即失败、不猜测；输出 UTF-8/indent=2/sort_keys；`--check` 内存重建比较（generated_at 作为构建信息排除在数据内容等值之外）→ “site data is up to date”。
+5. **四份 JSON 关键字段**：`site_summary.json`（project_version=0.2.0.dev0、source_commit=8fc1d6a…、data_as_of_date=2026-07-13、historical_record_count=360、process/identity=6/2、n_per_cell=30、historical_provider=DeepSeek API、local_engineering_status=completed、release_verification_status=pending_verification、benchmark_status=planned、token/cost/model snapshot=null）；`roadmap.json`（phases×8 + track_s×5，phase-1 = current+completed+pending_verification，phase-6=planned）；`version_history.json`（v0.1/v0.2/future）；`historical_results.json`（7 claims + 3 figures）。
+6. **数据来源**：pyproject.toml、configs/study.default.yaml、docs/audit/v1_provenance_statement.md、site_manifest.yaml、outputs/scale_scores.csv、outputs/controlled_regression_summary.csv、outputs/planned_contrasts.csv、outputs/parallel_mediation_summary.json、outputs/n30_stability_replication_report.md、三张选定 PNG；git rev-parse/commit date。
+7. **历史数字提取**：factual check（n30 报告表）、agency 条件均值（n30 报告表）、agency 控制回归（controlled_regression_summary.csv dv=agency spec=control_both，F≈12.19）、agency 计划对比（planned_contrasts.csv dv=agency）、free_will 控制回归（dv=free_will_attribution spec=control_both）、并行中介（parallel_mediation_summary.json，固定 exploratory_path_diagnostic）、责任归因（无数字、含来源与探索性标签）；每 metric 带 source_file+source_field，未在 HTML 硬编码统计值。
+8. **图表复制与 Hash**：复制 mean_agency.png（8611DBD9…）、mean_free_will_attribution.png（0814EE77…）、mean_subjective_process_completeness.png（66810828…）至 site/assets/figures/，复制前后 SHA-256 一致；未修改/重绘；historical_results.figures 记录源图 SHA-256。
+9. **页面结构**：`site/index.html` 10 栏目（Hero/Research Question/Experimental Design/Pipeline/Historical Results/Evidence And Limitations/Reproducibility/Version History/Roadmap/Repository Links）；原生 HTML/CSS/JS，无 CDN/外部字体/第三方 JS/远程 API/inline handler；语义化、响应式、键盘可访问、focus 样式、图有 alt+caption、prefers-reduced-motion；JS 加载四份 JSON，失败显式报错；状态徽章区分 Historical/Completed/Current/Planned/Pending verification；Hero 显示 360 / 6×2 / 30 / DeepSeek historical baseline / 本地基础完成 / 发布验证待完成（均由 JSON 注入）。
+10. **README 更新**：新增 v0.2 定位与数据边界、package CLI、两个 wrapper、schema/config 未接入正式 runner、CI configured/remote verification pending、本地展示页预览命令；旧 v0.1 入口移入 Legacy/Historical workflow；加 Method/Results/Limitations/Roadmap 链接；未写 Pages URL、未写 CI passing、未写成熟 benchmark；未改 L43-56 核心结果数字。
+11. **targeted tests**：`pytest tests/site -q` = 26 passed；`build_site_data.py --check` exit 0；`compileall scripts/build_site_data.py tests/site` exit 0。
+12. **HTTP smoke**：临时端口启动 `http.server --directory site`，请求 /、index.html、css、js、四份 JSON、三张图 → 全部 HTTP 200；随后关闭服务器，无长期后台进程。
+13. **其他检查**：HTML 解析 ok；README/site README 相对链接缺失 0；敏感值扫描仅命中 README Legacy 段 `DEEPSEEK_API_KEY = "你的 …Key"` 占位指令（非真实密钥值）；本地绝对路径 0；`git diff --check` exit 0。
+14. **collect-only 数量**：`pytest --collect-only -q` = 212（186 既有 + 26 新增 site）。
+15. **视觉浏览器自动化未执行**：本机未使用浏览器自动化，未安装浏览器、未扩大范围；仅完成本地 HTTP smoke。
+16. **未完整 pytest / 未 API / 未改 outputs / 未 push / 公开部署仍待授权**：均满足；`git diff -- outputs` 为空；未 commit/merge 页面分支；公开 Pages 部署待用户授权（REL-001）。
+
+---
+
+## 2026-07-14 · SITE-005 · Showcase Content And Visual Redesign
+
+1. **分支与起始 HEAD**：继续在 `feat/showcase-v1`（规则 A：分支已存在且有未提交页面变更）；起始 HEAD `8fc1d6a7f9678b3bbb707fbb2e70731214163e5d`；未新建分支、未覆盖已有修改。
+2. **页面审查范围**：完整阅读 `site/index.html`、`site/assets/css/site.css`、`site/assets/js/site.js`、`site/data/*.json`、`site/README.md`、`docs/showcase/site_manifest.yaml`、`scripts/build_site_data.py`、`tests/site/**`、`README.md`、`SHOWCASE_CONTENT.md`、`SITE_DATA_CONTRACT.md`、`PUBLIC_ASSET_INVENTORY.md`、`SHOWCASE_PLAN.md`、`configs/study.default.yaml`、`outputs/plots/`（列表）。产出 `docs/showcase/SHOWCASE_REDESIGN_AUDIT.md`（10 小节 + REDESIGN_AUDIT=PASS）后才修改页面。
+3. **主要 AI 感来源**：定位口号三处重复（meta/tagline/manifest）；"通过……的方式，观察……""系统改变……观察是否"模板句；边界声明"AI 模拟数据；非人类被试；单一模型"在页脚/每图/每 claim 重复堆叠；Pipeline/Evidence/Reproducibility 均为等长 `<li>` 平铺；全页无作者第一人称。
+4. **文案重写范围**：Hero、Research Question、Experimental Design、Pipeline、Historical Results 导读、Evidence、Reproducibility、Roadmap、Repository Links 文案整体按作者口吻重写；未改研究事实/统计结果/样本结构/状态标签/证据边界/版本事实/文件来源。
+5. **页面结构变化**：Hero 改左右双栏（介绍 + 概览面板 + Research/Engineering 双状态线）；Research Question 分研究缘起/实际比较/不研究什么/三问卡；Experimental Design 加 6×2 矩阵 + Historical/Mock 对照 + 数据来源/测量维度/实验单元卡；Pipeline 改原生流程图 + current/future 对照；Historical Results 改双列 + 首图整行大图 + `<details>` 统计 + 比较条；Evidence 改 Directly/Partially/Not claimed 三栏 + Data authenticity/Run auditability/Full reproducibility 三态 + 三个 `<details>`；Reproducibility 加组件链 + 能/不能复现两栏；Version History 时间线 4 节点；Roadmap 当前高亮/未来弱化 + 交付 `<details>`；Repository Links 改任务入口 + 用途。
+6. **新增原生可视化（≥5，实为 8）**：6×2 设计矩阵、Pipeline 状态流程图、Historical/Mock 对照、Evidence 三栏边界、Phase+Track S 路线图高亮、条件比较条、复现组件链、版本时间线。均由 JSON/manifest 驱动，`<noscript>` 保留文字兜底。
+7. **使用的仓库图表与完整 SHA-256（复用，无新增）**：
+   - `mean_agency.png` `8611DBD905130582FC49A1AF44724854EAFE5EA62D756379CDA5F1A851B6CE04`
+   - `mean_free_will_attribution.png` `0814EE77E3B09815F1CF1545F8DA4DE50433E528F3183B627D4C92EAB3DC10C7`
+   - `mean_subjective_process_completeness.png` `66810828D1B9816D7F41EA624BE82B4C2BE958FB2A7A0D91E0A30C058736FE54`
+   页面复制件与 `outputs/plots/` 源图逐字节一致（`test_figures_match_source_hashes` 通过）；放大展示 + `<dialog>` 灯箱。
+8. **新增视觉占位数量**：2（VIS-002 过程结构梯度、VIS-003 中介路径图），带 `data-visual-id`、显示 "Visual asset pending"、不显示破损图、不影响主内容；VIS-001 仅作候选未放置。
+9. **VISUAL_ASSET_BRIEF**：`docs/showcase/VISUAL_ASSET_BRIEF.md`，VIS-001/002/003 含页面位置/图名/用途/为何现有资产不足/类型/尺寸/宽高比/配色/必含/禁含/alt/caption/生图提示词/可否 SVG 代替/状态。
+10. **DELIVERY_PACKAGE_GUIDE**：`docs/showcase/DELIVERY_PACKAGE_GUIDE.md`，定义 Content/Visual/Site Code/Research Evidence/Review 五类包 + PACKAGE_MANIFEST 字段 + 接收→临时目录→敏感检查→审查→冲突→建议落库→人工确认→分批写入→targeted validation→等待提交授权流程；明确不直接覆盖仓库。
+11. **数据与 manifest 变化**：`build_site_data.py` 新增 `_design_block`（site_summary 增 `design`：process_conditions key/label/note、identity_labels、n_per_cell、total_records，均派生/校验，不手写）；manifest 校正 Track S（site-002/003/004 → completed）、新增 site-005（current）、version_history 扩为 v0.1/v0.2/next/future；`SITE_DATA_CONTRACT.md` 登记 design 块。研究结果数值未改。
+12. **README 更新**：仅"展示页与文档"段落，补充原生可视化与历史/mock、当前/未来区分说明；未写线上地址、未写 CI passing。
+13. **targeted tests**：`build_site_data.py --check` = "site data is up to date"（exit 0）；`pytest tests/site -q` = 26 passed；`compileall scripts/build_site_data.py tests/site` exit 0。
+14. **collect-only 数量**：`pytest --collect-only -q` = 212，无收集错误。
+15. **HTTP smoke**：临时端口 8137 启动 `http.server --directory site`，/、index.html、css、js、四份 JSON、三张图 → 全部 HTTP 200；随后 Stop-Process，无后台残留。
+16. **静态检查**：HTML 无硬编码统计值（"360"/"F = "/"p < ." 等，已移除误留的 "360"）、无 inline onclick、无空 href、`<script>/<link>` 均本地；JS 无 `https?://`、无 `import…from`、无 eval/innerHTML/远程请求；CSS 有 CSS variables、focus-visible、prefers-reduced-motion、1024/768/390 断点、正文 17px（390 断点 16px）。
+17. **浏览器视觉自动化未执行**：为遵守"不安装浏览器/前端工具"，本机未使用现成浏览器自动化，**未执行截图**，不声称视觉检查通过；建议人工 `python -m http.server 8000 --directory site` 本地视觉审核。
+18. **保护检查**：`git diff -- outputs` 为空；`src/**`、`configs/**`、`.github/**`、`pyproject.toml`、`requirements.txt`、`uv.lock`、`scripts/run_all.*`、`run_all.ps1`、`tests/unit|integration|characterization/**` 均无改动；未引入 Node/package.json/node_modules/外部依赖。
+19. **停止状态**：未 commit / 未 merge / 未 push / 未部署 / 未建新分支 / 未调用 API / 未改历史 outputs / 未运行完整 pytest；停在 `feat/showcase-v1` 未提交，等待人工视觉与文案审核。
+
+---
+
+### SITE-005.1 · Accuracy And Release-Safe Showcase Data
+
+- **分支与状态**：`feat/showcase-v1`，起始 HEAD `8fc1d6a7f9678b3bbb707fbb2e70731214163e5d`；变更全部落在 SITE-005 已批准范围；SITE-005 状态仍为 **Current / awaiting human visual approval**，未标为公开发布完成。
+- **source_commit 自引用问题**：原 `build_site_data.py` 用 `git rev-parse HEAD` 生成 `source_commit`，页面提交后 HEAD 变化会使已提交的 `site_summary.json` 立即过期、`--check` 失败。
+- **研究源提交语义**：新增 `RESEARCH_SOURCE_PATHS`（outputs 分析文件 + 三张选定图 + `configs/study.default.yaml` + provenance 声明）与 `_latest_source_commit()`（`git log -1 --format=%H -- <paths>`）；`source_commit` 改为研究数据/设计输入最近一次变化的 commit（实测 `a347bdb1845e56fa3fed3e6c64fed511524b84fc`，≠ HEAD），`data_as_of_date` 取该 commit 的提交日期（2026-07-13）；页脚"数据来源提交"→"研究数据源提交"。
+- **失效相对链接**：移除 `../docs/...`、`../outputs/...` 本地相对链接；页面内部改锚点（Method→#experimental-design、Results→#historical-results、Limitations→#evidence-limitations、Roadmap→#roadmap），外部仅保留 GitHub repo 根链接，具体仓库文件以 `<code>` 路径 + "位于 GitHub 仓库中"展示，永久链接待 REL-001。
+- **Pipeline 状态修正**：拆为 Historical research path（条件与刺激 / Prompt 构造〔exact prompt snapshot/hash unavailable〕/ DeepSeek API 响应 / 解析与量表记录 / 分析与报告）、Current engineering layer（Package·safe paths·wrapper=Completed locally / Schema·config=Partial / 站点导出·展示页=Current）、Planned；纠正原"配置与基础组件"把 `configs/`、`src/freewill_attribution/` 误标 Historical；注明 `prompt.v1.yaml` 是当前配置组件，不替代历史精确 prompt snapshot/hash。
+- **Windows/Git Bash/Linux 表述修正**："在 Windows 本地使用锁定依赖跑通 mock 流程；Bash wrapper 完成 Git Bash compatibility validation"，"真实 Linux 与 GitHub-hosted Windows/Linux 验证仍待发布阶段完成"；不把 Git Bash 称为 Linux 验证。
+- **VIS-002 原生替换**：删除占位，改由 `site_summary.design.process_conditions` 驱动的 Process Structure Gradient（低→高结构，六节点显示序号/key/中文标签/note/层级；`direct_choice_long` 标 Length-control diagnostic）；`<noscript>` 兜底；VISUAL_ASSET_BRIEF 状态 → `resolved_with_native_web_visual`。
+- **VIS-003 原生替换**：删除占位，扩展 `historical_results.json` mediation metrics（estimate/ci_low/ci_high/crosses_zero/path_role，不从 display 反解析），新增原生 Exploratory Path Diagram（主路径 process→agency→free-will、次路径 process→perceived_intelligence→free-will，显示间接效应估计/CI/是否跨 0/Exploratory/非机制证明）；VISUAL_ASSET_BRIEF 状态 → `resolved_with_native_svg_or_html`。页面**不再出现 "Visual asset pending"**。
+- **factual check 表述收紧**：标题改"操纵检验反映出低结构与高结构条件的整体差异"；摘要改"高结构整体高于低结构；两个低结构诊断条件不构成严格单调序列"；不声称严格单调或六类两两显著。
+- **中介区间表述**："在该探索性分析中 agency 间接效应区间未跨 0；perceived_intelligence 间接效应区间跨 0"；不写稳定机制/机制已确认/因果中介已证明。Evidence 三栏同步。
+- **read_note 数据化**：移除 JS `FIGURE_READS`；manifest figures_selected.items 增 `read_note_zh`，build 输出到 `figures[*].read_note`，JS 用 `fig.read_note`；比较条主标签改中文 label、key 作次级 `<code>`。
+- **新增测试**：`tests/site` +18（26→44）：source_commit=研究源提交、data_as_of 对应该提交、页面无 Visual asset pending / VIS-002 / VIS-003、无 `href="../"`、所有本地 href 可解析、mediation 结构化字段、agency CI 未跨 0 / 感知智能 CI 跨 0、figures 有 read_note、JS 无 FIGURE_READS、Pipeline 不把 `src/freewill_attribution/` 标 Historical、页面无"Windows/Linux 本地跑通"、factual 文案不过度声称、design 六条件 + length-control。
+- **targeted 验证**：`build_site_data.py`（写）ok；`--check` = "site data is up to date"；`pytest tests/site -q` = **44 passed**；`compileall` exit 0；`pytest --collect-only -q` = **230**；HTTP smoke（127? 用 localhost 的 Invoke-WebRequest）/、css、js、四份 JSON、三图 = 全 200，bad=0。
+- **浏览器截图结果**：本机存在 Edge（`C:\Program Files (x86)\...\msedge.exe`），无 CDP。headless 截图初次得到 `ERR_CONNECTION_REFUSED` 错误页（Edge 将 `localhost` 解析到 IPv6，与 `http.server` 的 IPv4 绑定不匹配）；改用 `127.0.0.1` 的重试命令被用户拒绝。**因此本轮浏览器视觉验证未完成、不声称通过**；那张错误页截图无效、应忽略。建议人工 `python -m http.server 8000 --directory site` + 浏览器本地审核。
+- **保护检查**：`git diff -- outputs` 为空；`src/**`、`configs/**`、`.github/**`、`pyproject.toml`、`requirements.txt`、`uv.lock`、`scripts/run_all.*`、`run_all.ps1`、`tests/unit|integration|characterization/**` 无差异；`git diff --check` exit 0；site 目录敏感信息/绝对路径扫描 0 命中。
+- **未运行完整 pytest / 未修改 outputs / 未调用 API / 未 push / 未 commit / 未 merge / 未部署 / 未建新分支**：均满足。停在 `feat/showcase-v1` 未提交，重新等待人工视觉与文案审核。
+
+---
+
+### SITE-005.2 · Runtime Completion, Mobile Layout And Concept Visual
+
+- **分支与状态**：`feat/showcase-v1`，起始 HEAD `8fc1d6a7f9678b3bbb707fbb2e70731214163e5d`；变更均在允许范围；SITE-005 仍为 **Current / awaiting human visual approval**，未标为 public release complete。
+- **输入图片检查**：`fcdb0f90-6a14-4e45-9412-9b6325cf17a3.png` 存在、PNG signature 正确、非空；大小 1,298,354 字节；1586×992；比例 1.5988（≈8:5）；SHA-256 `FFCC3139FD2FBE71CC9049F06CF718BBBFBB6C56E2BF37210C8268FF702BC7F7`；内容与研究主题相符（AI/人类主体 → 过程 → 归因输出），无水印/错误文字。
+- **导入与清理**：复制到 `site/assets/figures/attribution-research-concept.png`，源/目标 SHA-256 完全一致，字节未改；校验通过后删除根目录暂存副本（本轮授权）；`root_exists=False`、`target_exists=True`。
+- **figures 运行中断修复**：确认 `data-slot="figures"` 确实缺失（SITE-005.1 替换 VIS-003 块时误删），导致 `renderFigures` 崩溃并中断路径图/版本/路线图。已在 results 之后补回 figures 容器（含 `<noscript>` 兜底与导读），结果区顺序＝导读→claim→三张图→比较条→路径图。
+- **DOM slot 契约**：新增 `requireSlot`，核心容器改用它；`catch` 区分 `file:`/其他；成功写 `data-render-complete="true"`、失败写 `"false"`；`?diagnostics=1` 下双 rAF 写 doc/matrix/figures client/scroll 宽度。
+- **移动端溢出修复**：`.results`/`.figures`→`repeat(2,minmax(0,1fr))`、`.meta-cards`→`repeat(3,minmax(0,1fr))`；卡片加 `min-width:0`；caption/fig-read/code/flow-ref 加 `overflow-wrap:anywhere;word-break:break-word`；1024px 结果/图表单列；未用 `body{overflow-x:hidden}`。过程梯度改 6 列网格 + 独立 scale header，移动端单列，`direct_choice_long` 仍标 Length-control diagnostic。
+- **概念图接入**：Research Question 栏目（研究缘起/比较之后、三问之前）桌面左文右图（`.research-question-layout` 1.15fr:0.85fr），移动端上文下图；`object-fit:contain`；width=1586 height=992；未叠加像素文字，改图下三项图例（决策主体/过程描述/归因输出）。alt：AI 决策系统与人类决策者经过不同决策过程后被模型评估其能动性、自由意志归因和责任归因的概念示意；caption 含"该图只用于解释研究结构，不承载统计结果"。
+- **文档更新**：PUBLIC_ASSET_INVENTORY 新增概念插图条目（含 SHA、边界、local approved / public pending）；VISUAL_ASSET_BRIEF VIS-001 → `provided_and_integrated_for_local_preview`；site_manifest 新增 `conceptual_visuals`（不进 historical_results.figures，build 不读取）；SITE_DATA_CONTRACT/SHOWCASE_CONTENT/README/site README 同步；概念图不计入三张研究图。
+- **新增测试**：`tests/site` +13（44→57）：JS slot 全部存在于 HTML、figures slot 存在、requireSlot 用于核心容器、render 链路与 render-complete/diagnostics 标记、概念图存在/有效 PNG/尺寸与 HTML 一致/Hash 与清单一致/alt/caption 含边界/不在 historical figures/根目录副本已删、移动端网格 minmax+min-width+断词、无 body overflow-x hack。
+- **targeted 验证**：`--check` = "site data is up to date"；`pytest tests/site -q` = **57 passed**；`compileall` exit 0；`pytest --collect-only -q` = **243**。
+- **HTTP smoke（127.0.0.1）**：/、index.html、css、js、四份 JSON、三张历史图、概念图 = **全部 200，bad=0**。
+- **浏览器 dump-dom 与截图**：按要求以 `127.0.0.1` + Edge `--headless=new --dump-dom` + 截图设计了运行时校验与 6 张截图命令，但**该命令被用户拒绝执行**。因此 dump-dom 运行时断言（render-complete / figures=3 / path-row=2 / version=4 / phase=8 / track=6 / 概念图 / 无 pending）与截图**未执行、不声称通过**；未保留任何错误页。运行时修复以静态 DOM slot 契约测试验证。**未取得 390px document overflow 实测数值**（需浏览器），建议人工用 `?diagnostics=1` 核对。
+- **保护检查**：`git diff -- outputs` 为空；受保护路径（src/configs/.github/pyproject/requirements/uv.lock/run_all/tests unit-integration-char）无差异；`git diff --check` 干净；根目录不再有临时图片副本；无 Node/npm/外部依赖。
+- **未 commit / 未 push / 未部署 / 未调用 API / 未修改历史 outputs / 未运行完整 pytest**：均满足。停在 `feat/showcase-v1` 未提交，等待最终人工视觉审核。
+
+### SITE-005.2 收尾 · Deferred Validation 登记与人工提交准备（2026-07-14）
+
+- **优先级调整（本轮）**：浏览器自动截图与 390px 自动读取**不再作为当前提交阻断项**，统一登记为 deferred validation，留到 **Phase 7 发布验证**。本轮不再尝试被拒绝的浏览器命令，不安装任何工具。
+- **新增文档**：`docs/showcase/SHOWCASE_DEFERRED_REFINEMENTS.md`（文案自然度 / 内部流程不面向公众 / 数字图表化 / 页面清理时机 / §5 浏览器运行时与 390px 自动验证 deferred to Phase 7）。
+- **审计文档更新**：`SHOWCASE_REDESIGN_AUDIT.md` 追加验证登记：Browser runtime and 390px automated layout validation deferred to Phase 7 release validation；不声称浏览器视觉/移动端自动/GitHub Pages 已验证。
+- **重新执行的定向验证**：`--check` = site data is up to date；`pytest tests/site -q` = **57 passed**；`compileall` exit 0；`pytest --collect-only -q` = **243**；HTTP smoke（127.0.0.1:临时端口）index/css/js/四 JSON/三历史图/概念图 = **11/11 全 200**；概念图 signature ok、1586×992、SHA-256 `FFCC3139FD2FBE71CC9049F06CF718BBBFBB6C56E2BF37210C8268FF702BC7F7`；`git diff -- outputs` 为空；受保护路径无差异；`git diff --check` 干净；敏感信息扫描（api_key/access_token/secret/authorization/`C:\\Users\\`/.env value）在 site 与新增文档中 0 命中真实值。
+- **Git 决策**：遵循 AGENTS.md §二/§七——Agent **不执行** `git add/commit/merge/branch -d/push/switch`；仅准备变更并向作者输出精确人工提交命令（提交信息 `feat: complete local research showcase`，随后人工 `--no-ff` 合并入 `refactor/v0.2-professionalization` 并删除 `feat/showcase-v1`，不 push）。
+- **停止点**：输出人工命令后停止；在收到人工 merge SHA 前**不创建** `docs/research-and-benchmark-contract`、**不开始** RES-001 + BMK-001、不在展示页分支混入研究协议文件。

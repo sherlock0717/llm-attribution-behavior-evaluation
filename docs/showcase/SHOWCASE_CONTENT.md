@@ -1,5 +1,17 @@
 # 展示页首版完整文案（SITE-001）
 
+> **SITE-005 更新说明**：页面文案已在 `feat/showcase-v1` 分支按作者口吻整体重写（去模板化、去 AI 感），并把静态段落改为矩阵/流程图/证据三栏/时间线等原生可视化。本文件保留为首版基线文案与事实校对基准；**研究事实、统计结果、样本结构、状态标签、证据边界、版本事实、文件来源均未改变**。重构审查见 `SHOWCASE_REDESIGN_AUDIT.md`，最终页面以 `site/index.html` 为准。
+>
+> **SITE-005.1 措辞更正（以下表述取代本文件旧句，最终以 `site/index.html` 为准）**：
+> 1. 页脚"数据来源提交"改为"研究数据源提交"，语义为研究数据/设计输入最近一次变化的 commit（非 HEAD、非构建/部署 commit）。
+> 2. 操纵检验（§5）：由"随结构递增/模型能区分 6 类"改为"高结构条件的 factual manipulation check 整体高于低结构条件；两个低结构诊断条件不构成严格单调序列"，不声称严格单调或六类两两显著。
+> 3. 中介（§5）：由"间接路径稳定"改为"在该探索性分析中 agency 间接效应区间未跨 0；perceived_intelligence 间接效应区间跨 0"，不写稳定机制/机制已确认/因果中介已证明。
+> 4. Pipeline（§4）：分为 Historical research path / Current engineering layer / Planned 三层；`configs/`、`src/freewill_attribution/` 属当前工程组件，不再标为历史步骤；`prompt.v1.yaml` 为当前配置组件，不替代缺失的历史 prompt snapshot/hash。
+> 5. 跨平台（§7）：改为"在 Windows 本地使用锁定依赖跑通 mock 流程；Bash wrapper 完成 Git Bash compatibility validation；真实 Linux 与 GitHub-hosted Windows/Linux 验证仍待发布阶段完成"，不把 Git Bash 称为 Linux 验证。
+> 6. 仓库文件链接（§10）：不再用 `../` 本地相对链接；页面内部用锚点，外部仅保留 GitHub repo 根链接，具体文件以 `<code>` 路径 + "位于 GitHub 仓库中" 展示，永久链接待 REL-001。
+>
+> **SITE-005.2 追加**：Research Question 栏目接入用户提供的研究问题概念图（`site/assets/figures/attribution-research-concept.png`，1586×992，仅解释研究结构、不承载统计结果、不计入三张历史结果图）；修复 Historical Results 缺失 `data-slot="figures"` 导致的运行中断（三张图/路径图/版本/路线图现完整渲染）；修复 390px 页面级横向溢出；`figures`/`results`/`meta-cards` 改 `minmax(0,1fr)` 并对卡片加 `min-width:0` 与断词。
+
 > 本文件为静态展示页首版**可直接使用**的中文文案。栏目顺序与 `SHOWCASE_PLAN.md` §4 一致。
 > 页面可显示版本与阶段状态；内部任务编号仅在 Roadmap 技术详情中简述。
 > 所有数字来源见 `SITE_DATA_CONTRACT.md`；能力状态词遵循状态系统（Completed / Current / Planned / Historical / Pending verification）。

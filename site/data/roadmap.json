@@ -1,0 +1,154 @@
+{
+  "phases": [
+    {
+      "depends_on": [],
+      "evidence_ref": [
+        "docs/audit/repository_rebaseline_assessment.md"
+      ],
+      "id": "phase-1",
+      "local_status": "completed",
+      "name": "Engineering Foundation And Historical Baseline",
+      "release_status": "pending_verification",
+      "status": "current",
+      "summary": "本地工程基础完成；发布验证待完成。"
+    },
+    {
+      "depends_on": [
+        "phase-1"
+      ],
+      "evidence_ref": [],
+      "id": "phase-2",
+      "name": "Research Protocol Definition",
+      "status": "planned",
+      "summary": "冻结 v1/v2 研究协议、假设、条件、prompt 暴露策略、解析契约与分析计划。"
+    },
+    {
+      "depends_on": [
+        "phase-2"
+      ],
+      "evidence_ref": [],
+      "id": "phase-3a",
+      "name": "Reproducible V1 Run",
+      "status": "planned",
+      "summary": "正式 runner、RunManifest、resolved config、prompt snapshot、hashes、结构化失败。"
+    },
+    {
+      "depends_on": [
+        "phase-3a"
+      ],
+      "evidence_ref": [],
+      "id": "phase-3b",
+      "name": "Improved V2 Protocol And Run",
+      "status": "planned",
+      "summary": "盲化构念名、改进 prompt、修订批次、retry/repair、v1/v2 比较。"
+    },
+    {
+      "depends_on": [
+        "phase-3a"
+      ],
+      "evidence_ref": [],
+      "id": "phase-4",
+      "name": "Providers And Multi-Model Execution",
+      "status": "planned",
+      "summary": "provider abstraction、模型矩阵、并发、retry、rate limit、cost/token、模型快照。"
+    },
+    {
+      "depends_on": [
+        "phase-3a"
+      ],
+      "evidence_ref": [],
+      "id": "phase-5",
+      "name": "Analysis And Reporting",
+      "status": "planned",
+      "summary": "标准化分析输入、自动报告、图表、v1/v2 比较、稳健性、失败分析。"
+    },
+    {
+      "depends_on": [
+        "phase-4",
+        "phase-5"
+      ],
+      "evidence_ref": [],
+      "id": "phase-6",
+      "name": "Benchmark Track",
+      "status": "planned",
+      "summary": "task registry、benchmark_id、多任务/模型/运行（长期方向，非当前能力）。"
+    },
+    {
+      "depends_on": [
+        "phase-5"
+      ],
+      "evidence_ref": [],
+      "id": "phase-7",
+      "name": "Release And Audit",
+      "status": "planned",
+      "summary": "完整回归、GitHub-hosted Windows/Linux CI、provenance 审计、release、Pages 部署、在线链接校验。"
+    }
+  ],
+  "track_s": [
+    {
+      "depends_on": [],
+      "evidence_ref": [
+        "docs/showcase/SHOWCASE_CONTENT.md",
+        "docs/showcase/SITE_DATA_CONTRACT.md"
+      ],
+      "id": "site-001",
+      "name": "Showcase Content And Data Contract",
+      "status": "completed",
+      "summary": "信息架构、页面文案、证据边界、资产清单、数据契约。"
+    },
+    {
+      "depends_on": [
+        "site-001"
+      ],
+      "evidence_ref": [],
+      "id": "site-002",
+      "name": "Site Data Export",
+      "status": "completed",
+      "summary": "build_site_data.py 从仓库源文件派生站点 JSON。"
+    },
+    {
+      "depends_on": [
+        "site-001",
+        "site-002"
+      ],
+      "evidence_ref": [],
+      "id": "site-003",
+      "name": "Static Showcase MVP",
+      "status": "completed",
+      "summary": "原生 HTML/CSS/JS 静态展示页。"
+    },
+    {
+      "depends_on": [
+        "site-003"
+      ],
+      "evidence_ref": [],
+      "id": "site-004",
+      "name": "Local Showcase Validation",
+      "status": "completed",
+      "summary": "本地静态服务、JSON/路径校验、移动端布局、证据检查。"
+    },
+    {
+      "depends_on": [
+        "site-003",
+        "site-004"
+      ],
+      "evidence_ref": [],
+      "id": "site-005",
+      "name": "Public Showcase Content And Visual Redesign",
+      "status": "current",
+      "summary": "内容去模板化、信息层级与视觉结构重构、原生数据可视化。"
+    },
+    {
+      "depends_on": [
+        "site-004",
+        "phase-1"
+      ],
+      "evidence_ref": [],
+      "id": "rel-001",
+      "name": "Push, CI And Pages Release",
+      "release_status": "pending_verification",
+      "status": "planned",
+      "summary": "统一发布验证：完整回归、远程 CI、Pages 部署、在线链接校验（需 push 授权）。"
+    }
+  ]
+}
