@@ -5,11 +5,11 @@
 # scripts/build_site_data.py into site/data/*.json and read by the page.
 
 project:
-  name_zh: "大语言模型自由意志归因研究原型"
-  name_en: "LLM Free-Will Attribution Research Prototype"
-  tagline_zh: "一个面向可复现研究的大语言模型自由意志归因实验与模型行为评测原型。"
-  tagline_en: "A reproducibility-oriented experiment and model-behavior evaluation prototype for LLM free-will attribution."
-  subtitle_zh: "通过系统改变“决策过程”的呈现方式，观察大语言模型在扮演观察者时，如何对 AI 与人类决策者做出行动者感、自由意志与责任归因。"
+  name_zh: "LLM 归因行为评测"
+  name_en: "A Reproducible Study and Evaluation Prototype"
+  tagline_zh: "围绕模型如何对行动者的能动性、自由意志与责任作出归因，构建从历史研究、任务契约到可复现运行与证据审计的测试型评测基准。"
+  tagline_en: "A reproducible test-style evaluation benchmark for how models attribute agency, free will and responsibility."
+  subtitle_zh: "通过系统改变“决策过程”的呈现方式，观察模型在扮演观察者时，如何对 AI 与人类决策者作出能动性、自由意志与责任归因。"
 
 hero:
   status_labels:
@@ -243,7 +243,7 @@ repository_links:
   external:
     - id: "repo"
       label_zh: "GitHub 仓库"
-      target: "https://github.com/sherlock0717/llm-agent-free-will-attribution"
+      target: "https://github.com/sherlock0717/llm-attribution-behavior-evaluation"
   repo_file_paths:
     - path: "docs/research_design_blueprint.md"
       note_zh: "研究方法，位于 GitHub 仓库中"

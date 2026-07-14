@@ -1,6 +1,6 @@
-# Real Provider Readiness (REAL-SETUP-001)
+# 真实模型接入离线准备
 
-> Status block (authoritative for this round):
+> 本轮权威状态块：
 
 ```
 provider_adapter_status: offline_validated
@@ -17,45 +17,36 @@ actual_token_usage:      null
 actual_cost_usd:         null
 ```
 
-## What is done
+## 已完成的部分
 
-- A DeepSeek provider **adapter** exists (`src/freewill_attribution/providers/deepseek.py`)
-  with a dependency-injected client interface (`DeepSeekClientProtocol`). It does
-  **not** connect at import or init.
-- A **budget controller** (`src/freewill_attribution/budget.py`) using `Decimal`
-  with worst-case reservation, actual-usage commit, release, and a hard limit.
-- **Error classification** (401/402/429/500/503/400 → stable categories) validated
-  with fake exceptions only.
-- An **offline dry-run planner** (`runner.plan_dry_run`) that plans 12 (smoke) /
-  60 (pilot) records into `artifacts/plans/<plan_id>/` and produces **no**
-  responses, scores, usage, cost or latency.
-- CLI gates (`--real-api`, `--confirm-paid-run`, `--dry-run`, `--run-profile`,
-  `--provider deepseek`) and a hard refusal of any live run this round.
-- Full offline test coverage with sockets disabled and the API key never read.
+- 存在 DeepSeek provider **适配器**（`src/freewill_attribution/providers/deepseek.py`），采用依赖注入的客户端接口（`DeepSeekClientProtocol`）；**不会**在导入或初始化时联网。
+- **预算控制器**（`src/freewill_attribution/budget.py`）使用 `Decimal`，先按最坏情况预留、再按实际用量结算、支持释放与硬上限。
+- **错误分类**（401/402/429/500/503/400 → 稳定的错误类别），仅用伪造异常验证。
+- **离线 dry-run 规划器**（`runner.plan_dry_run`），把 12（smoke）/ 60（pilot）条记录规划到 `artifacts/plans/<plan_id>/`，**不产生**任何响应、分数、用量、费用或延迟。
+- CLI 门禁（`--real-api`、`--confirm-paid-run`、`--dry-run`、`--run-profile`、`--provider deepseek`），本轮对任何 live 运行一律硬拒绝。
+- 完整离线测试覆盖：禁用套接字，且从不读取 API Key。
 
-## What is explicitly NOT done
+## 明确未完成的部分
 
-This round did **not**:
+本轮**没有**：
 
-- read or check the real `DEEPSEEK_API_KEY`;
-- verify the actual DeepSeek **endpoint / base URL**;
-- verify the actual **model id**;
-- verify the actual **pricing**;
-- verify the actual **response fields** (request_id, system_fingerprint, usage);
-- verify actual **token accounting / billing**;
-- run any real **smoke** or **pilot**;
-- produce or analyze any **real model output**.
+- 读取或检查真实的 `DEEPSEEK_API_KEY`；
+- 核验真实的 DeepSeek **接口 / 基础地址**；
+- 核验真实的**模型 ID**；
+- 核验真实的**价格**；
+- 核验真实的**响应字段**（request_id、system_fingerprint、usage）；
+- 核验真实的 **token 记账 / 计费**；
+- 运行任何真实 **smoke** 或 **pilot**；
+- 产生或分析任何**真实模型输出**。
 
-No value labelled `fake` / `synthetic` / `test-only` / `null` in this codebase is
-a real-run measurement, and none is written into the public report as one.
+本仓库中任何标为 `fake` / `synthetic` / `test-only` / `null` 的值都不是真实运行的测量结果，也不会作为真实结果写入公开报告。
 
-## Credential isolation
+## 凭据隔离
 
-- The key lives ONLY in the environment variable `DEEPSEEK_API_KEY`.
-- It is read ONLY inside `DeepSeekProvider.load_api_key`, which runs ONLY on the
-  explicit live path after every gate passes.
-- Dry-run, unit tests and showcase builds never call it.
-- The key is never written into any config file, artifact, log, or error message.
-- `configs/model.deepseek.local.yaml` is `.gitignore`d and never committed.
+- 密钥只存在于环境变量 `DEEPSEEK_API_KEY`。
+- 只在 `DeepSeekProvider.load_api_key` 内读取，而该方法只在所有门禁通过后的显式 live 路径上运行。
+- dry-run、单元测试与展示页构建从不调用它。
+- 密钥绝不写入任何配置文件、产物、日志或错误信息。
+- `configs/model.deepseek.local.yaml` 已 `.gitignore`，绝不提交。
 
-See `docs/runs/REAL_PILOT_RUNBOOK.md` for the future run procedure.
+未来的真实运行流程见 `docs/runs/REAL_PILOT_RUNBOOK.md`。

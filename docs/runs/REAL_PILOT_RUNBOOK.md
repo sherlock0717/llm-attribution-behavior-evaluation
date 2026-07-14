@@ -1,49 +1,37 @@
-# Real Pilot Runbook (future, deferred)
+# 真实 Pilot 运行手册（未来，暂缓）
 
-> This runbook describes a FUTURE procedure. As of REAL-SETUP-001 no real run has
-> happened: `live_api_status: not_run`, `real_smoke_status: not_run`,
-> `real_pilot_status: not_run`. Do not claim any real run is complete.
+> 本手册描述的是**未来**流程。目前尚无任何真实运行：`live_api_status: not_run`、`real_smoke_status: not_run`、`real_pilot_status: not_run`。不得声称任何真实运行已完成。
 
-Follow these steps only when a real run is explicitly authorized and budgeted.
+仅在真实运行被显式授权并已列入预算时，才按以下步骤执行。
 
-1. **Read the official docs on the run day.** Model ids, base URL and pricing
-   change; treat all previously recorded values as stale.
-2. **Update `base_url`** in your local config to the current official API base URL.
-3. **Update `model_id`** to the current official model id.
-4. **Update the pricing snapshot**: fill `input_cache_hit`, `input_cache_miss`,
-   `output`, `checked_at`, `source`, and set `status: verified`.
-5. **Create the gitignored local config**: copy
-   `configs/model.deepseek.local.yaml.example` to
-   `configs/model.deepseek.local.yaml` (never commit it), then set
-   `enabled: true` and `live_api_allowed: true`.
-6. **Set the environment variable** (never store the key in a file):
-   - PowerShell: `$env:DEEPSEEK_API_KEY = "sk-..."`
-   - bash: `export DEEPSEEK_API_KEY="sk-..."`
-7. **Run the dry-run** and review the plan + readiness report:
+1. **运行当天先读官方文档。** 模型 ID、基础地址与价格会变化；把此前记录的一切值都视为过期。
+2. **更新 `base_url`**：把本地配置改为当前官方 API 基础地址。
+3. **更新 `model_id`**：改为当前官方模型 ID。
+4. **更新价格快照**：填写 `input_cache_hit`、`input_cache_miss`、`output`、`checked_at`、`source`，并设 `status: verified`。
+5. **创建 gitignored 的本地配置**：把 `configs/model.deepseek.local.yaml.example` 复制为 `configs/model.deepseek.local.yaml`（绝不提交），然后设 `enabled: true`、`live_api_allowed: true`。
+6. **设置环境变量**（绝不把密钥写入文件）：
+   - PowerShell：`$env:DEEPSEEK_API_KEY = "sk-..."`
+   - bash：`export DEEPSEEK_API_KEY="sk-..."`
+7. **先跑 dry-run**，检查计划与准备状态报告：
    ```
    python -m freewill_attribution.cli benchmark-run --provider deepseek \
      --dry-run --run-profile smoke \
      --model-config configs/model.deepseek.local.yaml \
      --artifact-root artifacts
    ```
-8. **Manually confirm the budget** against `budgets.*` and the verified pricing.
-9. **Run the 12-record smoke** (paid) only after confirming budget:
+8. **人工核对预算**：对照 `budgets.*` 与已核验价格。
+9. **仅在确认预算后，运行 12 条 smoke（付费）**：
    ```
    python -m freewill_attribution.cli benchmark-run --provider deepseek \
      --real-api --confirm-paid-run --run-profile smoke \
      --model-config configs/model.deepseek.local.yaml \
      --artifact-root artifacts
    ```
-10. **If smoke passes**, run the 60-record pilot with the same flags and
-    `--run-profile pilot`.
-11. **Generate and review a public, de-identified report** (aggregate only; no
-    API key, no raw per-request credentials). Only then may the showcase move
-    `real_smoke_status` / `real_pilot_status` off `not_run`.
+10. **若 smoke 通过**，用相同参数、`--run-profile pilot` 运行 60 条 pilot。
+11. **生成并审阅脱敏公开报告**（仅聚合；不含 API Key、不含逐请求原始凭据）。只有到这一步，展示页才可以把 `real_smoke_status` / `real_pilot_status` 移出 `not_run`。
 
-Safety invariants that always hold:
+始终成立的安全不变式：
 
-- No `--real-api` + `--confirm-paid-run` + verified config ⇒ no key is read and
-  no request is sent.
-- Historical `outputs/` is never modified; new runs write under
-  `artifacts/runs/<run_id>/` (gitignored).
-- Mock and dry-run values are never presented as real-model results.
+- 没有同时满足 `--real-api` + `--confirm-paid-run` + 已核验配置 ⇒ 不读取密钥、不发送任何请求。
+- 历史 `outputs/` 永不修改；新运行写入 `artifacts/runs/<run_id>/`（gitignored）。
+- mock 与 dry-run 的值永远不作为真实模型结果呈现。

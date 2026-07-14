@@ -1,7 +1,11 @@
 [project]
+# NOTE: the distribution name is an internal technical identifier kept stable to
+# avoid breaking uv.lock / build compatibility. The public brand is
+# "LLM 归因行为评测 (LLM Attribution Behavior Evaluation)"; public URLs below use
+# the new repository slug.
 name = "llm-agent-free-will-attribution"
 version = "0.2.0.dev0"
-description = "A reproducible LLM-simulated research prototype for free-will attribution."
+description = "LLM 归因行为评测｜A Reproducible Study and Evaluation Prototype: a reproducible test-style evaluation benchmark for how models attribute agency, free will and responsibility."
 readme = "README.md"
 requires-python = ">=3.12,<3.13"
 dependencies = [
@@ -16,6 +20,10 @@ dependencies = [
     "pydantic>=2.12,<3",
     "PyYAML>=6.0,<7",
 ]
+
+[project.urls]
+Homepage = "https://sherlock0717.github.io/llm-attribution-behavior-evaluation/"
+Repository = "https://github.com/sherlock0717/llm-attribution-behavior-evaluation"
 
 [dependency-groups]
 dev = [
