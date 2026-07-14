@@ -385,3 +385,88 @@ ul.tight li { margin: 5px 0; }
   html { scroll-behavior: auto; }
   * { animation: none !important; transition: none !important; }
 }
+
+/* --- Engineering core & validation (FAST-001) --- */
+.evolution {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+.evo-step {
+  min-width: 0;
+  border: 1px solid #d9dee6;
+  border-radius: 10px;
+  padding: 14px;
+  background: #fff;
+  border-top: 4px solid #b9c2cf;
+}
+.evo-step.is-done { border-top-color: #2f855a; }
+.evo-step.is-next { border-top-color: #b7791f; background: #fffdf6; }
+.evo-head { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.evo-idx {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 22px; height: 22px; border-radius: 50%;
+  background: #edf1f6; font-size: .8rem; font-weight: 700;
+}
+.evo-name { font-weight: 700; overflow-wrap: anywhere; }
+.evo-note { margin: 0; font-size: .86rem; color: #4a5568; overflow-wrap: anywhere; }
+
+.mock-quality { margin-top: 12px; display: grid; gap: 8px; }
+.mq-row { display: grid; grid-template-columns: minmax(0, 12rem) 1fr auto; gap: 10px; align-items: center; }
+.mq-label { min-width: 0; overflow-wrap: anywhere; font-size: .9rem; }
+.mq-track { background: #edf1f6; border-radius: 6px; height: 12px; overflow: hidden; min-width: 0; }
+.mq-fill { height: 100%; background: #2f855a; }
+.mq-val { font-variant-numeric: tabular-nums; font-weight: 700; }
+.mq-tag { font-size: .82rem; color: #718096; margin: 4px 0 0; }
+
+.prov-matrix {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.prov-cell {
+  min-width: 0;
+  border: 1px solid #d9dee6;
+  border-left-width: 4px;
+  border-radius: 8px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.prov-cell.known { border-left-color: #2f855a; }
+.prov-cell.unknown { border-left-color: #a0aec0; background: #f7f8fa; }
+.prov-dim { font-size: .82rem; font-weight: 600; overflow-wrap: anywhere; }
+.prov-type { font-size: .74rem; color: #718096; overflow-wrap: anywhere; }
+
+.artifact-chain {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.artifact-node {
+  min-width: 0;
+  border: 1px solid #d9dee6;
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-size: .8rem;
+  background: #f7f8fa;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 820px) {
+  .evolution { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .prov-matrix { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 480px) {
+  .evolution { grid-template-columns: 1fr; }
+  .prov-matrix { grid-template-columns: 1fr; }
+  .mq-row { grid-template-columns: 1fr; }
+}

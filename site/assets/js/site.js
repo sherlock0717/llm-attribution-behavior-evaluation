@@ -386,6 +386,101 @@ function renderRoadmapGroup(items, slot) {
 }
 
 // ---------------------------------------------------------------------------
+// Engineering core & validation (FAST-001): evolution, mock quality,
+// provenance completeness, artifact lifecycle. All mock values are labelled
+// mock_engineering_validation and are never real-model results.
+// ---------------------------------------------------------------------------
+function pct(value) {
+  if (value == null) return "—";
+  return Math.round(Number(value) * 100) + "%";
+}
+
+function renderEvolution(engineering, evaluation) {
+  const host = requireSlot("engineering-evolution");
+  host.textContent = "";
+  const stages = [
+    { name: "历史研究基线", state: "done",
+      note: "真实 DeepSeek API 历史数据；聚合结果与图表已产出。" },
+    { name: "可复现工程核心", state: "done",
+      note: "TaskSpec → Runner → Provider → Parser → Validation → Score → Manifest（当前成熟度 "
+        + (engineering.current_maturity_level || "pre-BMK-L1") + "）。" },
+    { name: "确定性 mock 验证", state: "done",
+      note: "mock 验收运行完成度 " + pct(engineering.mock_execution_quality
+        && engineering.mock_execution_quality.completion_rate) + "；仅验证工程链路。" },
+    { name: "真实模型试点", state: "next",
+      note: "尚未运行（" + (evaluation.planned_real_pilot
+        ? evaluation.planned_real_pilot.status : "planned_not_run") + "）；需单独授权。" },
+  ];
+  stages.forEach((s, i) => {
+    const li = el("li", { className: "evo-step is-" + s.state });
+    const head = el("div", { className: "evo-head" });
+    head.appendChild(el("span", { className: "evo-idx", text: String(i + 1) }));
+    head.appendChild(el("span", { className: "evo-name", text: s.name }));
+    li.appendChild(head);
+    li.appendChild(el("p", { className: "evo-note", text: s.note }));
+    host.appendChild(li);
+  });
+}
+
+function renderMockQuality(engineering) {
+  const host = requireSlot("mock-quality");
+  host.textContent = "";
+  const eq = engineering.mock_execution_quality || {};
+  const oq = engineering.mock_output_quality || {};
+  const rows = [
+    ["完成率", eq.completion_rate],
+    ["首答解析成功率", oq.first_attempt_parse_success_rate],
+    ["最终解析成功率", oq.final_parse_success_rate],
+    ["最终 schema 合规率", oq.final_schema_compliance_rate],
+    ["缺失题项率", oq.missing_item_rate],
+    ["范围有效率", oq.range_validity_rate],
+    ["repair 触发率", oq.repair_trigger_rate],
+  ];
+  rows.forEach(([label, value]) => {
+    const row = el("div", { className: "mq-row" });
+    row.appendChild(el("span", { className: "mq-label", text: label }));
+    const track = el("div", { className: "mq-track" });
+    const fill = el("div", { className: "mq-fill" });
+    fill.style.width = (value == null ? 0 : Math.round(Number(value) * 100)) + "%";
+    track.appendChild(fill);
+    row.appendChild(track);
+    row.appendChild(el("span", { className: "mq-val", text: pct(value) }));
+    host.appendChild(row);
+  });
+  const tag = el("p", { className: "mq-tag" });
+  tag.textContent = "确定性 mock 工程验证（provider=" + (engineering.mock_output_quality ? "mock" : "mock")
+    + "）；非真实模型结果。";
+  host.appendChild(tag);
+}
+
+function renderProvenance(evidence) {
+  const host = requireSlot("provenance-matrix");
+  host.textContent = "";
+  const pc = evidence.provenance_completeness || { dimensions: [] };
+  pc.dimensions.forEach((d) => {
+    const cell = el("div", { className: "prov-cell " + (d.verifiable ? "known" : "unknown") });
+    cell.appendChild(el("span", { className: "prov-dim", text: d.dimension }));
+    cell.appendChild(el("span", { className: "prov-type", text: d.evidence_type }));
+    host.appendChild(cell);
+  });
+}
+
+function renderArtifactChain(engineering) {
+  const host = requireSlot("artifact-chain");
+  host.textContent = "";
+  (engineering.artifact_lifecycle || []).forEach((role) => {
+    host.appendChild(el("li", { className: "artifact-node", text: role }));
+  });
+}
+
+function renderEngineeringCore(engineering, evaluation, evidence) {
+  renderEvolution(engineering, evaluation);
+  renderMockQuality(engineering);
+  renderProvenance(evidence);
+  renderArtifactChain(engineering);
+}
+
+// ---------------------------------------------------------------------------
 // Navigation: mobile toggle + scrollspy
 // ---------------------------------------------------------------------------
 function setupNav() {
@@ -463,15 +558,20 @@ async function main() {
   setupNav();
   setupDialog();
   try {
-    const [summary, roadmap, versions, results] = await Promise.all([
-      loadJSON("data/site_summary.json"),
-      loadJSON("data/roadmap.json"),
-      loadJSON("data/version_history.json"),
-      loadJSON("data/historical_results.json"),
-    ]);
+    const [summary, roadmap, versions, results, engineering, evaluation, evidence] =
+      await Promise.all([
+        loadJSON("data/site_summary.json"),
+        loadJSON("data/roadmap.json"),
+        loadJSON("data/version_history.json"),
+        loadJSON("data/historical_results.json"),
+        loadJSON("data/engineering_status.json"),
+        loadJSON("data/evaluation_summary.json"),
+        loadJSON("data/evidence_matrix.json"),
+      ]);
     renderHero(summary);
     renderDesign(summary);
     renderResults(results);
+    renderEngineeringCore(engineering, evaluation, evidence);
     renderVersions(versions);
     renderRoadmapGroup(roadmap.phases, "roadmap-phases");
     renderRoadmapGroup(roadmap.track_s, "roadmap-track");

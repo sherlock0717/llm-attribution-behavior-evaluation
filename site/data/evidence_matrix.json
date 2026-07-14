@@ -1,0 +1,138 @@
+{
+  "benchmark_object_model": {
+    "count": 10,
+    "data_source": "contract_and_mock_implementation",
+    "implemented_objects": [
+      "BenchmarkSpec",
+      "TaskSpec",
+      "ModelSpec",
+      "RunSpec",
+      "RunManifest",
+      "ResponseRecord",
+      "ScoreRecord",
+      "AggregateReport",
+      "ArtifactRef",
+      "FailureRecord"
+    ]
+  },
+  "generated_at": "2026-07-14T07:35:29+00:00",
+  "historical_evidence_levels": [
+    {
+      "evidence_level": "descriptive",
+      "id": "factual-check",
+      "title": "操纵检验反映出低结构与高结构条件的整体差异"
+    },
+    {
+      "evidence_level": "descriptive",
+      "id": "agency-condition-means",
+      "title": "行动者感（agency）按条件的均值"
+    },
+    {
+      "evidence_level": "derived",
+      "id": "agency-controlled-regression",
+      "title": "控制感知智能与文本长度后，决策过程对 agency 仍显著"
+    },
+    {
+      "evidence_level": "planned_contrast",
+      "id": "agency-planned-contrasts",
+      "title": "理由结构不是单纯的文本长度效应（agency 计划对比）"
+    },
+    {
+      "evidence_level": "derived",
+      "id": "freewill-controlled-regression",
+      "title": "自由意志归因：直接 process 效应不稳定"
+    },
+    {
+      "evidence_level": "exploratory_path_diagnostic",
+      "id": "parallel-mediation",
+      "title": "间接路径：process → agency → free_will_attribution"
+    },
+    {
+      "evidence_level": "exploratory_path_diagnostic",
+      "id": "responsibility-exploratory",
+      "title": "责任归因（仅探索性）"
+    }
+  ],
+  "provenance_completeness": {
+    "dimensions": [
+      {
+        "dimension": "record_count",
+        "evidence_type": "direct_file_evidence",
+        "verifiable": true
+      },
+      {
+        "dimension": "condition_design_6x2x30",
+        "evidence_type": "reconstructed_from_outputs",
+        "verifiable": true
+      },
+      {
+        "dimension": "scale_item_definitions",
+        "evidence_type": "direct_file_evidence",
+        "verifiable": true
+      },
+      {
+        "dimension": "historical_provider_is_deepseek",
+        "evidence_type": "historical_documentation",
+        "verifiable": true
+      },
+      {
+        "dimension": "exact_model_server_snapshot",
+        "evidence_type": "unknown",
+        "verifiable": false
+      },
+      {
+        "dimension": "exact_prompt_snapshot",
+        "evidence_type": "unknown",
+        "verifiable": false
+      },
+      {
+        "dimension": "prompt_hash",
+        "evidence_type": "unknown",
+        "verifiable": false
+      },
+      {
+        "dimension": "stimulus_hash",
+        "evidence_type": "reconstructed_from_code",
+        "verifiable": true
+      },
+      {
+        "dimension": "request_timestamp",
+        "evidence_type": "unknown",
+        "verifiable": false
+      },
+      {
+        "dimension": "provider_request_id",
+        "evidence_type": "unknown",
+        "verifiable": false
+      },
+      {
+        "dimension": "token_usage",
+        "evidence_type": "unknown",
+        "verifiable": false
+      },
+      {
+        "dimension": "estimated_cost_usd",
+        "evidence_type": "unknown",
+        "verifiable": false
+      },
+      {
+        "dimension": "retry_information",
+        "evidence_type": "unknown",
+        "verifiable": false
+      },
+      {
+        "dimension": "item_level_missingness",
+        "evidence_type": "unknown",
+        "verifiable": false
+      },
+      {
+        "dimension": "raw_response_public_availability",
+        "evidence_type": "unknown",
+        "verifiable": false
+      }
+    ],
+    "known_count": 5,
+    "note": "unknown 维度不得补写为确定事实（source map §11）。",
+    "total_count": 15
+  }
+}

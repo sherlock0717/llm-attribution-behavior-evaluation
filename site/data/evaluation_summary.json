@@ -1,0 +1,35 @@
+{
+  "generated_at": "2026-07-14T07:35:29+00:00",
+  "historical_deepseek": {
+    "boundary": "单一模型历史 AI 模拟数据；非人类被试；缺完整运行 provenance。",
+    "data_source": "historical_deepseek",
+    "data_type": "real_api_output",
+    "identity_condition_count": 2,
+    "n_per_cell": 30,
+    "process_condition_count": 6,
+    "provider": "DeepSeek API",
+    "record_count": 360
+  },
+  "mock_engineering_validation": {
+    "boundary": "确定性 mock 工程验证；非真实模型结果；不可解释为研究发现。",
+    "completed_records": 24,
+    "completion_rate": 1.0,
+    "data_source": "mock_engineering_validation",
+    "failed_records": 0,
+    "final_parse_success_rate": 1.0,
+    "final_schema_compliance_rate": 1.0,
+    "missing_item_rate": 0.0,
+    "model_id": "rule-based-v2",
+    "planned_records": 24,
+    "provider": "mock",
+    "repair_trigger_rate": 0.0
+  },
+  "planned_real_pilot": {
+    "boundary": "尚未运行；无任何真实模型结果；需单独授权。",
+    "data_source": "planned_real_pilot",
+    "provider_model": "decided_in_RUN-003",
+    "real_pilot_n_per_cell": 5,
+    "real_smoke_n_per_cell": 1,
+    "status": "planned_not_run"
+  }
+}
