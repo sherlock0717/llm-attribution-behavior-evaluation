@@ -194,3 +194,33 @@ def test_mediation_metrics_structured():
     for m in med["metrics"]:
         for field in ("estimate", "ci_low", "ci_high", "crosses_zero", "path_role"):
             assert field in m
+
+
+# --- CI-003: --check must be stable under a shallow (PR merge) checkout -----
+
+def test_check_ignores_git_derived_run_context():
+    """--check equality for site_summary.json must ignore run-context fields.
+
+    Under GitHub's PR merge commit (fetch-depth=1) only the merge commit is
+    visible, so ``git log`` over the research paths collapses to the merge SHA
+    and source_commit / data_as_of_date differ from the committed value. Those
+    fields, plus generated_at, must not trigger a spurious OUT OF DATE.
+    """
+    base = bsd.build_site_summary()
+    shifted = dict(base)
+    shifted["source_commit"] = "0" * 40
+    shifted["data_as_of_date"] = "1999-12-31"
+    shifted["generated_at"] = "1999-12-31T00:00:00+00:00"
+    assert bsd._comparable("site_summary.json", base) == bsd._comparable(
+        "site_summary.json", shifted
+    )
+
+
+def test_check_still_detects_research_content_drift():
+    """A genuine research-content change must still be reported as different."""
+    base = bsd.build_site_summary()
+    changed = dict(base)
+    changed["historical_record_count"] = base["historical_record_count"] + 1
+    assert bsd._comparable("site_summary.json", base) != bsd._comparable(
+        "site_summary.json", changed
+    )
