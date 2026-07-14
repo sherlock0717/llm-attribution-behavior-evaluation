@@ -49,7 +49,7 @@ def test_dry_run_smoke_plans_12_records(tmp_path):
         run_profile="smoke", seed=20260425, artifact_root=tmp_path,
     )
     assert result.planned_records == 12
-    requests = [json.loads(l) for l in (result.plan_dir / "request_plan.jsonl").read_text(encoding="utf-8").splitlines() if l.strip()]
+    requests = [json.loads(line) for line in (result.plan_dir / "request_plan.jsonl").read_text(encoding="utf-8").splitlines() if line.strip()]
     assert len(requests) == 12
 
 

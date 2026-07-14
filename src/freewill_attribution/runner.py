@@ -366,6 +366,7 @@ def run_benchmark(
         final_ratings: dict[str, int] = {}
         final_status = AttemptValidationStatus.NOT_VALIDATED
         parent_attempt_id: str | None = None
+        last_detail: dict = {}
 
         while True:
             base_prompt = prompting.render_prompt(row)

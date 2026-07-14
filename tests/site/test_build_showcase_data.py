@@ -90,8 +90,10 @@ def test_planned_contrasts_are_source_present_only():
 def test_build_is_deterministic():
     assert bsc.build_measurement_summary()["constructs"] == \
         bsc.build_measurement_summary()["constructs"]
-    a1 = bsc.build_analysis_results(); a1.pop("generated_at")
-    a2 = bsc.build_analysis_results(); a2.pop("generated_at")
+    a1 = bsc.build_analysis_results()
+    a1.pop("generated_at")
+    a2 = bsc.build_analysis_results()
+    a2.pop("generated_at")
     assert a1 == a2
 
 
