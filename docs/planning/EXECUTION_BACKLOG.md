@@ -24,14 +24,34 @@
 - **SITE-002 · Site Data Export** — 状态：**Complete**。已产出 `scripts/build_site_data.py`、`site/data/site_summary.json`、`roadmap.json`、`version_history.json`、`historical_results.json`（`--check` 通过）。
 - **SITE-003 · Static Showcase MVP** — 状态：**Complete**。已产出原生 HTML/CSS/JS 静态展示页（`site/`）。
 - **SITE-004 · Local Showcase Validation** — 状态：**Complete**。本地静态服务 HTTP smoke、JSON/路径校验、证据检查通过。
-- **SITE-005 · Public Showcase Content And Visual Redesign** — 状态：**Current / awaiting human visual approval**（Complete locally；public visual and deployment review pending）。文案去模板化/去 AI 感重写，信息层级与视觉结构重构，新增 6×2 设计矩阵、流程图、条件比较条、证据三栏、复现组件链、版本时间线、路线图高亮等原生可视化；复用同 3 张历史图并放大 + `<dialog>` 灯箱；新增 `SHOWCASE_REDESIGN_AUDIT.md`、`VISUAL_ASSET_BRIEF.md`、`DELIVERY_PACKAGE_GUIDE.md`；扩展 site_summary 的 `design` 块。
+- **SITE-005 · Public Showcase Content And Visual Redesign** — 状态：**Local implementation complete；Public refinement deferred to Phase 5/7；Deployment pending Phase 7**（已提交 `680de6c`、合并 `b375d5a`、推送 `origin/refactor/v0.2-professionalization`；公开发布未授权）。文案去模板化/去 AI 感重写，信息层级与视觉结构重构，新增 6×2 设计矩阵、流程图、条件比较条、证据三栏、复现组件链、版本时间线、路线图高亮等原生可视化；复用同 3 张历史图并放大 + `<dialog>` 灯箱；新增 `SHOWCASE_REDESIGN_AUDIT.md`、`VISUAL_ASSET_BRIEF.md`、`DELIVERY_PACKAGE_GUIDE.md`；扩展 site_summary 的 `design` 块。
 - **SITE-005.1 · Showcase Accuracy, Native Visuals And Release-Safe Data** — 状态：**Complete locally；SITE-005 仍为 Current / awaiting human visual approval，未标为公开发布完成**。修正 source_commit 自引用（改为研究源最近提交，`--check` 稳定）、移除 `../` 失效链接（锚点 + `<code>` 路径）、Pipeline 三层化并纠正 `src/freewill_attribution/` 误标 Historical、跨平台表述（Windows + Git Bash，非 Linux/远程）、VIS-002/003 原生替换（页面无 "Visual asset pending"）、factual/中介表述收紧、mediation 结构化字段（estimate/ci_low/ci_high/crosses_zero/path_role）、read_note 数据化（移除 JS FIGURE_READS）、比较条中文标签。targeted：`--check` 通过、`tests/site` 44 passed、collect-only 230、HTTP+链接检查全 200。停在未提交，重新等待人工视觉与文案审核。
-- **SITE-005.2 · Runtime Completion, Mobile Layout And Concept Visual** — 状态：**Complete locally；SITE-005 仍为 Current / awaiting human visual approval**。修复 Historical Results 缺失 `data-slot="figures"` 导致的 JS 运行中断（三张图/路径图/版本/路线图恢复渲染）；新增 `requireSlot` DOM slot 契约与 render-complete/diagnostics 标记；修复 390px 移动端横向溢出（`minmax(0,1fr)` + `min-width:0` + 断词）；过程梯度 6 列网格 + 独立 scale header；接入用户提供的研究问题概念图（`attribution-research-concept.png`，1586×992，SHA `FFCC3139…`，仅解释研究结构、不计入三张结果图），根目录暂存副本已删除。targeted：`--check` 通过、`tests/site` 57 passed、collect-only 243、HTTP smoke 12 项全 200。浏览器 dump-dom/截图命令被用户拒绝，故未做浏览器视觉/运行时验证（运行时经静态 slot 契约测试验证）。停在未提交。
+- **SITE-005.2 · Runtime Completion, Mobile Layout And Concept Visual** — 状态：**Complete locally；SITE-005 仍为 Current / awaiting human visual approval**。修复 Historical Results 缺失 `data-slot="figures"` 导致的 JS 运行中断（三张图/路径图/版本/路线图恢复渲染）；新增 `requireSlot` DOM slot 契约与 render-complete/diagnostics 标记；修复 390px 移动端横向溢出（`minmax(0,1fr)` + `min-width:0` + 断词）；过程梯度 6 列网格 + 独立 scale header；接入用户提供的研究问题概念图（`attribution-research-concept.png`，1586×992，SHA `FFCC3139…`，仅解释研究结构、不计入三张结果图），根目录暂存副本已删除。targeted：`--check` 通过、`tests/site` 57 passed、collect-only 243、HTTP smoke 12 项全 200。浏览器 dump-dom/截图命令被用户拒绝，故未做浏览器视觉/运行时验证（运行时经静态 slot 契约测试验证），已登记为 deferred validation（Phase 7）。展示页里程碑已人工授权提交并合并推送：commit `680de6cebb7c119f0bafb504e6fd069781a769fd`、merge `b375d5a421e6c7d46412dc262b14cc0e659bd251`、pushed `origin/refactor/v0.2-professionalization`；`feat/showcase-v1` 本地分支已删除；main 未改、未创建 PR。
 - **REL-001 · Push, CI And Pages Release** — 状态：**Planned / requires push authorization**。统一发布验证（完整回归、GitHub-hosted Windows/Linux CI、Pages 部署、在线链接校验），需用户 push 授权（Phase 7）。
 
-### 研究与运行主线
-- **RES-001 · Freeze V1 And V2 Research Protocols** — 依赖：PLAN-001。冻结 v1/v2 研究协议（RQ、假设、条件、prompt 暴露策略、解析契约、分析计划、成败判据）。
-- **RUN-001 · Reproducible V1 Runner** — 依赖：RES-001。正式 runner + RunManifest + resolved config + prompt snapshot + hashes + 结构化失败 + token/cost 可空。
+### 研究与运行主线（活动 ID 见下方权威表）
+- **RES-001 · Research Protocol And Benchmark Contract** — 状态：**Ready for review after RBC-001.1**。产出 `docs/audit/research_protocol_source_map.md`（`PROTOCOL_SOURCE_GATE=PASS`，`gate_scope: historical_protocol_reconstruction_only`）、v1 历史协议（historical_reconstructed, executable=false）、v2 协议（draft_specification, executable=false）。
+- **BMK-001 · Benchmark, Metric And Failure Contract** — 状态：**Ready for review after RBC-001.1**。产出 `BENCHMARK_SPEC.md`（benchmark_id=llm-attribution-behavior，current_maturity=pre-BMK-L1，target_maturity=BMK-L1，release_status=planned）、`METRIC_SPEC.md`、`FAILURE_TAXONOMY.md`、四份 YAML、契约测试。**current maturity: pre-BMK-L1；target maturity: BMK-L1**（不得写 BMK-L1 achieved）。不实现 runner/provider，不调用 API。
+- **RUN-001 · Reproducible Mock Run Core** — 状态：**Blocked pending contract approval**。范围：TaskSpec → Runner → Mock Provider → Raw Response → Parser → Validation → Score → RunManifest → Aggregate Report（仅 mock；真实 DeepSeek provider/budget/retry/resume/concurrency/真实 API 门禁属 RUN-003）。依赖：RES-001、BMK-001 审核通过 + v2 Open Questions 人工裁决 + 运行授权。
+
+<!-- ACTIVE_TASK_IDS_START -->
+RES-001 | Research Protocol And Benchmark Contract
+RES-002 | V2 Protocol Decision And Freeze
+RES-003 | V2 Stimulus Set Design And Freeze
+RES-004 | V2 Measurement And Construct Validation Plan
+BMK-001 | Benchmark, Metric And Failure Contract
+BMK-002 | Prompt Variant And Stability Protocol
+BMK-003 | Second Model And Cross-Model Comparison
+BMK-004 | Benchmark Metric Implementation
+BMK-005 | Task Card And Benchmark Card
+BMK-006 | Multi-Task Registry
+BMK-007 | Benchmark Release Specification
+RUN-001 | Reproducible Mock Run Core
+RUN-002 | V2 Task Pack Integration
+RUN-003 | Provider Interface And Run Control
+<!-- ACTIVE_TASK_IDS_END -->
+
+> 上表为 **RBC-001.1 权威活动任务 ID**。每个活动 ID 仅一个正式标题；本文件下方历史 backlog 中同号但不同含义的条目已标 **LEGACY**，不再作为活动任务。RUN-001 = Reproducible **Mock** Run Core（真实 provider/预算/重试/续跑/并发/真实 API 门禁在 RUN-003）。
 
 ### 发布
 - **REL-001 · Push, CI And Pages Release** — 依赖：SITE-004、Phase 1 local implementation、**用户 push 授权**。统一执行完整回归、GitHub-hosted Windows/Linux CI、Pages 部署、在线链接校验、release。
@@ -137,9 +157,11 @@
 
 ---
 
-## 研究协议（Phase 2，工程基础稳定后并行/其后）
+## LEGACY 研究协议草案（Phase 2 · 已被上方权威活动表取代）
 
-### RES-001 · 研究协议 v2（预定义假设）
+> **LEGACY**：本节任务编号为历史草案，已被"活动主线任务 ID 权威表"取代，**不得作为活动任务**。活动含义以权威表为准。
+
+### LEGACY RES-001(old) · 研究协议 v2（预定义假设）
 - 阶段：Phase 2 · 优先级：P1 · 前置：FND-005
 - 描述：撰写 `protocols/study_protocol_v2.md`：RQ、预定义假设、计划对比、变量独立性、随机化与平衡方案、证据等级预设。
 - 涉及文件（新增）：`protocols/study_protocol_v2.md`。
@@ -149,7 +171,7 @@
 - 验收标准：假设与后续分析口径一一对应。
 - 风险：与既有报告口径冲突。是否改变研究结果：是（表述）。需人工确认：是。推荐 Agent：研究。
 
-### RES-002 · 刺激材料 v2 设计与冻结
+### LEGACY RES-002(old) · 刺激材料 v2 设计与冻结
 - 阶段：Phase 2 · 优先级：P1 · 前置：RES-001、FND-004（输出隔离）
 - 描述：设计 v2：长度矩阵化控制、去元描述、valence 与 domain/fixed_choice 解耦、情境随机化；v1 冻结到 `data/stimuli/v1/`。
 - 涉及文件（新增）：`data/stimuli/v1/**`、`data/stimuli/v2/**`、`tests/unit/test_stimuli_v2.py`。
@@ -159,7 +181,7 @@
 - 验收标准：长度跨条件可控；无元描述；valence 独立。
 - 风险：改写偏离构念。是否改变研究结果：是。需人工确认：是（DEC 公开材料）。推荐 Agent：研究。
 
-### RES-003 · 题项去重与区分效度前置设计
+### LEGACY RES-003(old) · 题项去重与区分效度前置设计
 - 阶段：Phase 2 · 优先级：P2 · 前置：RES-001
 - 描述：针对 agency/autonomy/free_will/perceived_intelligence 重叠（M-06）设计区分度改写与 EFA/CFA 计划；补 factual check 不算 alpha（M-04）。
 - 涉及文件（新增）：`data/scales/v2/**`、`protocols/measurement_protocol_v2.md`。
@@ -170,9 +192,11 @@
 
 ---
 
-## 运行管线（Phase 3A / 3B）
+## LEGACY 运行管线草案（Phase 3A/3B · 已被上方权威活动表取代）
 
-### RUN-001 · provider 可替换接口 + mock/DeepSeek 单实现（Phase 3A）
+> **LEGACY**：本节任务编号为历史草案，已被权威活动表取代，**不得作为活动任务**。新 RUN-001 = Reproducible Mock Run Core；provider/预算/重试/续跑属 RUN-003。
+
+### LEGACY RUN-001(old) · provider 可替换接口 + mock/DeepSeek 单实现（Phase 3A）
 - 阶段：Phase 3A · 优先级：P1 · 前置：FND-006（schema）
 - 描述：定义**可替换** provider 接口 + `mock` + 单一 `deepseek` 实现；记录 retry/失败类型，**token/cost 允许缺失或 provider 不返回**；默认不真实调用。**不建多 provider 生态/多模型批量**。
 - 涉及文件（新增）：`.../providers/**`（单实现）。
@@ -181,7 +205,7 @@
 - 验收标准：接口可替换；DeepSeek 走 dry-run/契约测试。
 - 风险：密钥泄露/费用。是否改变研究结果：否。需人工确认：是（DEC-005 provider）。推荐 Agent：工程。
 
-### RUN-002 · run manifest 与运行目录（Phase 3A）
+### LEGACY RUN-002(old) · run manifest 与运行目录（Phase 3A）
 - 阶段：Phase 3A · 优先级：P1 · 前置：RUN-001、FND-004（输出隔离）
 - 描述：runner 生成完整 `artifacts/runs/<id>/`（manifest/config/env/prompts/stimuli/raw/normalized/validation/checksum）；使用**已冻结的 v1/mock 材料**（不依赖 v2）。
 - 涉及文件（新增）：`.../runner.py`（在最小 runner 上扩展）。
@@ -190,14 +214,14 @@
 - 验收标准：manifest 含全部**可得**溯源字段（token/cost 可空）；checksum 可校验。
 - 风险：resume 幂等。是否改变研究结果：否。需人工确认：否。推荐 Agent：工程。
 
-### RUN-004 · 将 stimuli v2 接入 runner（Phase 3B）
+### LEGACY RUN-004(old) · 将 stimuli v2 接入 runner（Phase 3B）
 - 阶段：Phase 3B · 优先级：P2 · 前置：RUN-002、RES-002（v2 冻结）
 - 描述：把冻结的 stimuli v2 接入同一 runner，v1/v2 并存可追溯。
 - 明确不修改：`outputs/**`、v1 文本 hash。
 - 验收命令：`python -m freewill_attribution.cli run --mock --stimuli v2 --out artifacts/runs/<id>`。
 - 验收标准：v2 可追溯运行；v1 hash 未变。是否改变研究结果：否。需人工确认：否。推荐 Agent：工程。
 
-### RUN-003 · resume / dry-run / 预算上限
+### LEGACY RUN-003(old) · resume / dry-run / 预算上限
 - 阶段：Phase 3 · 优先级：P2 · 前置：RUN-002
 - 描述：断点续跑、dry-run 预估调用数/费用、`max_calls`/`max_cost` 硬上限。
 - 涉及文件（改）：`.../study/runner.py`、`config.py`。
@@ -306,7 +330,9 @@ FND-001 → DOC-002（v1 provenance）
 
 ---
 
-## Future Strategic Backlog · Benchmark Evolution
+## LEGACY Future Strategic Backlog · Benchmark Evolution（已被权威活动表取代）
+
+> **LEGACY**：以下 `BMK-*` 历史草案编号已被上方权威活动表取代，不得作为活动任务。
 
 > 对应 DEC-011 与 `PROFESSIONALIZATION_PLAN.md` 的 `Strategic Horizon`。
 > 所有 `BMK-*` 任务统一标记：
@@ -317,26 +343,26 @@ FND-001 → DOC-002（v1 provenance）
 > ```
 > 未经作者人工批准，不得提前执行；不得为其预先创建大量空模块（防 R-16）。
 
-### BMK-001 · 多 prompt 配置与稳定性协议
+### LEGACY BMK-001(old) · 多 prompt 配置与稳定性协议
 - 成熟度：BMK-L2 · 描述：支持 blinded / exposed / batched 等 prompt 配置；统一版本与比较方法。
 - 前置：RUN-002 稳定。状态：Future。
 
-### BMK-002 · 第二模型接入与跨模型比较
+### LEGACY BMK-002(old) · 第二模型接入与跨模型比较
 - 成熟度：BMK-L3 · 描述：在 runner 稳定后接入一个额外模型，做跨模型比较；**不在当前 Phase 1 执行**。
 - 前置：RUN-001/002 稳定 + 作者批准。状态：Future。
 
-### BMK-003 · 统一模型行为指标
+### LEGACY BMK-003(old) · 统一模型行为指标
 - 成熟度：BMK-L2/L3 · 描述：定义条件敏感性、稳定性、方向一致性、prompt 依赖、模型间差异等指标。
 - 前置：BMK-001/002。状态：Future。
 
-### BMK-004 · Task Card 与 Benchmark Card
+### LEGACY BMK-004(old) · Task Card 与 Benchmark Card
 - 成熟度：BMK-L4 · 描述：为未来多任务扩展建立任务描述规范（任务卡/benchmark 卡）。
 - 前置：至少一个第二研究任务的真实需求。状态：Future。
 
-### BMK-005 · 多任务 registry 设计
+### LEGACY BMK-005(old) · 多任务 registry 设计
 - 成熟度：BMK-L4 · 描述：task registry 设计与实现；**仅在至少存在两个真实研究任务后执行**。
 - 前置：BMK-004 + 两个真实任务。状态：Future。
 
-### BMK-006 · Benchmark release 规范
+### LEGACY BMK-006(old) · Benchmark release 规范
 - 成熟度：BMK-L4 · 描述：版本、数据、模型、配置、评分、报告的统一发布规范；版本化 benchmark suite。
 - 前置：BMK-005。状态：Future。

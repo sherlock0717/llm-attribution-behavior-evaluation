@@ -1,0 +1,55 @@
+# Benchmark contract draft (NOT wired into any runner). RBC-001.1 corrected.
+benchmark_id: llm-attribution-behavior
+benchmark_version: "0.1-draft"
+title: LLM Attribution Behavior Benchmark
+description: >-
+  Benchmark contract for measuring a single LLM's attribution behaviour (agency,
+  free-will attribution and related constructs) as an observer of decision processes.
+  Contract draft only: no runner/provider implemented, no results.
+current_maturity_level: pre-BMK-L1
+target_maturity_level: BMK-L1
+release_status: planned
+license_status: unset
+created_at: "2026-07-14"
+source_commit: unknown
+source_commit_status: pending_contract_commit
+spec_ref: ../../docs/benchmark/BENCHMARK_SPEC.md
+
+task_ids:
+  - freewill-attribution-v1-historical
+  - freewill-attribution-v2
+
+task_refs:
+  - ../tasks/freewill_attribution.v1.yaml
+  - ../tasks/freewill_attribution.v2.yaml
+
+# Benchmark-level metric set = union of task metric_ids (all defined in metric registry).
+metric_ids:
+  - factual_process_check
+  - subjective_process_completeness
+  - agency
+  - free_will_attribution
+  - responsibility
+  - perceived_intelligence
+  - condition_sensitivity
+  - identity_effect
+  - construct_label_exposure
+  - provenance_completeness
+  - missing_item_rate
+  - first_attempt_parse_success_rate
+  - final_parse_success_rate
+  - first_attempt_schema_compliance_rate
+  - final_schema_compliance_rate
+  - range_validity_rate
+  - repair_trigger_rate
+  - repair_success_rate
+  - repeat_run_stability
+  - response_length_chars
+  - response_length_tokens
+
+metric_config_ref: ../metrics/attribution_metrics.v1.yaml
+
+notes: >-
+  current_maturity_level=pre-BMK-L1 (no reproducible run yet); target_maturity_level=BMK-L1.
+  No executable task exists this round: v1 is historical_reconstructed, v2 is draft_specification.
+  API key never appears in any spec, config, manifest, or log.

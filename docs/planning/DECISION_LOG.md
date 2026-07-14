@@ -241,3 +241,93 @@
 - Consequences：展示页 Evidence 栏与数据契约 provenance_status 字段据此表述。
 - Revisit condition：新可追溯运行产生后。
 - 状态：Decided
+
+### DEC-021 · Benchmark-first vertical slice
+- 日期：2026-07-14
+- 问题：先做通用平台还是先做单一垂直切片？
+- 最终决定：**采用 benchmark-first 垂直切片：先把单一任务家族的协议→契约→指标→失败分类打通，再谈横向扩展。**
+- Context：承接 DEC-011/R-16，避免过早通用化。
+- Consequences：RES-001 + BMK-001 只产出契约文档与 YAML，不建通用注册表。
+- Revisit condition：≥2 个稳定研究任务后。
+- 状态：Decided
+
+### DEC-022 · 首个任务家族限定为 attribution behavior
+- 日期：2026-07-14
+- 问题：首个 Benchmark 覆盖哪些任务？
+- 最终决定：**首个 benchmark（llm-attribution-behavior）只聚焦自由意志/归因行为任务家族。**
+- Context：与现有历史数据和研究问题一致。
+- Consequences：task_ids 仅含 v1-historical 与 v2。
+- Revisit condition：新增独立任务家族时。
+- 状态：Decided
+
+### DEC-023 · v1 为 historical reconstructed 且默认不可执行
+- 日期：2026-07-14
+- 问题：v1 历史协议的可执行性如何定位？
+- 最终决定：**v1 = historical_reconstructed，executable=false；不含历史精确 prompt/环境快照，不声称可逐字节复现。**
+- Context：承接 DEC-008/DEC-020 与 source map §11。
+- Consequences：v1 task YAML prompt_provenance 全部标 false/partial。
+- Revisit condition：出现历史精确快照证据时。
+- 状态：Decided
+
+### DEC-024 · v2 为首个正式可执行协议目标（当前仍 draft）
+- 日期：2026-07-14
+- 问题：哪个协议是第一个正式可执行目标？
+- 最终决定：**v2 是首个正式可执行协议目标，但当前状态为 draft_specification、executable=false；含 Open Questions 待人工裁决。**
+- Context：v2 针对 v1 已确认问题设计（盲化/repair/manifest）。
+- Consequences：RUN-001 前 v2 的 Open Questions 必须人工定案。
+- Revisit condition：Open Questions 全部裁决后。
+- 状态：Decided
+
+### DEC-025 · 当前成熟度目标 BMK-L1
+- 日期：2026-07-14
+- 问题：当前 benchmark 成熟度承诺到哪一级？
+- 最终决定：**只承诺 BMK-L1（单任务、单模型、可复现运行 + 重复稳定性）；L2–L4 为未来方向。**
+- Context：承接 DEC-011 Strategic Horizon。
+- Consequences：release_status=planned；不声称多模型/套件/公开 benchmark。
+- Revisit condition：L1 有正式结果并经人工批准后。
+- 状态：Decided
+
+### DEC-026 · 历史 outputs 与未来 artifacts 永久分离
+- 日期：2026-07-14
+- 问题：新运行产物是否可写入历史 outputs？
+- 最终决定：**历史 outputs/** 冻结不动；新运行写 artifacts/runs/**（未来），二者永久分离。**
+- Context：承接 FND-004 输出隔离与基线冻结。
+- Consequences：RunSpec.artifact_root 禁写 outputs/；path_safety 已强制。
+- Revisit condition：无（长期纪律）。
+- 状态：Decided
+
+### DEC-027 · API key 永不进入配置、Manifest 或日志
+- 日期：2026-07-14
+- 问题：凭证如何处理？
+- 最终决定：**API key 不属于 ModelSpec/RunSpec/RunManifest/任何配置或日志；仅通过环境变量在运行时读取，永不记录值。**
+- Context：安全纪律；承接 provenance 与失败分类。
+- Consequences：契约测试断言无 secret 字段；FAILURE_TAXONOMY 中 AUTH_FAILURE 不记录 key。
+- Revisit condition：无（长期纪律）。
+- 状态：Decided
+
+### DEC-028 · 内部 Phase/Task 编号不属于最终展示页内容
+- 日期：2026-07-14
+- 问题：内部编号是否进入公开页面？
+- 最终决定：**Phase 1–7、Track S、SITE/FND/RES/RUN/BMK 编号属内部管理结构，不作为最终公开页面正式内容。**
+- Context：承接 SHOWCASE_DEFERRED_REFINEMENTS §2。
+- Consequences：Phase 7 发布前用简化演进叙事替换。
+- Revisit condition：Phase 7 发布准备时。
+- 状态：Decided
+
+### DEC-029 · 展示页文案与数据图表更新延后至 Phase 5/7
+- 日期：2026-07-14
+- 问题：展示页文案自然度与数字图表化何时处理？
+- 最终决定：**统一延后至 Phase 5 报告层与 Phase 7 发布阶段；当前不手工伪造图表/数字。**
+- Context：承接 SHOWCASE_DEFERRED_REFINEMENTS §1/§3/§4。
+- Consequences：本轮不改展示页。
+- Revisit condition：Phase 5 报告层完成后。
+- 状态：Decided
+
+### DEC-030 · 本阶段不实现 runner/provider
+- 日期：2026-07-14
+- 问题：RES-001 + BMK-001 是否实现运行时？
+- 最终决定：**本阶段只定义协议与契约（文档 + YAML + 契约测试），不实现 runner、provider、真实 RunManifest，不调用真实 API。**
+- Context：承接 DEC-021 垂直切片纪律与本轮授权边界。
+- Consequences：运行时实现留待 RUN-001（需单独授权）。
+- Revisit condition：进入 RUN-001 且获人工授权后。
+- 状态：Decided

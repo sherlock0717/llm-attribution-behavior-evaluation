@@ -595,3 +595,45 @@
 - **重新执行的定向验证**：`--check` = site data is up to date；`pytest tests/site -q` = **57 passed**；`compileall` exit 0；`pytest --collect-only -q` = **243**；HTTP smoke（127.0.0.1:临时端口）index/css/js/四 JSON/三历史图/概念图 = **11/11 全 200**；概念图 signature ok、1586×992、SHA-256 `FFCC3139FD2FBE71CC9049F06CF718BBBFBB6C56E2BF37210C8268FF702BC7F7`；`git diff -- outputs` 为空；受保护路径无差异；`git diff --check` 干净；敏感信息扫描（api_key/access_token/secret/authorization/`C:\\Users\\`/.env value）在 site 与新增文档中 0 命中真实值。
 - **Git 决策**：遵循 AGENTS.md §二/§七——Agent **不执行** `git add/commit/merge/branch -d/push/switch`；仅准备变更并向作者输出精确人工提交命令（提交信息 `feat: complete local research showcase`，随后人工 `--no-ff` 合并入 `refactor/v0.2-professionalization` 并删除 `feat/showcase-v1`，不 push）。
 - **停止点**：输出人工命令后停止；在收到人工 merge SHA 前**不创建** `docs/research-and-benchmark-contract`、**不开始** RES-001 + BMK-001、不在展示页分支混入研究协议文件。
+
+## 2026-07-14 · RES-001 + BMK-001 · Research Protocol And Benchmark Contract
+
+1. **分支与起始 HEAD**：`docs/research-and-benchmark-contract`（从 `origin/docs/research-and-benchmark-contract` 创建 tracking 分支），起始 HEAD `b375d5a421e6c7d46412dc262b14cc0e659bd251`（= 展示页 merge SHA），工作区起始干净。
+2. **研究源检阅范围**：`src/{stimuli,scales,run_simulated_study,analyze_results}.py`、`configs/{study.default,prompt.v1,model.mock}.yaml`、`src/freewill_attribution/{schemas,config,runner,cli,paths}.py`、`outputs/**`（程序化核查 `scale_scores.csv`）、`docs/audit/v1_provenance_statement.md`；本地忽略文件（raw JSONL / wide CSV）程序化检查——**本地均不存在**且被 gitignore。
+3. **source map**：`docs/audit/research_protocol_source_map.md`（14 节；条件/身份/量表逐项直引文件位置）。
+4. **PROTOCOL_SOURCE_GATE**：`PASS`。
+5. **历史数据核验**：`outputs/scale_scores.csv` = **360 条**、22 列；`process_condition` 6 值各 60；`identity_label` {AI 决策者,人类决策者} 各 180；12 格 min=max=30（6×2×30）；SHA `c18bfa2c…`。10 构念 / 34 题项（`scales.py`）。
+6. **historical vs mock 区分**：provenance 声明确认 360 条为真实 DeepSeek API（非 mock_response）；CSV 无 provider 列，`synthetic=True` 为设计标记；区分依据 = 作者声明 + outputs 冻结基线 + mock 只写显式 `--out`。
+7. **prompt 证据**：由 `build_prompt()` 内联构造（暴露构念名，`expose_construct_names=true`）；历史精确 snapshot/hash **未归档**（unknown）；`prompt.v1.yaml` 仅 `legacy-inline-v1` 引用，非历史 prompt 正文。
+8. **v1 协议**：`docs/protocols/freewill_attribution_v1_historical.md`，`status=historical_reconstructed`，`executable=false`。
+9. **v2 协议**：`docs/protocols/freewill_attribution_v2.md`，`status=draft_specification`，`executable=false`，含分层假设（H-C/H-E/H-Q）与 8 项 Open Questions。
+10. **Benchmark**：`docs/benchmark/BENCHMARK_SPEC.md`，`benchmark_id=llm-attribution-behavior`，`maturity_level=BMK-L1`，`release_status=planned`；定义 8 类对象（BenchmarkSpec/TaskSpec/ModelSpec/RunSpec/RunManifest/ResponseRecord/ScoreRecord/AggregateReport）；API key 不入任何 Spec/Manifest。
+11. **Metric**：`docs/benchmark/METRIC_SPEC.md`，5 类（Execution Integrity/Output Quality/Task Metric/Reliability/Benchmark Quality Audit），未实现项标 `planned`，不伪造数值。
+12. **Failure Taxonomy**：`docs/benchmark/FAILURE_TAXONOMY.md`，23 个 failure code，按 configuration/provider/transport/content/parse/schema/lifecycle/artifact 分类，不全标 retryable。
+13. **四份 YAML**：`configs/tasks/freewill_attribution.v1.yaml`、`.v2.yaml`、`configs/benchmarks/llm_attribution_behavior.v1.yaml`、`configs/metrics/attribution_metrics.v1.yaml`（契约草案，不接入 runner）。
+14. **契约测试**：`tests/contracts/test_research_benchmark_contracts.py` = **29 passed**（覆盖 30 项检查点）；compileall exit 0。
+15. **collect-only**：**272**（原 243 + 29）。
+16. **决策**：DECISION_LOG 新增 **DEC-021~DEC-030**（benchmark-first / attribution 家族 / v1 不可执行 / v2 draft / BMK-L1 / outputs 与 artifacts 分离 / API key 永不记录 / 内部编号不入公开页 / 展示页延后 Phase5/7 / 本阶段不实现 runner）。
+17. **local_evidence**：生成 9 个证据文件（inventory/schema/condition/identity/cell/scale mapping/missingness/provenance gap/ignored summary），不入 Git，仅进审核包。
+18. **未实现 runner/provider**、**未调用真实 API**、**未修改 outputs**、**未运行完整 pytest**：均满足。
+19. **当前目标 BMK-L1**；**下一步 RUN-001**（需单独授权）。
+20. **Git**：本轮**未 git add / commit / merge / push / 创建 PR**；停在 `docs/research-and-benchmark-contract` 未提交，等待人工审核。
+
+## 2026-07-14 · RBC-001.1 · Contract Consistency And Methodology Correction
+
+分支 `docs/research-and-benchmark-contract`，起始 HEAD `b375d5a421e6c7d46412dc262b14cc0e659bd251`，首版未提交修改保留。修正首版审核发现的问题：
+
+1. **规划 ID 冲突**：EXECUTION_BACKLOG 新增 `<!-- ACTIVE_TASK_IDS_START/END -->` 权威活动表（RES-001~004、BMK-001~007、RUN-001~003，含正式标题）；老 Phase 2/3 与 Future Benchmark 段全部标 **LEGACY**（`### LEGACY xxx(old) ·`），不再作为活动任务。RUN-001 明确为 **Reproducible Mock Run Core**（TaskSpec→Runner→Mock Provider→Raw→Parser→Validation→Score→RunManifest→Aggregate），真实 DeepSeek provider/budget/retry/resume/concurrency/真实 API 门禁移至 RUN-003。新增 `test_active_planning_task_ids_are_unique` / `test_legacy_headings_are_marked` / `test_run001_is_mock_run_core`。
+2. **Source Gate 收紧**：source map 与 v1 协议保留 `PROTOCOL_SOURCE_GATE=PASS` 并新增 `gate_scope: historical_protocol_reconstruction_only`；明确不代表历史可复现/API 可独立验证/逐题响应可审计/prompt·seed·模型快照·retry 可恢复。seed `20260425` = 代码默认值（非历史 seed）；`deepseek-chat` = reconstruction candidate（非确认历史模型 ID）；raw JSONL/wide CSV 缺失不阻断设计重建但阻断逐题/首答/retry/request ID/精确 prompt 审计；聚合列无缺失 ≠ 题项无缺失。
+3. **BenchmarkSpec/YAML 对齐**：`maturity_level` → `current_maturity_level: pre-BMK-L1` + `target_maturity_level: BMK-L1`；Benchmark YAML 补齐 description/metric_ids/created_at/source_commit(unknown)+source_commit_status。TaskSpec 机器字段统一（task_id/task_version/protocol_ref/constructs/condition_schema/identity_schema/stimulus_set/prompt_config/response_schema/scoring_config/aggregation_config/evidence_boundary/status/executable）；历史兼容字段入 `legacy_metadata`。新增字段一致性测试。
+4. **v2 响应契约**：核心 JSON 只含 `items[*]={item_id,rating}`；participant_id/response_version/stimulus_id/scenario_id/condition/identity/batch_id/attempt/run_id/task_id 由 runner 写入 ResponseRecord；删除 `attention_check`；`short_reason` 移出核心评分（仅 optional explanation variant）。factual 题仍属 items（0-2）。
+5. **Batching**：`decision_status: unresolved`，`recommended_core_default: all_items`（不再把 by_construct 写成 provisional default）；核心中介运行必须同一响应内取全部核心构念；by_construct/single_item 仅为 prompt 稳健性变体；不得拼接不同 API 调用为同一参与者。
+6. **构念标签盲化**：construct blinding → **construct-label blinding**；YAML 字段 `construct_blinding` → `construct_label_blinding`；明确题项语义仍表达构念、不声称模型不知情、by_construct 可能反向暴露构念结构。
+7. **假设与分析单位**：H-C01/H-C02 标为 prospective replication（冻结且未看结果前不算确认性）；H-C02 精确写 `reasons_concise > direct_choice_long`；perceived_intelligence 移出默认确认性协变量（入探索性/敏感性）；中介统一 associational indirect-path diagnostic；新增分析单位与依赖结构（participant_id 非独立被试、scenario fixed effects/分层、condition-by-scenario 稳健性、重复 run/seed 为主复现层）；H-Q01~03 移为 Engineering Acceptance Criteria AC-Q01~03。
+8. **historical-v1 vs v1-compatible rerun**：区分 A（对历史 v1 只比较已有结果/聚合字段）与 B（未来 v1-compatible rerun 才比较 parse/schema/token/cost/latency/repair）；rerun 非历史重放，当前未实现无结果。
+9. **Metric registry**：由 YAML 动态计算，实际 **47** 条（44 + 3 兼容别名）；新增 first_attempt/final parse & schema、repair_trigger/repair_success、response_length_chars/tokens；parse_success_rate/schema_compliance_rate/repair_rate 标为 alias；construct_name_exposure→construct_label_exposure；estimated_cost→estimated_cost_usd；missing_item_rate v1 = unknown；repair_trigger_rate direction=context；condition_sensitivity/identity_effect 等标 planned_without_formula 并登记预定义对比（reasons_concise vs direct_choice_long、reasons vs direct_choice、reflection_feedback vs direct_choice；ordinal trend 仅次级）。
+10. **RunManifest/ResponseRecord**：hash 细化为 resolved_config_hash/task_spec_hash/model_spec_hash/prompt_template_hash/prompt_snapshot_set_hash/stimulus_set_hash/scoring_spec_hash（canonical serialization：UTF-8/稳定 key/规范换行/sha256）；ResponseRecord 增 stimulus_id/scenario_id/persona_ref/prompt_ref/request_ref/raw_response_ref/parent_attempt_id；费用统一 estimated_cost_usd。
+11. **Failure Taxonomy**：增 failure_scope{run,request,record,artifact} 与 terminal_scope{none,attempt,record,run}；新增 PROMPT_RENDER_FAILURE/STIMULUS_INVALID/SCORING_FAILURE；DUPLICATE_RESPONSE→DUPLICATE_RESPONSE_SUSPECTED（warning，不自动删记录）；AUTH_FAILURE/BUDGET_EXCEEDED/ARTIFACT_HASH_MISMATCH terminal_scope=run，REPAIR_EXHAUSTED=record。共 **26** 个 failure code。
+12. **local_evidence 卫生**：从工作树删除 `local_evidence/`（新增 `test_no_local_evidence_dir_in_repo`）；source map 声明 review-time evidence 为 non-normative，正式 claim 回溯 src/outputs/configs/docs/audit；审核包 inventory 列改名 `inventory_entry_included`。
+13. **验证**：`pytest tests/contracts -q` = **47 passed**；compileall exit 0；`pytest --collect-only -q` = **290**；`git diff --check` 干净；`git diff -- outputs` 空；受保护路径无变化；敏感/绝对路径扫描在契约文件 0 命中。
+14. **Git**：未 add/commit/push/PR；停在 `docs/research-and-benchmark-contract` 未提交。REV2 审核包重新生成到桌面（含 review_evidence/）。**未进入 RUN-001，未实现 runner/provider，未调用 API，未改 outputs。**
