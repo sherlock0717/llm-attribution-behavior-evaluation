@@ -1,0 +1,76 @@
+# REAL-SETUP-001: TEMPLATE ONLY for a FUTURE real DeepSeek run.
+#
+# This is NOT a verified run configuration. It intentionally leaves the current
+# model_id, base_url and pricing UNSET (null / requires_runtime_verification),
+# because those change over time and MUST be re-checked against the official
+# DeepSeek documentation on the day of the run.
+#
+# Nothing here reads or stores an API key. The key lives ONLY in the
+# environment variable named below and is never written into any config file.
+#
+# provider_adapter_status: offline_validated
+# credential_status:       not_configured
+# live_api_status:         not_run
+provider: deepseek
+
+# Both guards default to false. A live run additionally requires the CLI flags
+# --real-api and --confirm-paid-run (see docs/runs/REAL_PILOT_RUNBOOK.md).
+enabled: false
+live_api_allowed: false
+
+# Left null on purpose: verify the current official values before any live run.
+base_url: null
+model_id: null
+model_version_snapshot: null
+
+credential:
+  source: environment
+  environment_variable: DEEPSEEK_API_KEY
+  value_stored_in_config: false
+
+thinking:
+  mode: null
+
+stream: false
+temperature: 0
+max_tokens: 2048
+
+response_format:
+  type: json_object
+
+request_timeout_seconds: 180
+provider_retry_attempts: 3
+semantic_repair_attempts: 1
+
+pricing_snapshot:
+  status: requires_runtime_verification
+  checked_at: null
+  source: null
+  currency: USD
+  unit_tokens: 1000000
+  input_cache_hit: null
+  input_cache_miss: null
+  output: null
+
+budgets:
+  smoke_budget_usd: 0.25
+  pilot_budget_usd: 1.50
+  total_hard_budget_usd: 2.00
+
+run_profiles:
+  smoke:
+    n_per_cell: 1
+    planned_records: 12
+    concurrency: 1
+  pilot:
+    n_per_cell: 5
+    planned_records: 60
+    concurrency: 2
+
+requirements_before_live_run:
+  - verify_current_official_base_url
+  - verify_current_official_model_id
+  - verify_current_official_pricing
+  - configure_api_key_in_environment
+  - explicitly_enable_live_api
+  - explicitly_confirm_paid_run

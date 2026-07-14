@@ -1,0 +1,82 @@
+# REAL-SETUP-001: how to create your LOCAL real-run config.
+#
+# 1. Copy this file to:
+#        configs/model.deepseek.local.yaml
+#    (that path is .gitignore'd and MUST NEVER be committed).
+#
+# 2. On the day of the run, verify against the official DeepSeek docs and fill:
+#        base_url          <- current official API base URL
+#        model_id          <- current official model id
+#        pricing_snapshot  <- current official per-1M-token prices + set status: verified
+#
+# 3. Set your API key ONLY in the environment (never in this file):
+#        PowerShell:  $env:DEEPSEEK_API_KEY = "sk-..."
+#        bash:        export DEEPSEEK_API_KEY="sk-..."
+#
+# 4. To actually run (a PAID call), you additionally need:
+#        enabled: true
+#        live_api_allowed: true
+#      plus the CLI flags --real-api --confirm-paid-run.
+#
+# Until then everything runs offline via --dry-run and the fake client tests.
+# This example keeps all live guards OFF and pricing UNVERIFIED on purpose.
+provider: deepseek
+
+enabled: false
+live_api_allowed: false
+
+base_url: null            # e.g. https://api.deepseek.com  (verify on run day)
+model_id: null            # e.g. deepseek-chat             (verify on run day)
+model_version_snapshot: null
+
+credential:
+  source: environment
+  environment_variable: DEEPSEEK_API_KEY
+  value_stored_in_config: false
+
+thinking:
+  mode: null
+
+stream: false
+temperature: 0
+max_tokens: 2048
+
+response_format:
+  type: json_object
+
+request_timeout_seconds: 180
+provider_retry_attempts: 3
+semantic_repair_attempts: 1
+
+pricing_snapshot:
+  status: requires_runtime_verification   # set to "verified" only after checking
+  checked_at: null
+  source: null
+  currency: USD
+  unit_tokens: 1000000
+  input_cache_hit: null
+  input_cache_miss: null
+  output: null
+
+budgets:
+  smoke_budget_usd: 0.25
+  pilot_budget_usd: 1.50
+  total_hard_budget_usd: 2.00
+
+run_profiles:
+  smoke:
+    n_per_cell: 1
+    planned_records: 12
+    concurrency: 1
+  pilot:
+    n_per_cell: 5
+    planned_records: 60
+    concurrency: 2
+
+requirements_before_live_run:
+  - verify_current_official_base_url
+  - verify_current_official_model_id
+  - verify_current_official_pricing
+  - configure_api_key_in_environment
+  - explicitly_enable_live_api
+  - explicitly_confirm_paid_run

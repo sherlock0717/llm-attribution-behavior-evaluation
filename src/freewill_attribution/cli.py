@@ -90,11 +90,40 @@ def build_parser() -> argparse.ArgumentParser:
     bench.add_argument("--fresh", action="store_true", help="Remove prior artifacts in the run dir.")
     bench.add_argument("--resume", action="store_true", help="Resume: skip already-completed records.")
     bench.add_argument(
+        "--provider",
+        default="mock",
+        choices=["mock", "deepseek"],
+        help="Provider to use. Only 'mock' actually executes this round; "
+        "'deepseek' is offline-validated and supports --dry-run only.",
+    )
+    bench.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Plan a future real run offline (no network, no API key). Writes "
+        "artifacts/plans/<plan_id>/ only; generates no responses/scores/cost.",
+    )
+    bench.add_argument(
+        "--run-profile",
+        default="smoke",
+        choices=["smoke", "pilot"],
+        help="Dry-run profile: smoke (12 records) or pilot (60 records).",
+    )
+    bench.add_argument(
+        "--real-api",
+        action="store_true",
+        help="(Deferred) opt in to a real paid API call. Refused this round; "
+        "additional preconditions must all be satisfied.",
+    )
+    bench.add_argument(
+        "--confirm-paid-run",
+        action="store_true",
+        help="(Deferred) explicit confirmation of a paid run. Refused this round.",
+    )
+    bench.add_argument(
         "--mock",
         action="store_true",
-        required=True,
-        help="Required. Only the deterministic mock provider is available; no "
-        "real API is called and no API key is read.",
+        help="Use the deterministic mock provider (default provider). No real "
+        "API is called and no API key is read.",
     )
     return parser
 
@@ -114,6 +143,37 @@ def main(argv: list[str] | None = None) -> int:
         )
 
     if args.command == "benchmark-run":
+        # --- offline dry-run planner (no network, no API key) ----------------
+        if args.dry_run:
+            model_config = args.model_config
+            if args.provider == "deepseek" and model_config == str(registry.MODEL_MOCK_YAML):
+                model_config = str(registry.MODEL_DEEPSEEK_EXAMPLE_YAML)
+            result = runner.plan_dry_run(
+                model_config=model_config,
+                run_profile=args.run_profile,
+                seed=args.seed,
+                artifact_root=args.artifact_root,
+                task_config=args.task_config,
+                real_api=args.real_api,
+                confirm_paid_run=args.confirm_paid_run,
+            )
+            print(f"dry_run plan_id={result.plan_id}")
+            print(f"planned_records={result.planned_records}")
+            print(f"plan_dir={result.plan_dir}")
+            print("live_run_blockers=" + ("; ".join(result.blockers) or "(none)"))
+            print("network_calls_made=0 api_key_read=false")
+            return 0
+
+        # --- deferred real provider: refuse a live run this round ------------
+        if args.provider == "deepseek":
+            print(
+                "live deepseek run is refused this round; the real provider is "
+                "offline_validated only. Use --dry-run to plan a future run. "
+                "No API key was read and no network request was made.",
+            )
+            return 2
+
+        # --- mock provider (default): execute the reproducible mock slice ----
         result = runner.run_benchmark(
             seed=args.seed,
             n_per_cell=args.n_per_cell,
