@@ -15,7 +15,7 @@
       "FailureRecord"
     ]
   },
-  "generated_at": "2026-07-14T07:35:29+00:00",
+  "generated_at": "2026-07-14T08:18:59+00:00",
   "historical_evidence_levels": [
     {
       "evidence_level": "descriptive",
@@ -54,85 +54,79 @@
     }
   ],
   "provenance_completeness": {
+    "author_attested_count": 1,
     "dimensions": [
       {
         "dimension": "record_count",
-        "evidence_type": "direct_file_evidence",
-        "verifiable": true
+        "verification_status": "repository_verified"
       },
       {
         "dimension": "condition_design_6x2x30",
-        "evidence_type": "reconstructed_from_outputs",
-        "verifiable": true
+        "verification_status": "repository_verified"
       },
       {
         "dimension": "scale_item_definitions",
-        "evidence_type": "direct_file_evidence",
-        "verifiable": true
+        "verification_status": "repository_verified"
       },
       {
         "dimension": "historical_provider_is_deepseek",
-        "evidence_type": "historical_documentation",
-        "verifiable": true
+        "verification_status": "author_attested"
       },
       {
         "dimension": "exact_model_server_snapshot",
-        "evidence_type": "unknown",
-        "verifiable": false
+        "verification_status": "unknown"
       },
       {
         "dimension": "exact_prompt_snapshot",
-        "evidence_type": "unknown",
-        "verifiable": false
+        "verification_status": "unknown"
       },
       {
-        "dimension": "prompt_hash",
-        "evidence_type": "unknown",
-        "verifiable": false
+        "dimension": "historical_stimulus_hash",
+        "verification_status": "unknown"
       },
       {
-        "dimension": "stimulus_hash",
-        "evidence_type": "reconstructed_from_code",
-        "verifiable": true
+        "dimension": "current_stimulus_definition",
+        "verification_status": "reconstructed"
       },
       {
         "dimension": "request_timestamp",
-        "evidence_type": "unknown",
-        "verifiable": false
+        "verification_status": "unknown"
       },
       {
         "dimension": "provider_request_id",
-        "evidence_type": "unknown",
-        "verifiable": false
+        "verification_status": "unknown"
       },
       {
         "dimension": "token_usage",
-        "evidence_type": "unknown",
-        "verifiable": false
+        "verification_status": "unknown"
       },
       {
         "dimension": "estimated_cost_usd",
-        "evidence_type": "unknown",
-        "verifiable": false
+        "verification_status": "unknown"
       },
       {
         "dimension": "retry_information",
-        "evidence_type": "unknown",
-        "verifiable": false
+        "verification_status": "unknown"
       },
       {
         "dimension": "item_level_missingness",
-        "evidence_type": "unknown",
-        "verifiable": false
+        "verification_status": "unknown"
       },
       {
         "dimension": "raw_response_public_availability",
-        "evidence_type": "unknown",
-        "verifiable": false
+        "verification_status": "unknown"
       }
     ],
-    "known_count": 5,
-    "note": "unknown 维度不得补写为确定事实（source map §11）。",
-    "total_count": 15
+    "note": "四种状态互不等价；author_attested / reconstructed 不得显示为已验证。",
+    "reconstructed_count": 1,
+    "repository_verified_count": 3,
+    "status_legend": {
+      "author_attested": "作者说明，仓库无法独立验证",
+      "reconstructed": "由当前代码重建，非历史运行产物",
+      "repository_verified": "可由仓库内容直接验证",
+      "unknown": "无证据；不得补写为确定事实（source map §11）"
+    },
+    "total_count": 15,
+    "unknown_count": 10
   }
 }

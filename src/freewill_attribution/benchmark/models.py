@@ -249,6 +249,17 @@ class RunManifest(ExtensibleModel):
     artifacts: list[ArtifactRef] = Field(default_factory=list)
     errors: list[FailureRecord] = Field(default_factory=list)
 
+    # FAST-001.1: manifest.json is the integrity index for the run. It records
+    # every OTHER artifact's hash but is deliberately excluded from its own
+    # ``artifacts`` list; its digest is written separately to ``manifest.sha256``
+    # so there is no self-referential hash cycle.
+    integrity_note: NonEmptyStr = (
+        "manifest.json is the integrity index and is excluded from its own "
+        "artifact list; its SHA-256 is written separately to manifest.sha256."
+    )
+    # Free-form provenance notes (e.g. when git_commit could not be determined).
+    provenance_notes: list[str] = Field(default_factory=list)
+
 
 __all__ = [
     "SCHEMA_VERSION",

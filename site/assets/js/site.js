@@ -453,14 +453,28 @@ function renderMockQuality(engineering) {
   host.appendChild(tag);
 }
 
+// Four distinct verification states. author_attested / reconstructed must NOT
+// be shown as "verified"; each state gets its own class and label.
+var PROV_STATUS_LABEL = {
+  repository_verified: "仓库可验证",
+  author_attested: "作者说明",
+  reconstructed: "代码重建",
+  unknown: "未知",
+};
+
 function renderProvenance(evidence) {
   const host = requireSlot("provenance-matrix");
   host.textContent = "";
   const pc = evidence.provenance_completeness || { dimensions: [] };
   pc.dimensions.forEach((d) => {
-    const cell = el("div", { className: "prov-cell " + (d.verifiable ? "known" : "unknown") });
+    const status = d.verification_status || "unknown";
+    const cls = PROV_STATUS_LABEL[status] ? status : "unknown";
+    const cell = el("div", { className: "prov-cell prov-" + cls });
     cell.appendChild(el("span", { className: "prov-dim", text: d.dimension }));
-    cell.appendChild(el("span", { className: "prov-type", text: d.evidence_type }));
+    cell.appendChild(el("span", {
+      className: "prov-type",
+      text: PROV_STATUS_LABEL[status] || status,
+    }));
     host.appendChild(cell);
   });
 }

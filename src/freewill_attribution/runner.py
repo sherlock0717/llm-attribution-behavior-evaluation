@@ -17,6 +17,7 @@ This module has two clearly separated parts:
 
 from __future__ import annotations
 
+import shutil
 import subprocess
 import sys
 from dataclasses import dataclass
@@ -24,7 +25,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from .paths import SOURCE_DIR, get_legacy_run_script
+from .paths import PROJECT_ROOT, SOURCE_DIR, get_legacy_run_script
 
 # --- path_safety bootstrap (top-level module lives at the src/ layout root) ---
 if str(SOURCE_DIR) not in sys.path:
@@ -32,7 +33,8 @@ if str(SOURCE_DIR) not in sys.path:
 from path_safety import resolve_output_dir  # noqa: E402
 
 from .benchmark import artifacts as artifact_io  # noqa: E402
-from .benchmark.hashing import hash_object, hash_text  # noqa: E402
+from .benchmark import registry  # noqa: E402
+from .benchmark.hashing import hash_file, hash_object, hash_text  # noqa: E402
 from .benchmark.models import (  # noqa: E402
     AggregateReport,
     ArtifactRef,
@@ -43,11 +45,16 @@ from .benchmark.models import (  # noqa: E402
     ResponseRecord,
     RunManifest,
     RunStatus,
+    TaskSpec,
 )
 from . import reporting  # noqa: E402
 from .providers.base import ProviderRequest  # noqa: E402
 from .providers.mock import MockProvider  # noqa: E402
 from .tasks.freewill_attribution import parsing, prompting, scoring, spec, stimuli  # noqa: E402
+
+
+class RunConfigError(RuntimeError):
+    """Raised when the task/model config is incompatible with the task pack."""
 
 
 # ===========================================================================
@@ -129,30 +136,76 @@ def default_run_id(task_id: str, n_per_cell: int, seed: int) -> str:
     return f"{short}-n{n_per_cell}-seed{seed}"
 
 
-def _default_model_spec() -> ModelSpec:
-    return ModelSpec(
-        provider=MockProvider.provider_name,
-        model_id=MockProvider.model_id,
-        model_version_snapshot=None,
-        sampling_parameters={"temperature": 0.0, "deterministic": True},
-        capabilities=["rule_based", "deterministic"],
-        endpoint_type="mock",
-    )
+def _detect_git_commit(explicit: str | None) -> tuple[str, list[str]]:
+    """Return ``(git_commit, provenance_notes)``.
+
+    When ``explicit`` is provided it is used verbatim. Otherwise ``git rev-parse
+    HEAD`` is run against the repository root. If git is unavailable the commit
+    is recorded as ``"unknown"`` and a provenance note explains why (we never
+    fabricate a commit id).
+    """
+    if explicit:
+        return explicit, []
+    try:
+        proc = subprocess.run(  # noqa: S603 - fixed args, no shell
+            ["git", "rev-parse", "HEAD"],
+            cwd=str(PROJECT_ROOT),
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+        sha = proc.stdout.strip()
+        if proc.returncode == 0 and sha:
+            return sha, []
+    except (OSError, subprocess.SubprocessError):
+        pass
+    return "unknown", [
+        "git_commit could not be determined (git unavailable or not a git "
+        "checkout); recorded as 'unknown' rather than fabricated."
+    ]
 
 
-def _task_spec_payload(task_id: str, n_per_cell: int, seed: int) -> dict[str, Any]:
-    return {
-        "task_id": task_id,
-        "task_version": spec.TASK_VERSION,
-        "conditions": spec.PROCESS_CONDITIONS,
-        "identities": spec.IDENTITY_LABELS,
-        "item_ids": spec.ITEM_IDS,
-        "item_ranges": {k: list(v) for k, v in spec.ITEM_RANGE.items()},
-        "batching": "all_items",
-        "construct_label_blinding": True,
-        "n_per_cell": n_per_cell,
-        "seed": seed,
-    }
+def _repo_relative(path: str | Path) -> str:
+    """Return ``path`` relative to the repo root (falls back to the file name)."""
+    resolved = Path(path).resolve()
+    try:
+        return resolved.relative_to(PROJECT_ROOT).as_posix()
+    except ValueError:
+        return resolved.name
+
+
+def _load_and_validate_specs(
+    task_config: str | Path,
+    model_config: str | Path,
+    provider_name: str,
+) -> tuple[TaskSpec, ModelSpec]:
+    """Load + validate the declarative TaskSpec/ModelSpec against the task pack.
+
+    Fails loudly (``RunConfigError``) on any incompatibility. There is NO silent
+    fallback to hard-coded defaults: a run only proceeds when the contract on
+    disk truly drives it.
+    """
+    task_spec = registry.load_task_spec(task_config)
+    model_spec = registry.load_model_spec(model_config)
+
+    problems = spec.taskspec_consistency_problems(task_spec)
+    if not task_spec.executable:
+        problems.append("task is not executable (executable=false)")
+    supported = list(task_spec.model_dump().get("supported_providers") or [])
+    if provider_name not in supported:
+        problems.append(
+            f"provider {provider_name!r} not in task.supported_providers {supported}"
+        )
+    if model_spec.provider != "mock":
+        problems.append(
+            f"model provider must be 'mock' this round, got {model_spec.provider!r}"
+        )
+    if problems:
+        raise RunConfigError(
+            "Task/model config is not compatible with the implemented task pack: "
+            + "; ".join(problems)
+        )
+    return task_spec, model_spec
 
 
 def _scoring_spec_payload() -> dict[str, Any]:
@@ -169,10 +222,10 @@ def run_benchmark(
     seed: int,
     n_per_cell: int,
     artifact_root: str | Path,
+    task_config: str | Path | None = None,
+    model_config: str | Path | None = None,
     benchmark_id: str = BENCHMARK_ID,
-    task_id: str | None = None,
     provider: Any | None = None,
-    model_spec: ModelSpec | None = None,
     max_repair_attempts: int = 1,
     fresh: bool = False,
     resume: bool = False,
@@ -182,58 +235,93 @@ def run_benchmark(
 ) -> BenchmarkRunResult:
     """Execute the mock benchmark vertical slice and write all artifacts.
 
+    The run is DRIVEN BY the declarative contracts on disk: the TaskSpec YAML
+    (default ``configs/tasks/freewill_attribution.v2.yaml``) and the model
+    config YAML (default ``configs/model.mock.yaml``) are loaded, validated
+    against the implemented task pack, and used as the source of the recorded
+    ``task_spec.json`` / ``model_spec.json`` and their hashes.
+
     ``fault_map`` maps ``record_id -> fault`` (test-only) to force a malformed /
-    incomplete first attempt and exercise the repair path. Normal runs pass None.
+    incomplete first attempt (or a provider exception) and exercise the repair /
+    failure paths. Normal runs pass None.
     """
     if n_per_cell < 1:
         raise ValueError("n_per_cell must be >= 1")
 
+    task_config = Path(task_config) if task_config else registry.TASK_V2_YAML
+    model_config = Path(model_config) if model_config else registry.MODEL_MOCK_YAML
+
     provider = provider or MockProvider()
-    model_spec = model_spec or _default_model_spec()
-    task_id = task_id or spec.TASK_ID
+    provider_name = getattr(provider, "provider_name", "mock")
+
+    # Contract-driven: load + validate the declarative specs (fail loudly, no
+    # silent fallback to hard-coded defaults).
+    task_spec, model_spec = _load_and_validate_specs(task_config, model_config, provider_name)
+    task_id = task_spec.task_id
     fault_map = fault_map or {}
     started_at = datetime.now(timezone.utc)
+    git_commit_value, provenance_notes = _detect_git_commit(git_commit)
 
     run_id = run_id or default_run_id(task_id, n_per_cell, seed)
     runs_parent = Path(artifact_root) / "runs" / run_id
-    run_dir = resolve_output_dir(runs_parent, create=True)
+    # Validate the path is a safe output target (rejects outputs/, src/, ...).
+    run_dir = resolve_output_dir(runs_parent, create=False)
+
+    # --- overwrite protection / fresh / resume ------------------------------
+    existing = run_dir.exists() and (
+        (run_dir / "manifest.json").exists()
+        or (run_dir / "response_records.jsonl").exists()
+    )
+    if fresh:
+        # run_dir has already passed the safe-output-path check above, so the
+        # whole tree (including stale figures/ or any future files) is removed.
+        if run_dir.exists():
+            shutil.rmtree(run_dir)
+    elif existing and not resume:
+        raise RunConfigError(
+            f"Run directory already exists with prior artifacts: {run_dir.as_posix()}. "
+            "Refusing to overwrite. Pass fresh=True to recreate it or resume=True "
+            "to continue the existing run."
+        )
+    run_dir.mkdir(parents=True, exist_ok=True)
     figures_dir = run_dir / "figures"
     figures_dir.mkdir(parents=True, exist_ok=True)
 
     normalized_path = run_dir / "normalized_responses.jsonl"
-    if fresh:
-        for name in [
-            "manifest.json",
-            "resolved_config.json",
-            "task_spec.json",
-            "model_spec.json",
-            "prompt_template.txt",
-            "prompt_snapshots.jsonl",
-            "stimuli_snapshot.jsonl",
-            "raw_responses.jsonl",
-            "normalized_responses.jsonl",
-            "scores.jsonl",
-            "failures.jsonl",
-            "aggregate_report.json",
-        ]:
-            candidate = run_dir / name
-            if candidate.exists():
-                candidate.unlink()
+    response_records_path = run_dir / "response_records.jsonl"
+
+    # --- resume: restore prior attempts from response_records.jsonl ---------
+    prior_attempts_by_id: dict[str, list[dict[str, Any]]] = {}
+    prior_raw_by_id: dict[str, list[dict[str, Any]]] = {}
+    prior_prompt_by_id: dict[str, list[dict[str, Any]]] = {}
+    prior_norm_by_id: dict[str, dict[str, Any]] = {}
+    prior_scores_by_id: dict[str, list[dict[str, Any]]] = {}
+    done_ids: set[str] = set()
+    if resume:
+        for rec in artifact_io.read_jsonl(response_records_path):
+            prior_attempts_by_id.setdefault(str(rec.get("record_id")), []).append(rec)
+        for row in artifact_io.read_jsonl(run_dir / "raw_responses.jsonl"):
+            prior_raw_by_id.setdefault(str(row.get("record_id")), []).append(row)
+        for row in artifact_io.read_jsonl(run_dir / "prompt_snapshots.jsonl"):
+            prior_prompt_by_id.setdefault(str(row.get("record_id")), []).append(row)
+        for row in artifact_io.read_jsonl(normalized_path):
+            prior_norm_by_id[str(row.get("record_id"))] = row
+        for row in artifact_io.read_jsonl(run_dir / "scores.jsonl"):
+            prior_scores_by_id.setdefault(str(row.get("record_id")), []).append(row)
+        for rid, attempts in prior_attempts_by_id.items():
+            last = max(attempts, key=lambda a: a.get("attempt", 0))
+            if last.get("validation_status") == AttemptValidationStatus.OK.value:
+                done_ids.add(rid)
 
     design = stimuli.build_design(n_per_cell, seed)
     planned = len(design)
-
-    already_done: set[str] = set()
-    if resume and normalized_path.exists():
-        for row in artifact_io.read_jsonl(normalized_path):
-            if row.get("validation_status") == AttemptValidationStatus.OK.value:
-                already_done.add(str(row.get("record_id")))
 
     all_attempt_records: list[ResponseRecord] = []
     raw_rows: list[dict[str, Any]] = []
     prompt_snapshot_rows: list[dict[str, Any]] = []
     normalized_rows: list[dict[str, Any]] = []
     score_rows: list[dict[str, Any]] = []
+    response_record_rows: list[dict[str, Any]] = []
     failure_rows: list[FailureRecord] = []
     scored_for_agg: list[dict[str, Any]] = []
     raw_text_lengths: dict[str, int] = {}
@@ -246,9 +334,32 @@ def run_benchmark(
 
     for row in design:
         record_id = row["record_id"]
-        if record_id in already_done:
+
+        # ---- resume reuse: keep ALL prior attempts verbatim (no fabrication) ----
+        if resume and record_id in done_ids:
+            for rec in sorted(
+                prior_attempts_by_id.get(record_id, []), key=lambda a: a.get("attempt", 0)
+            ):
+                all_attempt_records.append(ResponseRecord.model_validate(rec))
+                response_record_rows.append(rec)
+            raw_rows.extend(prior_raw_by_id.get(record_id, []))
+            prompt_snapshot_rows.extend(prior_prompt_by_id.get(record_id, []))
+            if record_id in prior_norm_by_id:
+                normalized_rows.append(prior_norm_by_id[record_id])
+            score_rows.extend(prior_scores_by_id.get(record_id, []))
+            reused_raw = prior_raw_by_id.get(record_id, [])
+            if reused_raw:
+                last_raw = max(reused_raw, key=lambda r: r.get("attempt", 0))
+                raw_text_lengths[record_id] = len(str(last_raw.get("raw_text", "")))
+            nr = prior_norm_by_id.get(record_id, {})
+            if nr.get("validation_status") == AttemptValidationStatus.OK.value:
+                scored_for_agg.append(
+                    {"condition": nr["condition"], "identity": nr["identity"],
+                     "scores": nr.get("scores", {})}
+                )
             continue
 
+        # ---- run this record ----
         attempt = 1
         final_ratings: dict[str, int] = {}
         final_status = AttemptValidationStatus.NOT_VALIDATED
@@ -279,7 +390,28 @@ def run_benchmark(
                 choice_valence=row["choice_valence"],
                 fault=fault,
             )
-            response = provider.generate(request)
+            try:
+                response = provider.generate(request)
+            except Exception as exc:  # noqa: BLE001 - a provider fault must not lose the run
+                # A single provider exception must NOT crash the whole run
+                # without a manifest: record a FailureRecord and finalize the
+                # record as failed. Real retry/budget policy is RUN-003.
+                failure_rows.append(
+                    FailureRecord(
+                        failure_code="PROVIDER_UNAVAILABLE",
+                        stage="provider",
+                        failure_scope="record",
+                        terminal_scope="record",
+                        severity="error",
+                        record_id=record_id,
+                        attempt=attempt,
+                        message=f"provider raised for record {record_id}: "
+                        f"{type(exc).__name__}",
+                        context={"attempt": attempt},
+                    )
+                )
+                final_status = AttemptValidationStatus.NOT_VALIDATED
+                break
 
             parsed, parse_status, _pmsg = parsing.parse_response(response.text)
             if parsed is None:
@@ -315,6 +447,7 @@ def run_benchmark(
                 provider_metadata=dict(response.raw_metadata),
             )
             all_attempt_records.append(record)
+            response_record_rows.append(record.model_dump(mode="json"))
 
             raw_rows.append(
                 {
@@ -403,66 +536,13 @@ def run_benchmark(
                 {"condition": row["condition"], "identity": row["identity"], "scores": record_scores}
             )
 
-    # --- resume union: merge previously completed rows from disk ------------
-    if resume and already_done:
-        processed_ids = {r["record_id"] for r in normalized_rows}
-        keep_ids = already_done - processed_ids
-        if keep_ids:
-            prior_raw = [
-                r for r in artifact_io.read_jsonl(run_dir / "raw_responses.jsonl")
-                if r.get("record_id") in keep_ids
-            ]
-            prior_prompts = [
-                r for r in artifact_io.read_jsonl(run_dir / "prompt_snapshots.jsonl")
-                if r.get("record_id") in keep_ids
-            ]
-            prior_scores = [
-                r for r in artifact_io.read_jsonl(run_dir / "scores.jsonl")
-                if r.get("record_id") in keep_ids
-            ]
-            prior_norm = [
-                r for r in artifact_io.read_jsonl(normalized_path)
-                if r.get("record_id") in keep_ids
-            ]
-            raw_rows = prior_raw + raw_rows
-            prompt_snapshot_rows = prior_prompts + prompt_snapshot_rows
-            score_rows = prior_scores + score_rows
-            normalized_rows = prior_norm + normalized_rows
-
-            for nr in prior_norm:
-                rid = nr["record_id"]
-                ratings = {k: v for k, v in nr.get("ratings", {}).items() if v is not None}
-                parsed = {"items": [{"item_id": k, "rating": v} for k, v in ratings.items()]}
-                all_attempt_records.append(
-                    ResponseRecord(
-                        record_id=rid,
-                        run_id=run_id,
-                        task_id=task_id,
-                        condition=nr["condition"],
-                        identity=nr["identity"],
-                        stimulus_id=nr["stimulus_id"],
-                        scenario_id=nr["scenario_id"],
-                        request_index=0,
-                        batch_id="all_items",
-                        attempt=int(nr.get("final_attempt", 1)),
-                        parse_status=AttemptParseStatus.OK,
-                        validation_status=AttemptValidationStatus(nr["validation_status"]),
-                        parsed_response=parsed,
-                    )
-                )
-                finals = [r for r in prior_raw if r.get("record_id") == rid]
-                if finals:
-                    raw_text_lengths[rid] = len(str(finals[-1].get("raw_text", "")))
-                if nr.get("validation_status") == AttemptValidationStatus.OK.value:
-                    scored_for_agg.append(
-                        {
-                            "condition": nr["condition"],
-                            "identity": nr["identity"],
-                            "scores": nr.get("scores", {}),
-                        }
-                    )
-        normalized_rows.sort(key=lambda r: r["record_id"])
-        raw_rows.sort(key=lambda r: (r.get("record_id", ""), r.get("attempt", 0)))
+    # Deterministic ordering (design order is already deterministic; sort keeps
+    # a fresh full run and a no-op resume byte-identical).
+    normalized_rows.sort(key=lambda r: r["record_id"])
+    raw_rows.sort(key=lambda r: (r.get("record_id", ""), r.get("attempt", 0)))
+    prompt_snapshot_rows.sort(key=lambda r: (r.get("record_id", ""), r.get("attempt", 0)))
+    score_rows.sort(key=lambda r: (r.get("record_id", ""), r.get("metric_id", "")))
+    response_record_rows.sort(key=lambda r: (r.get("record_id", ""), r.get("attempt", 0)))
 
     # --- aggregate + metrics -------------------------------------------------
     agg_scores = scoring.aggregate_scores(scored_for_agg)
@@ -474,20 +554,27 @@ def run_benchmark(
         raw_text_lengths=raw_text_lengths,
     )
 
-    # --- write artifacts -----------------------------------------------------
-    task_payload = _task_spec_payload(task_id, n_per_cell, seed)
+    # --- write artifacts (portable, run-dir-relative paths) -----------------
+    task_payload = task_spec.model_dump(mode="json")
     model_payload = model_spec.model_dump(mode="json")
     scoring_payload = _scoring_spec_payload()
+    task_config_sha = hash_file(task_config)
+    model_config_sha = hash_file(model_config)
     resolved_config = {
         "benchmark_id": benchmark_id,
         "benchmark_version": BENCHMARK_VERSION,
+        "task_config_ref": _repo_relative(task_config),
+        "task_config_sha256": task_config_sha,
+        "model_config_ref": _repo_relative(model_config),
+        "model_config_sha256": model_config_sha,
         "task_id": task_id,
-        "task_version": spec.TASK_VERSION,
+        "task_version": task_spec.task_version,
+        "provider": provider_name,
+        "model_id": model_spec.model_id,
         "seed": seed,
         "n_per_cell": n_per_cell,
         "max_repair_attempts": max_repair_attempts,
-        "provider": model_spec.provider,
-        "model_id": model_spec.model_id,
+        "artifact_root_relative": f"runs/{run_id}",
         "prompt_template_id": prompting.PROMPT_TEMPLATE_ID,
         "prompt_template_version": prompting.PROMPT_TEMPLATE_VERSION,
     }
@@ -495,18 +582,28 @@ def run_benchmark(
     stimulus_set = stimuli.canonical_stimulus_set()
     stimulus_snapshot_rows = stimuli.stimulus_snapshot(design)
 
-    artifacts: list[ArtifactRef] = []
-    artifacts.append(artifact_io.write_json_artifact(run_dir / "resolved_config.json", resolved_config, role="resolved_config"))
-    artifacts.append(artifact_io.write_json_artifact(run_dir / "task_spec.json", task_payload, role="task_spec"))
-    artifacts.append(artifact_io.write_json_artifact(run_dir / "model_spec.json", model_payload, role="model_spec"))
-    artifacts.append(artifact_io.write_json_artifact(run_dir / "scoring_spec.json", scoring_payload, role="scoring_spec"))
-    artifacts.append(artifact_io.write_text_artifact(run_dir / "prompt_template.txt", prompt_template, role="prompt_template"))
-    artifacts.append(artifact_io.write_jsonl_artifact(run_dir / "prompt_snapshots.jsonl", prompt_snapshot_rows, role="prompt_snapshots"))
-    artifacts.append(artifact_io.write_jsonl_artifact(run_dir / "stimuli_snapshot.jsonl", stimulus_snapshot_rows, role="stimuli_snapshot"))
-    artifacts.append(artifact_io.write_jsonl_artifact(run_dir / "raw_responses.jsonl", raw_rows, role="raw_responses"))
-    artifacts.append(artifact_io.write_jsonl_artifact(normalized_path, normalized_rows, role="normalized_responses"))
-    artifacts.append(artifact_io.write_jsonl_artifact(run_dir / "scores.jsonl", score_rows, role="scores"))
-    artifacts.append(artifact_io.write_jsonl_artifact(run_dir / "failures.jsonl", [f.model_dump(mode="json") for f in failure_rows], role="failures"))
+    def _json(name: str, obj: Any, role: str) -> ArtifactRef:
+        return artifact_io.write_json_artifact(run_dir / name, obj, role=role, base_dir=run_dir)
+
+    def _jsonl(name: str, rows: list[dict[str, Any]], role: str) -> ArtifactRef:
+        return artifact_io.write_jsonl_artifact(run_dir / name, rows, role=role, base_dir=run_dir)
+
+    artifacts: list[ArtifactRef] = [
+        _json("resolved_config.json", resolved_config, "resolved_config"),
+        _json("task_spec.json", task_payload, "task_spec"),
+        _json("model_spec.json", model_payload, "model_spec"),
+        _json("scoring_spec.json", scoring_payload, "scoring_spec"),
+        artifact_io.write_text_artifact(
+            run_dir / "prompt_template.txt", prompt_template, role="prompt_template", base_dir=run_dir
+        ),
+        _jsonl("prompt_snapshots.jsonl", prompt_snapshot_rows, "prompt_snapshots"),
+        _jsonl("stimuli_snapshot.jsonl", stimulus_snapshot_rows, "stimuli_snapshot"),
+        _jsonl("raw_responses.jsonl", raw_rows, "raw_responses"),
+        _jsonl("response_records.jsonl", response_record_rows, "response_records"),
+        _jsonl("normalized_responses.jsonl", normalized_rows, "normalized_responses"),
+        _jsonl("scores.jsonl", score_rows, "scores"),
+        _jsonl("failures.jsonl", [f.model_dump(mode="json") for f in failure_rows], "failures"),
+    ]
 
     completed = int(metrics["execution_quality"]["completed_record_count"])
     failed = int(metrics["execution_quality"]["failed_record_count"])
@@ -520,20 +617,16 @@ def run_benchmark(
         artifact_refs=list(artifacts),
         figure_refs=[],
     )
-    artifacts.append(
-        artifact_io.write_json_artifact(
-            run_dir / "aggregate_report.json", aggregate_report.model_dump(mode="json"), role="aggregate_report"
-        )
-    )
+    artifacts.append(_json("aggregate_report.json", aggregate_report.model_dump(mode="json"), "aggregate_report"))
 
     manifest = RunManifest(
         run_id=run_id,
         status=status,
         started_at=started_at,
         finished_at=datetime.now(timezone.utc),
-        git_commit=git_commit,
+        git_commit=git_commit_value,
         benchmark_version=BENCHMARK_VERSION,
-        task_version=spec.TASK_VERSION,
+        task_version=task_spec.task_version,
         resolved_config_hash=hash_object(resolved_config),
         task_spec_hash=hash_object(task_payload),
         model_spec_hash=hash_object(model_payload),
@@ -541,7 +634,7 @@ def run_benchmark(
         prompt_snapshot_set_hash=hash_object(prompt_snapshot_rows),
         stimulus_set_hash=hash_object(stimulus_set),
         scoring_spec_hash=hash_object(scoring_payload),
-        provider=model_spec.provider,
+        provider=provider_name,
         model_id=model_spec.model_id,
         model_snapshot=model_spec.model_version_snapshot,
         planned_records=planned,
@@ -560,8 +653,17 @@ def run_benchmark(
         estimated_cost_usd=None,
         artifacts=list(artifacts),
         errors=failure_rows,
+        provenance_notes=provenance_notes,
     )
-    artifact_io.write_json_artifact(run_dir / "manifest.json", manifest.model_dump(mode="json"), role="manifest")
+    # manifest.json is the integrity index; it is NOT part of its own artifact
+    # list. Its digest is written separately to manifest.sha256 (no self-cycle).
+    manifest_path = run_dir / "manifest.json"
+    artifact_io.write_json_artifact(
+        manifest_path, manifest.model_dump(mode="json"), role="manifest", base_dir=run_dir
+    )
+    (run_dir / "manifest.sha256").write_text(
+        hash_file(manifest_path) + "\n", encoding="utf-8", newline="\n"
+    )
 
     # --- re-verify manifest artifacts against files on disk ------------------
     problems = artifact_io.verify_artifacts(artifacts, run_dir)
@@ -600,6 +702,7 @@ __all__ = [
     "BENCHMARK_ID",
     "BENCHMARK_VERSION",
     "BenchmarkRunResult",
+    "RunConfigError",
     "default_run_id",
     "run_benchmark",
 ]

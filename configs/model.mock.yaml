@@ -1,7 +1,10 @@
+# FAST-001.1: model config that drives the deterministic mock benchmark run.
+# provider=mock is the ONLY supported provider this round. There is NO API key
+# here and none is read anywhere. Real provider/model config is RUN-003.
 provider: mock
-model: rule-based-v1
+model: rule-based-v2
 model_version_snapshot: null
-temperature: 1.0
+temperature: 0.0
 seed: 20260425
 max_tokens: 2800
 response_format: json_object

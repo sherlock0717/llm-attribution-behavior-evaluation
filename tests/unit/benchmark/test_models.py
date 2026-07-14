@@ -66,7 +66,7 @@ def test_run_manifest_requires_detailed_hashes():
             status=models.RunStatus.COMPLETED,
             started_at="2026-07-14T00:00:00Z",
             benchmark_version="0.1-draft",
-            task_version="2.0-draft",
+            task_version="2.0-mock",
             provider="mock",
             model_id="rule-based-v2",
             planned_records=12,

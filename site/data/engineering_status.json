@@ -8,6 +8,7 @@
     "prompt_template",
     "raw_responses",
     "resolved_config",
+    "response_records",
     "scores",
     "scoring_spec",
     "stimuli_snapshot",
@@ -16,7 +17,7 @@
   "benchmark_id": "llm-attribution-behavior",
   "current_maturity_level": "pre-BMK-L1",
   "data_source": "mock_engineering_validation",
-  "generated_at": "2026-07-14T07:35:29+00:00",
+  "generated_at": "2026-07-14T08:19:00+00:00",
   "mock_execution_quality": {
     "completed_record_count": 24,
     "completion_rate": 1.0,

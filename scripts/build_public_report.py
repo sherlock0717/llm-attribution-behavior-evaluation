@@ -49,16 +49,28 @@ from freewill_attribution.benchmark import registry  # noqa: E402
 MOCK_ACCEPTANCE_N = 2
 MOCK_SEED = 20260425
 
-# Provenance dimensions and whether the repository can verify them (source map §11).
+# Provenance dimensions with a FOUR-state verification status (FAST-001.1 §6).
+# We must NOT collapse "author attested" or "reconstructed from code" into
+# "repository verified". The four states are:
+#   repository_verified : directly checkable from repository content
+#   author_attested     : stated by the author; not independently verifiable here
+#   reconstructed        : rebuilt from current code, not a historical artifact
+#   unknown              : no evidence; must never be back-filled as fact
+VERIFICATION_STATES = (
+    "repository_verified",
+    "author_attested",
+    "reconstructed",
+    "unknown",
+)
 PROVENANCE_DIMENSIONS = [
-    ("record_count", "direct_file_evidence"),
-    ("condition_design_6x2x30", "reconstructed_from_outputs"),
-    ("scale_item_definitions", "direct_file_evidence"),
-    ("historical_provider_is_deepseek", "historical_documentation"),
+    ("record_count", "repository_verified"),
+    ("condition_design_6x2x30", "repository_verified"),
+    ("scale_item_definitions", "repository_verified"),
+    ("historical_provider_is_deepseek", "author_attested"),
     ("exact_model_server_snapshot", "unknown"),
     ("exact_prompt_snapshot", "unknown"),
-    ("prompt_hash", "unknown"),
-    ("stimulus_hash", "reconstructed_from_code"),
+    ("historical_stimulus_hash", "unknown"),
+    ("current_stimulus_definition", "reconstructed"),
     ("request_timestamp", "unknown"),
     ("provider_request_id", "unknown"),
     ("token_usage", "unknown"),
@@ -177,11 +189,13 @@ def build_evidence_matrix() -> dict:
         for c in historical["claims"]
     ]
     provenance = [
-        {"dimension": name, "evidence_type": etype,
-         "verifiable": etype != "unknown"}
-        for name, etype in PROVENANCE_DIMENSIONS
+        {"dimension": name, "verification_status": status}
+        for name, status in PROVENANCE_DIMENSIONS
     ]
-    known = sum(1 for _n, e in PROVENANCE_DIMENSIONS if e != "unknown")
+    counts = {
+        state: sum(1 for _n, st in PROVENANCE_DIMENSIONS if st == state)
+        for state in VERIFICATION_STATES
+    }
     benchmark_objects = [
         "BenchmarkSpec", "TaskSpec", "ModelSpec", "RunSpec", "RunManifest",
         "ResponseRecord", "ScoreRecord", "AggregateReport", "ArtifactRef", "FailureRecord",
@@ -191,9 +205,18 @@ def build_evidence_matrix() -> dict:
         "historical_evidence_levels": historical_evidence,
         "provenance_completeness": {
             "dimensions": provenance,
-            "known_count": known,
+            "repository_verified_count": counts["repository_verified"],
+            "author_attested_count": counts["author_attested"],
+            "reconstructed_count": counts["reconstructed"],
+            "unknown_count": counts["unknown"],
             "total_count": len(PROVENANCE_DIMENSIONS),
-            "note": "unknown 维度不得补写为确定事实（source map §11）。",
+            "status_legend": {
+                "repository_verified": "可由仓库内容直接验证",
+                "author_attested": "作者说明，仓库无法独立验证",
+                "reconstructed": "由当前代码重建，非历史运行产物",
+                "unknown": "无证据；不得补写为确定事实（source map §11）",
+            },
+            "note": "四种状态互不等价；author_attested / reconstructed 不得显示为已验证。",
         },
         "benchmark_object_model": {
             "implemented_objects": benchmark_objects,

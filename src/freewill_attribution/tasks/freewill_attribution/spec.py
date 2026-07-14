@@ -21,7 +21,12 @@ import scales as _scales  # noqa: E402  (path bootstrap above)
 import stimuli as _stimuli  # noqa: E402
 
 TASK_ID = "freewill-attribution-v2"
-TASK_VERSION = "2.0-draft"
+# FAST-001.1: unified single source of truth for the v2 version string. This
+# must equal configs/tasks/freewill_attribution.v2.yaml:task_version and the
+# protocol_version in docs/protocols/freewill_attribution_v2.md.
+TASK_VERSION = "2.0-mock"
+CORE_BATCHING = "all_items"
+FROZEN_MAX_REPAIR_ATTEMPTS = 1
 
 PROCESS_CONDITIONS: list[str] = list(_stimuli.PROCESS_CONDITIONS)
 IDENTITY_LABELS: list[str] = list(_stimuli.IDENTITY_LABELS)
@@ -76,9 +81,44 @@ def build_decision_text(scenario_id: str, condition: str, identity: str) -> str:
     return _stimuli.build_decision_text(scenario, condition, identity)
 
 
+def taskspec_consistency_problems(task_spec: Any) -> list[str]:
+    """Check that a declarative TaskSpec matches this Python task pack.
+
+    Returns a list of human-readable problems (empty when consistent). This
+    prevents the YAML contract and the Python implementation from drifting into
+    two unverified sources of truth (FAST-001.1 §2.10).
+    """
+    td = task_spec.model_dump() if hasattr(task_spec, "model_dump") else dict(task_spec)
+    problems: list[str] = []
+    if td.get("task_id") != TASK_ID:
+        problems.append(f"task_id mismatch: config={td.get('task_id')!r} impl={TASK_ID!r}")
+    if td.get("task_version") != TASK_VERSION:
+        problems.append(
+            f"task_version mismatch: config={td.get('task_version')!r} impl={TASK_VERSION!r}"
+        )
+    conds = list((td.get("condition_schema") or {}).get("conditions") or [])
+    if set(conds) != set(PROCESS_CONDITIONS):
+        problems.append(
+            f"condition_schema mismatch: config={sorted(conds)} impl={sorted(PROCESS_CONDITIONS)}"
+        )
+    idents = list((td.get("identity_schema") or {}).get("identities") or [])
+    if set(idents) != set(IDENTITY_LABELS):
+        problems.append(
+            f"identity_schema mismatch: config={sorted(idents)} impl={sorted(IDENTITY_LABELS)}"
+        )
+    batching = (td.get("prompt_config") or {}).get("batching") or {}
+    core = batching.get("core") or batching.get("recommended_core_default")
+    if core != CORE_BATCHING:
+        problems.append(f"core batching must be {CORE_BATCHING!r}, got {core!r}")
+    return problems
+
+
 __all__ = [
     "TASK_ID",
     "TASK_VERSION",
+    "CORE_BATCHING",
+    "FROZEN_MAX_REPAIR_ATTEMPTS",
+    "taskspec_consistency_problems",
     "PROCESS_CONDITIONS",
     "IDENTITY_LABELS",
     "PROCESS_ORDINAL",

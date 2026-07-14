@@ -169,9 +169,30 @@ def test_v2_response_schema_no_runner_owned_metadata():
 
 def test_v2_core_batching_not_by_construct():
     b = load(TASK_V2)["prompt_config"]["batching"]
-    assert b["decision_status"] == "unresolved"
+    # FAST-001.1: frozen for the first mock v2 run (no longer "unresolved").
+    assert b["decision_status"] == "frozen_for_mock_v2"
+    assert b["core"] == "all_items"
     assert b["recommended_core_default"] == "all_items"
     assert b["recommended_core_default"] != "by_construct"
+
+
+def test_v2_frozen_decisions_are_not_unresolved():
+    # FAST-001.1 §7: a frozen v2 item must NOT simultaneously be candidate/unresolved.
+    d = load(TASK_V2)
+    assert d["condition_schema"]["decision_status"] == "frozen_for_mock_v2"
+    assert d["prompt_config"]["batching"]["decision_status"] == "frozen_for_mock_v2"
+    assert d["prompt_config"]["batching"]["max_repair_attempts"] == 1
+    assert d["open_questions"] == []
+    # future (unimplemented) robustness variants may still be listed.
+    assert "by_construct" in d["prompt_config"]["batching"]["future_variants"]
+
+
+def test_v2_version_is_unified():
+    # FAST-001.1 §3: task_version unified to 2.0-mock across contract + protocol.
+    assert load(TASK_V2)["task_version"] == "2.0-mock"
+    proto = V2_PROTO.read_text(encoding="utf-8")
+    assert 'protocol_version: "2.0-mock"' in proto
+    assert "2.0-draft" not in proto
 
 
 def test_v2_construct_label_blinding_name_accurate():

@@ -22,6 +22,7 @@ from __future__ import annotations
 import argparse
 
 from . import runner
+from .benchmark import registry
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -74,8 +75,17 @@ def build_parser() -> argparse.ArgumentParser:
     bench.add_argument("--n-per-cell", type=int, default=1)
     bench.add_argument("--seed", type=int, default=20260425)
     bench.add_argument("--max-repair-attempts", type=int, default=1)
-    bench.add_argument("--task-config", default=None, help="Optional task config path (reserved).")
-    bench.add_argument("--model-config", default=None, help="Optional model config path (reserved).")
+    bench.add_argument(
+        "--task-config",
+        default=str(registry.TASK_V2_YAML),
+        help="TaskSpec contract YAML that drives the run "
+        "(default: configs/tasks/freewill_attribution.v2.yaml).",
+    )
+    bench.add_argument(
+        "--model-config",
+        default=str(registry.MODEL_MOCK_YAML),
+        help="Model config YAML (default: configs/model.mock.yaml). Mock only.",
+    )
     bench.add_argument("--run-id", default=None)
     bench.add_argument("--fresh", action="store_true", help="Remove prior artifacts in the run dir.")
     bench.add_argument("--resume", action="store_true", help="Resume: skip already-completed records.")
@@ -108,6 +118,8 @@ def main(argv: list[str] | None = None) -> int:
             seed=args.seed,
             n_per_cell=args.n_per_cell,
             artifact_root=args.artifact_root,
+            task_config=args.task_config,
+            model_config=args.model_config,
             max_repair_attempts=args.max_repair_attempts,
             fresh=args.fresh,
             resume=args.resume,

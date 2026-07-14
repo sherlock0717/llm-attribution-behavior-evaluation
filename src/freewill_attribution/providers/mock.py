@@ -90,6 +90,10 @@ class MockProvider:
     model_id = MODEL_ID
 
     def generate(self, request: ProviderRequest) -> ProviderResponse:
+        # Test-only: force a provider-side exception on every attempt so the
+        # runner lifecycle (FailureRecord + partial manifest) can be exercised.
+        if request.fault == "provider_error":
+            raise RuntimeError("mock provider forced failure (test-only fault)")
         rng = random.Random(_seed_int(request))
         is_human = request.identity == "人类决策者"
         is_long_direct = request.condition == "direct_choice_long"

@@ -438,8 +438,10 @@ ul.tight li { margin: 5px 0; }
   flex-direction: column;
   gap: 2px;
 }
-.prov-cell.known { border-left-color: #2f855a; }
-.prov-cell.unknown { border-left-color: #a0aec0; background: #f7f8fa; }
+.prov-cell.prov-repository_verified { border-left-color: #2f855a; }
+.prov-cell.prov-author_attested { border-left-color: #3182ce; background: #f5f9fd; }
+.prov-cell.prov-reconstructed { border-left-color: #b7791f; background: #fffdf6; }
+.prov-cell.prov-unknown { border-left-color: #a0aec0; background: #f7f8fa; }
 .prov-dim { font-size: .82rem; font-weight: 600; overflow-wrap: anywhere; }
 .prov-type { font-size: .74rem; color: #718096; overflow-wrap: anywhere; }
 
