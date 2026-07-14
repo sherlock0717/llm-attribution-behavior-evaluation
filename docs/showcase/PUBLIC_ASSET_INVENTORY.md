@@ -47,6 +47,32 @@
 
 > 首版仅复制 3 张"首版选用"图；"可选"图需人工点选后方可加入；"旧命名/默认排除"两张默认不进入首版；任何原始逐条响应图不存在。
 
+> **SITE-005 复核（视觉重构）**：本轮**不新增图片资产**，仅放大并重新组织已在页面使用的 3 张"首版选用"图；页面首图（`mean_agency.png`）改为整行大图 + `<dialog>` 灯箱，其余两张为双列大图，均附读图结论与来源边界。复制后 SHA-256 与源图逐字节一致（`tests/site/test_static_site.py::test_figures_match_source_hashes` 校验通过）。批准维度：`local_preview_status = approved`；`public_release_status = pending_user_approval`（公开部署仍待授权）。新增插图需求以规范占位记录于 `docs/showcase/VISUAL_ASSET_BRIEF.md`。
+
+> **SITE-005.1 复核**：VIS-002、VIS-003 已用原生网页可视化替换（Process Structure Gradient / Exploratory Path Diagram），页面**不再有任何 "Visual asset pending" 占位**；仍未新增任何图片资产（继续复用同 3 张历史图，SHA-256 不变）。VIS-001 仅保留在 `VISUAL_ASSET_BRIEF.md` 作候选，不放入公开页面。批准维度不变：`local_preview_status = approved`，`public_release_status = pending_user_approval`。
+
+## E. 概念插图（Conceptual Visual · SITE-005.2）
+
+| 字段 | 值 |
+|---|---|
+| 原始暂存路径 | `fcdb0f90-6a14-4e45-9412-9b6325cf17a3.png`（仓库根目录临时副本，导入后已删除） |
+| 站点路径 | `site/assets/figures/attribution-research-concept.png` |
+| 文件类型 | PNG（signature 校验通过） |
+| 实际尺寸 | 1586 × 992 |
+| 实际宽高比 | 1.5988（≈ 8:5） |
+| SHA-256 | `FFCC3139FD2FBE71CC9049F06CF718BBBFBB6C56E2BF37210C8268FF702BC7F7` |
+| 内容说明 | 概念示意：AI / 人类决策主体 → 六种决策过程描述 → 模型的能动性/自由意志/责任归因输出 |
+| 页面位置 | Research Question 栏目（研究缘起/比较内容 之后，三个核心问题 之前） |
+| 是否含原始响应 | No |
+| 是否是统计图 | No |
+| 是否需要脱敏 | No |
+| 是否为概念插图 | Yes |
+| local_preview_status | approved |
+| public_release_status | pending_user_approval |
+| 证据边界 | 只解释研究结构，不作为研究结果；不计入三张历史结果图；不承载统计证据 |
+
+> 该资产为概念插图，**不得**标为历史数据证据，**不得**加入 `historical_results.figures`。字节未修改（源/目标 SHA-256 一致）。
+
 ## C. Internal Only（默认不公开）
 
 | 资产 | 理由 |

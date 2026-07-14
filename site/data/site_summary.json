@@ -1,0 +1,61 @@
+{
+  "benchmark_status": "planned",
+  "data_as_of_date": "2026-07-13",
+  "design": {
+    "identity_labels": [
+      "AI 决策者",
+      "人类决策者"
+    ],
+    "n_per_cell": 30,
+    "process_conditions": [
+      {
+        "key": "direct_choice",
+        "label": "直接选择",
+        "note": "只给出最终选择，最低结构，作为基线"
+      },
+      {
+        "key": "direct_choice_long",
+        "label": "长文本直接选择",
+        "note": "拉长文本但不加入真正理由结构，用于分离文本长度效应"
+      },
+      {
+        "key": "alternatives",
+        "label": "列出可选方案",
+        "note": "呈现多个候选行动"
+      },
+      {
+        "key": "reasons_concise",
+        "label": "简洁理由权衡",
+        "note": "较短文本中的理由权衡"
+      },
+      {
+        "key": "reasons",
+        "label": "完整理由权衡",
+        "note": "较完整的理由比较"
+      },
+      {
+        "key": "reflection_feedback",
+        "label": "反思与反馈修正",
+        "note": "理由 + 反思 + 反馈修正，最高结构"
+      }
+    ],
+    "total_records": 360
+  },
+  "estimated_cost_usd": null,
+  "generated_at": "2026-07-14T02:31:21+00:00",
+  "historical_data_type": "real_api_output",
+  "historical_provider": "DeepSeek API",
+  "historical_record_count": 360,
+  "identity_condition_count": 2,
+  "local_engineering_status": "completed",
+  "mock_usage": "engineering_validation_only",
+  "model_version_snapshot": null,
+  "n_per_cell": 30,
+  "process_condition_count": 6,
+  "project_stage": "current",
+  "project_version": "0.2.0.dev0",
+  "provenance_status": "incomplete_run_metadata",
+  "release_verification_status": "pending_verification",
+  "source_commit": "a347bdb1845e56fa3fed3e6c64fed511524b84fc",
+  "token_usage_total": null
+}

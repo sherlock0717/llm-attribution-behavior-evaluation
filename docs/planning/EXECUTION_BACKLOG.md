@@ -20,10 +20,14 @@
 - **PLAN-001 · Rebaseline Phases And Showcase Track** — 状态：**Complete（local documentation and contract）**。已重设 Phase 1–7、加入并行 Track S、三级测试策略、更新 backlog 与决策日志。
 - **SITE-001 · Showcase Content And Data Contract** — 状态：**Complete（local documentation and contract）**。已产出 information architecture、page copy、evidence boundaries、asset inventory、site data contract（见 `docs/planning/SHOWCASE_PLAN.md`、`docs/showcase/*`）。
 
-### 下一里程碑（同一 `feat/showcase-v1` 分支连续完成，不再拆成三个小分支）
-- **SITE-002 · Site Data Export** — 状态：**Current**。产出 `scripts/build_site_data.py`、`site/data/site_summary.json`、`roadmap.json`、`version_history.json`、`historical_results.json`。
-- **SITE-003 · Static Showcase MVP** — 状态：**Current**。产出原生 HTML/CSS/JS 静态展示页（`site/`）。
-- **SITE-004 · Local Showcase Validation** — 状态：**Current**。本地静态服务、JSON/路径校验、移动端布局、证据检查。
+### 展示页里程碑（`feat/showcase-v1` 分支连续完成）
+- **SITE-002 · Site Data Export** — 状态：**Complete**。已产出 `scripts/build_site_data.py`、`site/data/site_summary.json`、`roadmap.json`、`version_history.json`、`historical_results.json`（`--check` 通过）。
+- **SITE-003 · Static Showcase MVP** — 状态：**Complete**。已产出原生 HTML/CSS/JS 静态展示页（`site/`）。
+- **SITE-004 · Local Showcase Validation** — 状态：**Complete**。本地静态服务 HTTP smoke、JSON/路径校验、证据检查通过。
+- **SITE-005 · Public Showcase Content And Visual Redesign** — 状态：**Current / awaiting human visual approval**（Complete locally；public visual and deployment review pending）。文案去模板化/去 AI 感重写，信息层级与视觉结构重构，新增 6×2 设计矩阵、流程图、条件比较条、证据三栏、复现组件链、版本时间线、路线图高亮等原生可视化；复用同 3 张历史图并放大 + `<dialog>` 灯箱；新增 `SHOWCASE_REDESIGN_AUDIT.md`、`VISUAL_ASSET_BRIEF.md`、`DELIVERY_PACKAGE_GUIDE.md`；扩展 site_summary 的 `design` 块。
+- **SITE-005.1 · Showcase Accuracy, Native Visuals And Release-Safe Data** — 状态：**Complete locally；SITE-005 仍为 Current / awaiting human visual approval，未标为公开发布完成**。修正 source_commit 自引用（改为研究源最近提交，`--check` 稳定）、移除 `../` 失效链接（锚点 + `<code>` 路径）、Pipeline 三层化并纠正 `src/freewill_attribution/` 误标 Historical、跨平台表述（Windows + Git Bash，非 Linux/远程）、VIS-002/003 原生替换（页面无 "Visual asset pending"）、factual/中介表述收紧、mediation 结构化字段（estimate/ci_low/ci_high/crosses_zero/path_role）、read_note 数据化（移除 JS FIGURE_READS）、比较条中文标签。targeted：`--check` 通过、`tests/site` 44 passed、collect-only 230、HTTP+链接检查全 200。停在未提交，重新等待人工视觉与文案审核。
+- **SITE-005.2 · Runtime Completion, Mobile Layout And Concept Visual** — 状态：**Complete locally；SITE-005 仍为 Current / awaiting human visual approval**。修复 Historical Results 缺失 `data-slot="figures"` 导致的 JS 运行中断（三张图/路径图/版本/路线图恢复渲染）；新增 `requireSlot` DOM slot 契约与 render-complete/diagnostics 标记；修复 390px 移动端横向溢出（`minmax(0,1fr)` + `min-width:0` + 断词）；过程梯度 6 列网格 + 独立 scale header；接入用户提供的研究问题概念图（`attribution-research-concept.png`，1586×992，SHA `FFCC3139…`，仅解释研究结构、不计入三张结果图），根目录暂存副本已删除。targeted：`--check` 通过、`tests/site` 57 passed、collect-only 243、HTTP smoke 12 项全 200。浏览器 dump-dom/截图命令被用户拒绝，故未做浏览器视觉/运行时验证（运行时经静态 slot 契约测试验证）。停在未提交。
+- **REL-001 · Push, CI And Pages Release** — 状态：**Planned / requires push authorization**。统一发布验证（完整回归、GitHub-hosted Windows/Linux CI、Pages 部署、在线链接校验），需用户 push 授权（Phase 7）。
 
 ### 研究与运行主线
 - **RES-001 · Freeze V1 And V2 Research Protocols** — 依赖：PLAN-001。冻结 v1/v2 研究协议（RQ、假设、条件、prompt 暴露策略、解析契约、分析计划、成败判据）。
