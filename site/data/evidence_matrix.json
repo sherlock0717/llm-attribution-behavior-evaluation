@@ -15,7 +15,7 @@
       "FailureRecord"
     ]
   },
-  "generated_at": "2026-07-14T09:39:47+00:00",
+  "generated_at": "2026-07-14T10:28:41+00:00",
   "historical_evidence_levels": [
     {
       "evidence_level": "descriptive",
@@ -58,94 +58,152 @@
     "dimensions": [
       {
         "dimension": "record_count",
+        "group": "历史数据与设计",
+        "label": "历史记录数",
         "verification_status": "repository_verified"
       },
       {
         "dimension": "condition_design_6x2x30",
+        "group": "历史数据与设计",
+        "label": "实验设计（6×2×30）",
         "verification_status": "repository_verified"
       },
       {
         "dimension": "scale_item_definitions",
+        "group": "历史数据与设计",
+        "label": "量表题项定义",
         "verification_status": "repository_verified"
       },
       {
+        "dimension": "current_stimulus_definition",
+        "group": "历史数据与设计",
+        "label": "当前刺激定义",
+        "verification_status": "reconstructed"
+      },
+      {
         "dimension": "historical_provider_is_deepseek",
+        "group": "历史运行元数据",
+        "label": "历史 Provider 为 DeepSeek",
         "verification_status": "author_attested"
       },
       {
         "dimension": "exact_model_server_snapshot",
+        "group": "历史运行元数据",
+        "label": "历史精确模型快照",
         "verification_status": "unknown"
       },
       {
         "dimension": "exact_prompt_snapshot",
+        "group": "历史运行元数据",
+        "label": "历史精确 Prompt",
         "verification_status": "unknown"
       },
       {
         "dimension": "historical_stimulus_hash",
+        "group": "历史运行元数据",
+        "label": "历史刺激哈希",
         "verification_status": "unknown"
       },
       {
-        "dimension": "current_stimulus_definition",
-        "verification_status": "reconstructed"
-      },
-      {
         "dimension": "request_timestamp",
+        "group": "历史运行元数据",
+        "label": "历史请求时间戳",
         "verification_status": "unknown"
       },
       {
         "dimension": "provider_request_id",
+        "group": "历史运行元数据",
+        "label": "历史请求 ID",
         "verification_status": "unknown"
       },
       {
         "dimension": "token_usage",
+        "group": "历史运行元数据",
+        "label": "历史 token 用量",
         "verification_status": "unknown"
       },
       {
         "dimension": "estimated_cost_usd",
+        "group": "历史运行元数据",
+        "label": "历史费用估计",
         "verification_status": "unknown"
       },
       {
         "dimension": "retry_information",
+        "group": "历史运行元数据",
+        "label": "历史 retry 信息",
         "verification_status": "unknown"
       },
       {
         "dimension": "item_level_missingness",
+        "group": "历史运行元数据",
+        "label": "逐题缺失情况",
         "verification_status": "unknown"
       },
       {
         "dimension": "raw_response_public_availability",
+        "group": "历史运行元数据",
+        "label": "原始响应公开可得性",
         "verification_status": "unknown"
       },
       {
         "dimension": "provider_adapter_code",
+        "group": "真实接入与运行",
+        "label": "离线 Provider 代码",
         "verification_status": "repository_verified"
       },
       {
         "dimension": "provider_live_connectivity",
+        "group": "真实接入与运行",
+        "label": "真实连接",
         "verification_status": "unknown"
       },
       {
         "dimension": "actual_model_id",
+        "group": "真实接入与运行",
+        "label": "真实模型 ID",
         "verification_status": "unknown"
       },
       {
         "dimension": "actual_model_snapshot",
+        "group": "真实接入与运行",
+        "label": "真实模型快照",
         "verification_status": "unknown"
       },
       {
         "dimension": "actual_pricing",
+        "group": "真实接入与运行",
+        "label": "真实价格",
         "verification_status": "unknown"
       },
       {
         "dimension": "actual_request_ids",
+        "group": "真实接入与运行",
+        "label": "真实请求 ID",
         "verification_status": "unknown"
       },
       {
         "dimension": "actual_token_usage",
+        "group": "真实接入与运行",
+        "label": "真实 token 用量",
         "verification_status": "unknown"
       },
       {
         "dimension": "actual_cost",
+        "group": "真实接入与运行",
+        "label": "真实费用",
+        "verification_status": "unknown"
+      },
+      {
+        "dimension": "actual_smoke_run",
+        "group": "真实接入与运行",
+        "label": "真实 smoke 运行",
+        "verification_status": "unknown"
+      },
+      {
+        "dimension": "actual_pilot_run",
+        "group": "真实接入与运行",
+        "label": "真实 pilot 运行",
         "verification_status": "unknown"
       }
     ],
@@ -158,7 +216,7 @@
       "repository_verified": "可由仓库内容直接验证",
       "unknown": "无证据；不得补写为确定事实（source map §11）"
     },
-    "total_count": 23,
-    "unknown_count": 17
+    "total_count": 25,
+    "unknown_count": 19
   }
 }

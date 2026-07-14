@@ -1,0 +1,267 @@
+{
+  "artifact_lifecycle": [
+    {
+      "label": "解析后配置",
+      "role": "resolved_config"
+    },
+    {
+      "label": "任务规格",
+      "role": "task_spec"
+    },
+    {
+      "label": "模型规格",
+      "role": "model_spec"
+    },
+    {
+      "label": "Prompt 快照",
+      "role": "prompt_snapshots"
+    },
+    {
+      "label": "刺激快照",
+      "role": "stimuli_snapshot"
+    },
+    {
+      "label": "原始响应",
+      "role": "raw_response"
+    },
+    {
+      "label": "规范化响应",
+      "role": "normalized_response"
+    },
+    {
+      "label": "计分记录",
+      "role": "score"
+    },
+    {
+      "label": "失败记录",
+      "role": "failure"
+    },
+    {
+      "label": "聚合报告",
+      "role": "aggregate_report"
+    },
+    {
+      "label": "运行清单",
+      "role": "manifest"
+    }
+  ],
+  "doc_entries": [
+    {
+      "label": "研究方法",
+      "path": "docs/research_design_blueprint.md"
+    },
+    {
+      "label": "结果报告",
+      "path": "outputs/final_simulated_pilot_report.md"
+    },
+    {
+      "label": "证据来源声明",
+      "path": "docs/audit/v1_provenance_statement.md"
+    },
+    {
+      "label": "真实运行手册",
+      "path": "docs/runs/REAL_PILOT_RUNBOOK.md"
+    },
+    {
+      "label": "真实接入离线准备",
+      "path": "docs/runs/REAL_PROVIDER_READINESS.md"
+    }
+  ],
+  "generated_at": "2026-07-14T10:26:38+00:00",
+  "hash_fields": [
+    {
+      "field": "resolved_config_hash",
+      "label": "解析后配置"
+    },
+    {
+      "field": "task_spec_hash",
+      "label": "任务规格"
+    },
+    {
+      "field": "model_spec_hash",
+      "label": "模型规格"
+    },
+    {
+      "field": "prompt_template_hash",
+      "label": "Prompt 模板"
+    },
+    {
+      "field": "prompt_snapshot_set_hash",
+      "label": "Prompt 快照集"
+    },
+    {
+      "field": "stimulus_set_hash",
+      "label": "刺激集"
+    },
+    {
+      "field": "scoring_spec_hash",
+      "label": "计分规格"
+    }
+  ],
+  "hash_note": "任务规格、模型配置、Prompt、刺激集、计分规格与运行产物各自记录 SHA-256，运行清单据此把一次运行的输入与产物关联起来。",
+  "key_directories": [
+    {
+      "note": "评测运行器、Provider 接口与计分逻辑",
+      "path": "src/freewill_attribution/"
+    },
+    {
+      "note": "任务、模型、Prompt 与研究配置契约",
+      "path": "configs/"
+    },
+    {
+      "note": "历史聚合结果、统计产物与图表（只读、不覆盖）",
+      "path": "outputs/"
+    },
+    {
+      "note": "静态展示页与其数据",
+      "path": "site/"
+    },
+    {
+      "note": "研究协议、证据审计与运行手册",
+      "path": "docs/"
+    }
+  ],
+  "pipeline_stages": [
+    {
+      "code_object": "TaskSpec",
+      "role": "冻结任务、条件与解析契约",
+      "stage": "任务规格"
+    },
+    {
+      "code_object": "stimulus_set",
+      "role": "记录本次运行使用的刺激材料与其哈希",
+      "stage": "刺激快照"
+    },
+    {
+      "code_object": "prompt_template",
+      "role": "由模板与刺激拼装并快照 Prompt",
+      "stage": "Prompt"
+    },
+    {
+      "code_object": "Provider",
+      "role": "统一的模型调用接口（mock / 真实 provider）",
+      "stage": "模型接口"
+    },
+    {
+      "code_object": "ResponseRecord",
+      "role": "保存逐条原始模型响应",
+      "stage": "原始响应"
+    },
+    {
+      "code_object": "parser",
+      "role": "把原始响应解析为结构化题项",
+      "stage": "解析"
+    },
+    {
+      "code_object": "validator",
+      "role": "schema 校验、范围检查、缺失检查",
+      "stage": "校验"
+    },
+    {
+      "code_object": "repair",
+      "role": "对可修复的解析问题触发重试/修复",
+      "stage": "修复"
+    },
+    {
+      "code_object": "ScoreRecord",
+      "role": "按计分规格聚合为构念分数",
+      "stage": "计分"
+    },
+    {
+      "code_object": "AggregateReport",
+      "role": "汇总执行质量与输出质量指标",
+      "stage": "聚合报告"
+    },
+    {
+      "code_object": "RunManifest",
+      "role": "记录配置、哈希与产物引用，支持审计",
+      "stage": "运行清单"
+    }
+  ],
+  "real_provider": {
+    "checklist": [
+      {
+        "label": "核验当前官方 API 基础地址",
+        "step": "verify_current_official_base_url"
+      },
+      {
+        "label": "核验当前官方模型 ID",
+        "step": "verify_current_official_model_id"
+      },
+      {
+        "label": "核验当前官方价格",
+        "step": "verify_current_official_pricing"
+      },
+      {
+        "label": "在环境变量中配置 API Key",
+        "step": "configure_api_key_in_environment"
+      },
+      {
+        "label": "显式开启 live 模式",
+        "step": "explicitly_enable_live_api"
+      },
+      {
+        "label": "显式确认这是一次付费运行",
+        "step": "explicitly_confirm_paid_run"
+      }
+    ],
+    "dry_run_plan": [
+      {
+        "n_per_cell": 1,
+        "name": "smoke",
+        "note": "每个实验单元 1 条，用于最小连通与解析校验",
+        "records": 12
+      },
+      {
+        "n_per_cell": 5,
+        "name": "pilot",
+        "note": "每个实验单元 5 条，用于首次真实小规模试点",
+        "records": 60
+      }
+    ],
+    "flow": [
+      "离线 Provider",
+      "凭据隔离",
+      "价格与模型核验",
+      "dry-run",
+      "12 条 smoke",
+      "60 条 pilot",
+      "脱敏公开报告"
+    ],
+    "future_record_fields": [
+      "token",
+      "费用",
+      "延迟",
+      "解析与 schema 质量",
+      "条件与身份结果"
+    ],
+    "runbook": "docs/runs/REAL_PILOT_RUNBOOK.md",
+    "statement": "真实模型接入方案已完成离线验证；在运行日核验模型、价格与凭据后，可直接执行真实运行。"
+  },
+  "repro_commands": [
+    {
+      "cmd": "uv sync --frozen",
+      "label": "环境安装（锁定依赖）"
+    },
+    {
+      "cmd": "python -m freewill_attribution.cli run --mock --n-per-cell 2 --out <临时目录>",
+      "label": "mock 快速运行（写临时目录）"
+    },
+    {
+      "cmd": "python -m freewill_attribution.cli run --provider deepseek --dry-run --run-profile smoke",
+      "label": "真实运行离线 dry-run（只规划、不发送、不计费）"
+    },
+    {
+      "cmd": "python -m pytest -q",
+      "label": "测试"
+    },
+    {
+      "cmd": "python scripts/build_site_data.py && python scripts/build_public_report.py && python scripts/build_showcase_data.py",
+      "label": "生成站点数据"
+    },
+    {
+      "cmd": "python -m http.server 8000 --directory site",
+      "label": "本地预览"
+    }
+  ]
+}
