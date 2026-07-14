@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-14T08:18:59+00:00",
+  "generated_at": "2026-07-14T09:39:47+00:00",
   "historical_deepseek": {
     "boundary": "单一模型历史 AI 模拟数据；非人类被试；缺完整运行 provenance。",
     "data_source": "historical_deepseek",
@@ -27,9 +27,28 @@
   "planned_real_pilot": {
     "boundary": "尚未运行；无任何真实模型结果；需单独授权。",
     "data_source": "planned_real_pilot",
-    "provider_model": "decided_in_RUN-003",
+    "provider_model": "verify_on_run_day",
     "real_pilot_n_per_cell": 5,
     "real_smoke_n_per_cell": 1,
     "status": "planned_not_run"
+  },
+  "real_provider_readiness": {
+    "actual_completion_rate": null,
+    "actual_cost_usd": null,
+    "actual_latency_ms": null,
+    "actual_parse_success_rate": null,
+    "actual_token_usage": null,
+    "adapter_status": "offline_validated",
+    "credential_status": "not_configured",
+    "dry_run_planning": "available",
+    "live_api_status": "not_run",
+    "model_id_status": "requires_runtime_verification",
+    "network_calls_made": 0,
+    "pilot_status": "not_run",
+    "pricing_status": "requires_runtime_verification",
+    "real_pilot": "not_run",
+    "real_smoke": "not_run",
+    "result_analysis_status": "not_applicable",
+    "smoke_status": "not_run"
   }
 }

@@ -495,6 +495,76 @@ function renderEngineeringCore(engineering, evaluation, evidence) {
 }
 
 // ---------------------------------------------------------------------------
+// Real provider readiness (REAL-SETUP-001). Never renders a fabricated real
+// metric: unrun values arrive as null / "not_run" / "not_applicable" and are
+// shown as such. All data comes from engineering_status.real_provider_readiness.
+// ---------------------------------------------------------------------------
+var READINESS_STATE_CLASS = {
+  offline_validated: "ok",
+  not_configured: "pending",
+  not_run: "pending",
+  requires_runtime_verification: "pending",
+  not_applicable: "muted",
+  available: "ok",
+};
+
+function readinessValue(v) {
+  if (v == null) return "null";
+  return String(v);
+}
+
+function renderReadiness(engineering) {
+  const rp = (engineering && engineering.real_provider_readiness) || {};
+  const statusHost = requireSlot("readiness-status");
+  statusHost.textContent = "";
+  const rows = [
+    ["Provider adapter", rp.adapter_status],
+    ["Credentials", rp.credential_status],
+    ["Model", rp.model_id_status],
+    ["Pricing", rp.pricing_status],
+    ["Dry-run planning", rp.dry_run_planning],
+    ["Live API", rp.live_api_status],
+    ["Live smoke", rp.smoke_status],
+    ["Live pilot", rp.pilot_status],
+    ["Result analysis", rp.result_analysis_status],
+  ];
+  rows.forEach(([label, value]) => {
+    const v = readinessValue(value);
+    const cls = READINESS_STATE_CLASS[v] || "pending";
+    const cell = el("div", { className: "readiness-cell is-" + cls });
+    cell.appendChild(el("span", { className: "readiness-label", text: label }));
+    cell.appendChild(el("span", { className: "readiness-value", text: v }));
+    statusHost.appendChild(cell);
+  });
+
+  const checklistHost = requireSlot("readiness-checklist");
+  checklistHost.textContent = "";
+  const reqs = [
+    "verify_current_official_base_url",
+    "verify_current_official_model_id",
+    "verify_current_official_pricing",
+    "configure_api_key_in_environment",
+    "explicitly_enable_live_api",
+    "explicitly_confirm_paid_run",
+  ];
+  reqs.forEach((r) => checklistHost.appendChild(el("li", { className: "readiness-req", text: r })));
+
+  const planHost = requireSlot("readiness-plan");
+  planHost.textContent = "";
+  const plan = [
+    ["smoke", 12, 1],
+    ["pilot", 60, 5],
+  ];
+  plan.forEach(([name, records, nPerCell]) => {
+    const card = el("div", { className: "plan-card" });
+    card.appendChild(el("span", { className: "plan-name", text: name }));
+    card.appendChild(el("span", { className: "plan-records", text: records + " 条计划" }));
+    card.appendChild(el("span", { className: "plan-note", text: "6 × 2 单元格 · 每格 " + nPerCell }));
+    planHost.appendChild(card);
+  });
+}
+
+// ---------------------------------------------------------------------------
 // Navigation: mobile toggle + scrollspy
 // ---------------------------------------------------------------------------
 function setupNav() {
@@ -586,6 +656,7 @@ async function main() {
     renderDesign(summary);
     renderResults(results);
     renderEngineeringCore(engineering, evaluation, evidence);
+    renderReadiness(engineering);
     renderVersions(versions);
     renderRoadmapGroup(roadmap.phases, "roadmap-phases");
     renderRoadmapGroup(roadmap.track_s, "roadmap-track");

@@ -23,6 +23,7 @@
           <li><a href="#pipeline">流程</a></li>
           <li><a href="#historical-results">历史结果</a></li>
           <li><a href="#engineering-core">工程核心</a></li>
+          <li><a href="#real-provider-readiness">真实运行准备</a></li>
           <li><a href="#evidence-limitations">证据与局限</a></li>
           <li><a href="#reproducibility">可复现性</a></li>
           <li><a href="#version-history">版本</a></li>
@@ -317,6 +318,43 @@
       </div>
     </section>
 
+    <!-- 5c. Real Provider Readiness (REAL-SETUP-001) -->
+    <section id="real-provider-readiness" class="section alt">
+      <div class="wrap">
+        <h2>真实运行准备</h2>
+        <p class="reading">
+          真实模型运行的<strong>接口与安全护栏</strong>已经就绪，但<strong>尚未真正运行</strong>。
+          下面每一项状态都直接来自公开数据文件：真实 provider 目前是<strong>离线验证</strong>，
+          凭据<strong>未配置</strong>，实际模型 ID 与价格<strong>需在运行当天核对</strong>，真实 smoke 与 pilot 都<strong>未运行</strong>。
+          这里不会出现任何真实 token、费用、延迟或性能数字——未运行的真实指标一律显示为 <code>null</code> / <code>not run</code>。
+        </p>
+
+        <div class="readiness-status" data-slot="readiness-status" aria-label="真实运行准备状态"></div>
+        <noscript>
+          <p>Provider adapter：offline validated；Credentials：not configured；Model / Pricing：requires runtime verification；Live smoke / pilot：not run。</p>
+        </noscript>
+
+        <h3>运行前检查清单</h3>
+        <p class="note">真实运行前必须逐项满足；未满足前 CLI 会在发送任何请求前拒绝，并且不会读取 API Key。</p>
+        <ol class="readiness-checklist" data-slot="readiness-checklist" aria-label="运行前检查清单"></ol>
+
+        <h3>Dry-run 计划（12 / 60）</h3>
+        <p class="note">
+          离线 dry-run 只规划请求，不发送、不计费、不产出响应或分数：smoke 计划 12 条、pilot 计划 60 条，
+          按 6 过程 × 2 身份的单元格分布。下列数字来自计划配置，不是真实运行结果。
+        </p>
+        <div class="readiness-plan" data-slot="readiness-plan" aria-label="dry-run 计划规模"></div>
+
+        <h3>凭据隔离与预算护栏</h3>
+        <ul class="reading tight">
+          <li>API Key 只存在于环境变量 <code>DEEPSEEK_API_KEY</code>，绝不写入配置、产物、日志或错误信息；</li>
+          <li>只有显式进入 live 模式且所有前置条件满足时才读取 Key；dry-run 与测试从不读取；</li>
+          <li>预算用 Decimal 记账：先按最坏情况预留，再按实际用量结算，超过硬上限直接拒绝；</li>
+          <li>价格未核实时无法计价，真实运行被拒绝，dry-run 只显示 <code>unavailable_until_pricing_verified</code>。</li>
+        </ul>
+      </div>
+    </section>
+
     <!-- 6. Evidence And Limitations -->
     <section id="evidence-limitations" class="section">
       <div class="wrap">
@@ -460,12 +498,12 @@
       <div class="wrap">
         <h2>路线图</h2>
         <p class="reading">
-          研究主线 Phase 1–7 与展示线 Track S 并行推进。Phase 1 的本地实现已完成，但发布验证还没做，
-          所以它同时带两个状态。当前阶段高亮，未来阶段刻意弱化。
+          研究方向与展示打磨两条线并行推进：有的部分本地已经能跑、但远程发布验证还没做，因此会同时带两个状态。
+          当前正在做的高亮显示，未来计划刻意弱化。这里描述的是方向与进度，不是已完成的真实运行。
         </p>
-        <h3>研究主线（Phase 1–7）</h3>
+        <h3>研究与工程方向</h3>
         <div class="roadmap" data-slot="roadmap-phases"></div>
-        <h3>展示线（Track S）</h3>
+        <h3>展示与发布打磨</h3>
         <div class="roadmap" data-slot="roadmap-track"></div>
       </div>
     </section>
@@ -479,6 +517,7 @@
           <li><a href="#hero">先看项目概览</a><span>一屏抓住研究什么、做到哪、不是什么</span></li>
           <li><a href="#experimental-design">查看研究方法</a><span>6×2 设计、诊断条件与测量维度</span></li>
           <li><a href="#historical-results">查看历史结果</a><span>条件均值、控制回归、探索性中介与图表</span></li>
+          <li><a href="#real-provider-readiness">查看真实运行准备</a><span>Provider 离线验证、凭据隔离、预算护栏、dry-run 计划</span></li>
           <li><a href="#evidence-limitations">查看证据限制</a><span>能说什么、不能说什么、复现边界</span></li>
           <li><a href="#reproducibility">查看复现说明</a><span>组件链与文件级证据</span></li>
           <li><a href="#roadmap">查看路线图</a><span>研究主线与展示线的当前进度</span></li>

@@ -78,7 +78,39 @@ PROVENANCE_DIMENSIONS = [
     ("retry_information", "unknown"),
     ("item_level_missingness", "unknown"),
     ("raw_response_public_availability", "unknown"),
+    # REAL-SETUP-001: real-provider readiness dimensions. Only the adapter code
+    # is repository-verifiable; nothing about a real run exists yet.
+    ("provider_adapter_code", "repository_verified"),
+    ("provider_live_connectivity", "unknown"),
+    ("actual_model_id", "unknown"),
+    ("actual_model_snapshot", "unknown"),
+    ("actual_pricing", "unknown"),
+    ("actual_request_ids", "unknown"),
+    ("actual_token_usage", "unknown"),
+    ("actual_cost", "unknown"),
 ]
+
+# Real-provider readiness status block. Unrun real metrics MUST be null /
+# not_run / not_applicable — never 0, 0.0 or false.
+REAL_PROVIDER_READINESS = {
+    "adapter_status": "offline_validated",
+    "credential_status": "not_configured",
+    "live_api_status": "not_run",
+    "smoke_status": "not_run",
+    "pilot_status": "not_run",
+    "model_id_status": "requires_runtime_verification",
+    "pricing_status": "requires_runtime_verification",
+    "actual_token_usage": None,
+    "actual_cost_usd": None,
+    "actual_latency_ms": None,
+    "actual_completion_rate": None,
+    "actual_parse_success_rate": None,
+    "result_analysis_status": "not_applicable",
+    "dry_run_planning": "available",
+    "network_calls_made": 0,
+    "real_smoke": "not_run",
+    "real_pilot": "not_run",
+}
 
 
 class ReportError(RuntimeError):
@@ -136,6 +168,7 @@ def build_engineering_status() -> dict:
         "artifact_lifecycle": mock["artifact_roles"],
         "mock_execution_quality": mock["execution_quality"],
         "mock_output_quality": mock["output_quality"],
+        "real_provider_readiness": dict(REAL_PROVIDER_READINESS),
         "data_source": "mock_engineering_validation",
         "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
     }
@@ -175,9 +208,10 @@ def build_evaluation_summary() -> dict:
             "status": "planned_not_run",
             "real_smoke_n_per_cell": 1,
             "real_pilot_n_per_cell": 5,
-            "provider_model": "decided_in_RUN-003",
+            "provider_model": "verify_on_run_day",
             "boundary": "尚未运行；无任何真实模型结果；需单独授权。",
         },
+        "real_provider_readiness": dict(REAL_PROVIDER_READINESS),
     }
 
 
