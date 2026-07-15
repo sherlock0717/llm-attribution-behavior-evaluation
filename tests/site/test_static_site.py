@@ -624,3 +624,19 @@ def test_no_public_future_pilot_numbers_on_page_or_readme():
                 "每格 2 条", "每格 1 条"]:
         assert bad not in HTML, bad
         assert bad not in README_SRC, bad
+
+
+# --- final polish: repository paths are clickable ---------------------------
+
+def test_repository_document_paths_are_clickable():
+    assert "function repoPathURL(path, kind)" in JS_SRC
+    assert 'a.href = repoPathURL(d.path, "blob")' in JS_SRC
+    assert 'a.href = repoPathURL(d.path, "tree")' in JS_SRC
+    assert JS_SRC.count('a.target = "_blank"') >= 3
+    assert JS_SRC.count('a.rel = "noopener"') >= 3
+
+
+def test_repository_url_targets_current_slug_and_main():
+    assert '"llm-attribution-behavior-evaluation"' in JS_SRC
+    assert '"main"' in JS_SRC
+    assert OLD_SLUG not in JS_SRC
