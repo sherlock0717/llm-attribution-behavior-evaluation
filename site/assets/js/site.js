@@ -163,6 +163,53 @@ function renderScenarios(story) {
 }
 
 // ---------------------------------------------------------------------------
+// 3b. Research & measurement sources (equal cards + full references)
+// ---------------------------------------------------------------------------
+function renderResearchSources(story) {
+  const rs = story.research_sources || {};
+  setSlot("research-sources-intro", rs.intro || "");
+  setSlot("research-sources-usage", rs.usage_note || "");
+
+  const host = requireSlot("research-source-cards");
+  host.textContent = "";
+  (rs.sources || []).forEach((s) => {
+    const card = el("article", { className: "src-card" });
+    card.appendChild(el("h3", { className: "src-name", text: s.label }));
+    card.appendChild(el("p", { className: "src-cite", text: s.citation_short }));
+    const chips = el("ul", { className: "src-constructs" });
+    (s.constructs || []).forEach((c) => chips.appendChild(el("li", { text: c })));
+    card.appendChild(chips);
+    card.appendChild(el("p", { className: "src-role", text: s.role }));
+    card.appendChild(el("span", { className: "src-usage", text: s.usage }));
+    host.appendChild(card);
+  });
+
+  const refs = requireSlot("research-references");
+  refs.textContent = "";
+  (rs.references || []).forEach((r) => {
+    const li = el("li", { className: "ref-item" });
+    li.appendChild(el("span", { className: "ref-full", text: r.full }));
+    if (r.url) {
+      const a = el("a", { className: "ref-link", text: r.doi ? "DOI: " + r.doi : "出版社入口" });
+      a.href = r.url;
+      a.target = "_blank";
+      a.rel = "noopener";
+      li.appendChild(a);
+    }
+    refs.appendChild(li);
+  });
+
+  const docs = requireSlot("research-source-docs");
+  docs.textContent = "";
+  (rs.detail_docs || []).forEach((d) => {
+    const li = el("li", { className: "ref-doc" });
+    li.appendChild(el("span", { className: "ref-doc-note", text: d.note }));
+    li.appendChild(el("code", { text: d.path }));
+    docs.appendChild(li);
+  });
+}
+
+// ---------------------------------------------------------------------------
 // 3. Construct / measurement table
 // ---------------------------------------------------------------------------
 function renderConstructTable(measurement) {
@@ -671,10 +718,10 @@ function writeLayoutDiagnostics() {
   const root = document.documentElement;
   root.dataset.docClientWidth = String(root.clientWidth);
   root.dataset.docScrollWidth = String(root.scrollWidth);
-  const slots = ["process-cards", "scenario-cards", "condition-profile",
-    "identity-effect", "planned-contrasts", "controlled-regression",
-    "mediation-path", "figures", "mock-quality", "eval-steps",
-    "readiness-flow", "benchmark-flow"];
+  const slots = ["process-cards", "scenario-cards", "research-source-cards",
+    "condition-profile", "identity-effect", "planned-contrasts",
+    "controlled-regression", "mediation-path", "figures", "mock-quality",
+    "eval-steps", "readiness-flow", "benchmark-flow"];
   const empties = slots.filter((s) => {
     const n = slotEl(s);
     return !n || n.childElementCount === 0;
@@ -704,6 +751,7 @@ async function main() {
     renderProcessConditions(summary);
     renderDesign(summary);
     renderScenarios(story);
+    renderResearchSources(story);
     renderConstructTable(measurement);
     renderHistoryComposition(summary);
     renderReliability(measurement);

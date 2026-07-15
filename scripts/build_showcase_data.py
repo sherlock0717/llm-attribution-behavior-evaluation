@@ -27,6 +27,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import statistics
 import sys
 from datetime import datetime, timezone
@@ -297,6 +298,98 @@ def _scenario_cards(data_ids: set[str]) -> list[dict]:
     return cards
 
 
+# DOI must look like a real DOI (10.<registrant>/<suffix>); empty is allowed for
+# a book-only theoretical source that carries a publisher URL instead.
+_DOI_RE = re.compile(r"^10\.\d{4,9}/\S+$")
+
+# Expected research-source ids and their canonical page order. This guards the
+# page against silently gaining/losing a source card.
+RESEARCH_SOURCE_IDS = [
+    "mind_perception",
+    "free_will_beliefs",
+    "perceived_intelligence",
+    "reasons_responsiveness_responsibility",
+    "self_authored_checks",
+]
+
+
+def _research_sources() -> dict:
+    """Research & measurement sources, read from the human-verified manifest.
+
+    Every card is a contextual adaptation of prior theory/scale constructs, not a
+    direct reuse of a complete published scale; the self-authored checks carry no
+    external scale. DOIs are format-checked so a malformed reference fails loudly.
+    """
+    block = bsd._manifest().get("research_sources")
+    if not isinstance(block, dict):
+        raise BuildError("site_manifest.yaml research_sources block missing")
+    for field in ("intro_zh", "usage_note_zh"):
+        if not block.get(field):
+            raise BuildError(f"research_sources missing '{field}'")
+    raw = block.get("sources")
+    if not isinstance(raw, list) or not raw:
+        raise BuildError("research_sources.sources missing")
+    by_id = {}
+    for s in raw:
+        if not isinstance(s, dict) or not s.get("id"):
+            raise BuildError("research_sources entry missing id")
+        by_id[s["id"]] = s
+    if set(by_id) != set(RESEARCH_SOURCE_IDS):
+        raise BuildError(
+            f"research_sources id mismatch: manifest={sorted(by_id)} "
+            f"expected={sorted(RESEARCH_SOURCE_IDS)}")
+
+    sources = []
+    all_refs = []
+    for sid in RESEARCH_SOURCE_IDS:  # stable canonical order
+        s = by_id[sid]
+        for field in ("label_zh", "citation_short", "role_zh", "usage_zh"):
+            if not s.get(field):
+                raise BuildError(f"research_source '{sid}' missing '{field}'")
+        constructs = s.get("constructs_zh")
+        if not isinstance(constructs, list) or not constructs:
+            raise BuildError(f"research_source '{sid}' missing constructs_zh")
+        refs = []
+        for ref in (s.get("references") or []):
+            full = (ref.get("full") or "").strip()
+            if not full:
+                raise BuildError(f"research_source '{sid}' reference missing 'full'")
+            doi = (ref.get("doi") or "").strip()
+            if doi and not _DOI_RE.match(doi):
+                raise BuildError(f"research_source '{sid}' has malformed DOI '{doi}'")
+            entry = {"full": full, "doi": doi, "url": (ref.get("url") or "").strip()}
+            refs.append(entry)
+            all_refs.append({"source": sid, **entry})
+        # self-authored sources legitimately have no external reference
+        if sid != "self_authored_checks" and not refs:
+            raise BuildError(f"research_source '{sid}' must carry at least one reference")
+        sources.append({
+            "id": sid,
+            "label": s["label_zh"],
+            "citation_short": s["citation_short"],
+            "constructs": list(constructs),
+            "role": s["role_zh"],
+            "usage": s["usage_zh"],
+            "references": refs,
+        })
+
+    detail_docs = []
+    for d in (block.get("detail_docs") or []):
+        if not isinstance(d, dict) or not d.get("path") or not d.get("note_zh"):
+            raise BuildError("research_sources.detail_docs entry malformed")
+        detail_docs.append({"path": d["path"], "note": d["note_zh"]})
+    if not detail_docs:
+        raise BuildError("research_sources.detail_docs missing")
+
+    return {
+        "intro": block["intro_zh"],
+        "usage_note": block["usage_note_zh"],
+        "sources": sources,
+        "references": all_refs,
+        "detail_docs": detail_docs,
+    }
+
+
 def build_showcase_story() -> dict:
     rows = bsd._read_csv("outputs/scale_scores.csv")
     records = len(rows)
@@ -334,6 +427,7 @@ def build_showcase_story() -> dict:
         "core_facts": core_facts,
         "scenarios": _scenario_cards(set(scenarios)),
         "domains": domains,
+        "research_sources": _research_sources(),
         "result_takeaways": RESULT_TAKEAWAYS,
     }
 

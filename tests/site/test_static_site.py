@@ -41,9 +41,9 @@ JSON_FILES = [
 ]
 
 SECTION_IDS = [
-    "overview", "research-question", "design-measurement", "historical-data",
-    "analysis", "results-summary", "evaluation-core", "mock-validation",
-    "real-provider", "reproducibility", "future-work",
+    "overview", "research-question", "design-measurement", "research-sources",
+    "historical-data", "analysis", "results-summary", "evaluation-core",
+    "mock-validation", "real-provider", "reproducibility", "future-work",
 ]
 
 SELECTED_FIGURES = [
@@ -211,7 +211,8 @@ def test_every_javascript_slot_exists_in_html():
 
 def test_core_chart_slots_present():
     for name in ["hero-corefacts", "process-cards", "design-matrix",
-                 "scenario-cards", "condition-profile", "identity-effect",
+                 "scenario-cards", "research-source-cards", "research-references",
+                 "condition-profile", "identity-effect",
                  "planned-contrasts", "controlled-regression", "mediation-path",
                  "figures", "mock-quality", "eval-steps", "artifact-table",
                  "readiness-flow", "benchmark-flow"]:
@@ -221,7 +222,8 @@ def test_core_chart_slots_present():
 def test_render_pipeline_and_diagnostics_present():
     for call in ["renderConditionProfile(", "renderFigures(", "renderMediation(",
                  "renderReadiness(", "renderMockQuality(", "renderProcessConditions(",
-                 "renderScenarios(", "renderEvalSteps(", "renderBenchmarkRoadmap("]:
+                 "renderScenarios(", "renderResearchSources(", "renderEvalSteps(",
+                 "renderBenchmarkRoadmap("]:
         assert call in JS_SRC, call
     assert 'renderComplete = "true"' in JS_SRC
     assert 'renderComplete = "false"' in JS_SRC
@@ -431,3 +433,194 @@ def test_scenarios_have_case_content_matching_stimuli():
         assert c["option_b"] == s.option_b
         assert c["fixed_choice"] == s.fixed_choice
         assert c["domain"] == s.domain
+
+
+# --- SHOWCASE-FIX-002: research & measurement sources ----------------------
+
+README = REPO_ROOT / "README.md"
+README_SRC = README.read_text(encoding="utf-8")
+STORY = json.loads((DATA / "showcase_story.json").read_text(encoding="utf-8"))
+RESEARCH_SOURCES = STORY["research_sources"]
+DOI_RE = re.compile(r"^10\.\d{4,9}/\S+$")
+
+EXPECTED_SOURCE_IDS = [
+    "mind_perception", "free_will_beliefs", "perceived_intelligence",
+    "reasons_responsiveness_responsibility", "self_authored_checks",
+]
+
+
+def test_page_has_research_sources_section():
+    # (4) the page carries a "研究与测量来源" section, placed after 实验设计
+    assert 'id="research-sources"' in HTML
+    assert "研究与测量来源" in HTML
+    dm = HTML.index('id="design-measurement"')
+    rs = HTML.index('id="research-sources"')
+    hd = HTML.index('id="historical-data"')
+    assert dm < rs < hd
+
+
+def test_page_has_no_evidence_boundary_section_still():
+    # (5) the removed evidence-boundary section must not come back
+    assert 'id="evidence-boundary"' not in HTML
+    assert "证据与来源边界" not in HTML
+
+
+def test_readme_has_research_sources_section():
+    # (3) README carries the source section between 实验设计 and 历史数据
+    assert "## 研究与测量来源" in README_SRC
+    assert README_SRC.index("## 实验设计") < README_SRC.index("## 研究与测量来源")
+    assert README_SRC.index("## 研究与测量来源") < README_SRC.index("## 历史数据与主要结果")
+
+
+def test_readme_has_only_approved_edits():
+    # (2) approved copy changes are present; disallowed/old wording is gone
+    assert "会如何改变模型对行动者能动性、自由意志与责任的归因评分" in README_SRC
+    assert "## 模拟运行验证" in README_SRC
+    assert "## 从单一任务到通用评测" in README_SRC
+    assert "暂不作因果机制解释" in README_SRC
+    for bad in ["数据边界：", "## Mock 工程验证", "## 多模型测评计划",
+                "随时可复现", "而非因果中介证明", "每格 2 条", "每格 1 条",
+                "smoke 为每格"]:
+        assert bad not in README_SRC, bad
+
+
+def test_readme_preserves_manual_main_content():
+    # (1) unapproved parts of the manual main README are preserved verbatim
+    for keep in [
+        "A Reproducible Study and Evaluation Prototype",
+        "可复现的测试型评测基准原型",
+        "它评价的是**模型输出中的归因行为**",
+        "自由意志的评分是直接受过程影响，还是先经过能动性这一中间步骤",
+        "材料（参考心理学领域相关前沿研究设计）覆盖 8 个情境",
+        "链路：情境 → 过程条件 → 身份标签 → 题项响应 → 构念分数 → 条件与身份比较",
+    ]:
+        assert keep in README_SRC, keep
+
+
+def test_readme_and_page_share_title_and_terms():
+    # (22) README and page share the frozen title and terminology
+    assert MAIN_TITLE in README_SRC and MAIN_TITLE in HTML
+    assert SUBTITLE in README_SRC and SUBTITLE in HTML
+    assert "研究与测量来源" in README_SRC and "研究与测量来源" in HTML
+
+
+def test_source_cards_count_and_order_stable():
+    # (6) exactly the five sources, in canonical order
+    ids = [s["id"] for s in RESEARCH_SOURCES["sources"]]
+    assert ids == EXPECTED_SOURCE_IDS
+
+
+def test_every_source_card_has_constructs_and_usage():
+    # (7) each source carries constructs + a usage description + role
+    for s in RESEARCH_SOURCES["sources"]:
+        assert s["constructs"], s["id"]
+        assert s["role"], s["id"]
+        assert s["usage"], s["id"]
+
+
+def test_all_dois_are_well_formed():
+    # (8) every DOI present must be a well-formed DOI
+    seen = 0
+    for ref in RESEARCH_SOURCES["references"]:
+        if ref["doi"]:
+            assert DOI_RE.match(ref["doi"]), ref["doi"]
+            seen += 1
+    assert seen >= 4  # four journal references carry DOIs
+
+
+def test_full_references_present():
+    # (9) the full reference list is non-empty and every entry has full text
+    assert RESEARCH_SOURCES["references"]
+    for ref in RESEARCH_SOURCES["references"]:
+        assert ref["full"].strip()
+
+
+def _source(sid):
+    return next(s for s in RESEARCH_SOURCES["sources"] if s["id"] == sid)
+
+
+def test_gray_maps_to_agency_and_experience():
+    # (10) mind perception source covers agency + experience
+    s = _source("mind_perception")
+    assert "Gray" in s["citation_short"]
+    assert "能动性" in s["constructs"] and "体验性" in s["constructs"]
+
+
+def test_free_will_source_maps_to_fwi_and_fadplus():
+    # (11) free-will attribution source cites FWI and FAD-Plus
+    s = _source("free_will_beliefs")
+    assert "FWI" in s["citation_short"] and "FAD-Plus" in s["citation_short"]
+    assert "自由意志" in s["constructs"]
+    dois = {r["doi"] for r in s["references"]}
+    assert "10.1016/j.concog.2014.01.006" in dois
+    assert "10.1080/00223891.2010.528483" in dois
+
+
+def test_godspeed_maps_to_perceived_intelligence():
+    # (12) perceived intelligence source is Godspeed
+    s = _source("perceived_intelligence")
+    assert "Godspeed" in s["citation_short"]
+    assert s["references"][0]["doi"] == "10.1007/s12369-008-0001-3"
+
+
+def test_fischer_ravizza_is_theory_background():
+    # (13) reasons-responsiveness / responsibility source is theory, not a scale
+    s = _source("reasons_responsiveness_responsibility")
+    assert "Fischer" in s["citation_short"]
+    assert "责任" in "".join(s["constructs"])
+    assert "不是直接采用的心理量表" in s["role"]
+
+
+def test_self_authored_checks_have_no_external_scale():
+    # (14) self-authored manipulation checks carry no external reference
+    s = _source("self_authored_checks")
+    assert s["references"] == []
+    assert "自编" in s["citation_short"] or "自编" in s["role"]
+
+
+def test_autonomy_not_claimed_as_a_complete_scale():
+    # (15) autonomy is never claimed to come directly from a complete scale
+    doc = (REPO_ROOT / "docs" / "research_and_measurement_sources.md").read_text(encoding="utf-8")
+    assert "自主性与行动控制相关理论背景" in doc
+    for bad in ["Self-Determination Theory 量表", "直接采用自主性量表",
+                "autonomy 量表原题"]:
+        assert bad not in doc, bad
+
+
+def test_page_does_not_claim_complete_scale_use_or_inherited_validity():
+    # (16, 17) page never claims direct use of a complete scale or inherited validity
+    blob = HTML + json.dumps(RESEARCH_SOURCES, ensure_ascii=False)
+    # positive over-claims must never appear; the legitimate negation
+    # "并非对原量表的完整直接使用" is expected and must NOT be flagged.
+    for bad in ["直接使用完整量表", "直接使用成熟量表", "沿用原量表信效度",
+                "继承原量表信效度"]:
+        assert bad not in blob, bad
+
+
+def test_item_ids_and_texts_unchanged():
+    # (18) src/scales.py item ids and texts are untouched by this task
+    stim_scales = _load_scales()
+    ids = [it.item_id for it in stim_scales.ITEMS]
+    assert len(ids) == 34
+    assert len(set(ids)) == 34
+    # a couple of anchor texts must remain verbatim
+    texts = {it.item_id: it.text for it in stim_scales.ITEMS}
+    assert texts["agency_self_control"] == "该决策者能够控制自己的行动，而不是只被情境推着走。"
+    assert texts["subjective_not_sparse"] == "我认为材料中的决策过程不是只有一个稀疏结论。"
+
+
+def _load_scales():
+    import importlib.util
+    spec = importlib.util.spec_from_file_location(
+        "scales", REPO_ROOT / "src" / "scales.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def test_no_public_future_pilot_numbers_on_page_or_readme():
+    # (21) no concrete future smoke/pilot counts leak into page or README
+    for bad in ["12 条真实 smoke", "60 条真实 pilot", "12 / 60",
+                "每格 2 条", "每格 1 条"]:
+        assert bad not in HTML, bad
+        assert bad not in README_SRC, bad

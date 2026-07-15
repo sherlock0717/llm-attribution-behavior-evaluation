@@ -166,6 +166,25 @@ ul.tight li { margin: 5px 0; }
 .sc-choice-tag { display: inline-block; margin-right: 6px; font-size: .74rem; font-weight: 700; color: var(--engineering); background: #e7f5ef; border-radius: 6px; padding: 2px 8px; }
 .sc-id { align-self: flex-start; background: var(--bg-soft); font-size: .72rem; color: var(--muted); }
 
+/* Research & measurement source cards (equal styling, desktop 2 col / mobile 1) */
+.source-cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin: 12px 0 14px; }
+.src-card { min-width: 0; border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; background: var(--surface); display: flex; flex-direction: column; gap: 8px; box-shadow: var(--shadow); }
+.src-name { margin: 0; font-size: 1.05rem; }
+.src-cite { margin: 0; font-size: .84rem; color: var(--muted); overflow-wrap: anywhere; }
+.src-constructs { list-style: none; padding: 0; margin: 2px 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.src-constructs li { font-size: .76rem; color: var(--accent); background: var(--accent-soft); border-radius: 999px; padding: 2px 10px; }
+.src-role { margin: 0; font-size: .88rem; color: var(--text); }
+.src-usage { align-self: flex-start; font-size: .74rem; font-weight: 700; color: var(--research); background: #f0ecfb; border-radius: 6px; padding: 2px 8px; }
+.references-details { margin-top: 6px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-soft); padding: 4px 16px; }
+.references-details summary { cursor: pointer; font-weight: 600; padding: 10px 0; }
+.reference-list { list-style: none; padding: 0; margin: 6px 0 4px; display: grid; gap: 10px; }
+.ref-item { display: flex; flex-direction: column; gap: 3px; font-size: .84rem; }
+.ref-full { overflow-wrap: anywhere; }
+.ref-link { align-self: flex-start; font-size: .8rem; font-variant-numeric: tabular-nums; }
+.reference-docs { list-style: none; padding: 0; margin: 8px 0 12px; display: grid; gap: 6px; }
+.ref-doc { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 10px; font-size: .84rem; }
+.ref-doc-note { color: var(--muted); }
+
 /* Construct table */
 .construct-table { border-collapse: collapse; width: 100%; min-width: 560px; }
 .construct-table th, .construct-table td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
@@ -379,6 +398,7 @@ ul.tight li { margin: 5px 0; }
   .design-stats { grid-template-columns: 1fr 1fr; gap: 16px; }
   .process-cards { grid-template-columns: 1fr; }
   .scenario-cards { grid-template-columns: 1fr; }
+  .source-cards { grid-template-columns: 1fr; }
   .cr-row, .ie-row, .rel-row, .mq-row, .cmd-row { grid-template-columns: 1fr; gap: 6px; }
   .cr-specs { grid-template-columns: 1fr; }
   .provenance-counts { grid-template-columns: repeat(2, minmax(0, 1fr)); }

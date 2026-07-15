@@ -49,8 +49,153 @@
     "道德冲突",
     "风险决策"
   ],
-  "generated_at": "2026-07-15T02:52:07+00:00",
+  "generated_at": "2026-07-15T03:44:55+00:00",
   "positioning_zh": "围绕模型如何对行动者的能动性、自由意志与责任作出归因，构建从历史研究、任务契约到可复现运行与证据审计的测试型评测基准。",
+  "research_sources": {
+    "detail_docs": [
+      {
+        "note": "研究与测量来源（完整文献与题项映射）",
+        "path": "docs/research_and_measurement_sources.md"
+      },
+      {
+        "note": "题项与理论来源映射（逐题）",
+        "path": "docs/scale_source_mapping.md"
+      }
+    ],
+    "intro": "题项池以既有理论和量表构念为基础，再根据具体决策情境改写为归因评分。不同来源在项目中的作用并不相同：有些提供构念框架，有些提供量表维度，操纵检验则由本研究根据实验材料自行编写。",
+    "references": [
+      {
+        "doi": "10.1126/science.1134475",
+        "full": "Gray, H. M., Gray, K., & Wegner, D. M. (2007). Dimensions of mind perception. Science, 315(5812), 619. https://doi.org/10.1126/science.1134475",
+        "source": "mind_perception",
+        "url": "https://doi.org/10.1126/science.1134475"
+      },
+      {
+        "doi": "10.1016/j.concog.2014.01.006",
+        "full": "Nadelhoffer, T., Shepard, J., Nahmias, E., Sripada, C. S., & Ross, L. T. (2014). The free will inventory: Measuring beliefs about agency and responsibility. Consciousness and Cognition, 25, 27–41. https://doi.org/10.1016/j.concog.2014.01.006",
+        "source": "free_will_beliefs",
+        "url": "https://doi.org/10.1016/j.concog.2014.01.006"
+      },
+      {
+        "doi": "10.1080/00223891.2010.528483",
+        "full": "Paulhus, D. L., & Carey, J. M. (2011). The FAD–Plus: Measuring lay beliefs regarding free will and related constructs. Journal of Personality Assessment, 93(1), 96–104. https://doi.org/10.1080/00223891.2010.528483",
+        "source": "free_will_beliefs",
+        "url": "https://doi.org/10.1080/00223891.2010.528483"
+      },
+      {
+        "doi": "10.1007/s12369-008-0001-3",
+        "full": "Bartneck, C., Kulić, D., Croft, E., & Zoghbi, S. (2009). Measurement instruments for the anthropomorphism, animacy, likeability, perceived intelligence, and perceived safety of robots. International Journal of Social Robotics, 1(1), 71–81. https://doi.org/10.1007/s12369-008-0001-3",
+        "source": "perceived_intelligence",
+        "url": "https://doi.org/10.1007/s12369-008-0001-3"
+      },
+      {
+        "doi": "",
+        "full": "Fischer, J. M., & Ravizza, M. (1998). Responsibility and control: A theory of moral responsibility. Cambridge University Press.",
+        "source": "reasons_responsiveness_responsibility",
+        "url": "https://www.cambridge.org/core/books/responsibility-and-control/54D0EB8AEDEF4D5F4930D691EC214E01"
+      }
+    ],
+    "sources": [
+      {
+        "citation_short": "Gray、Gray 与 Wegner（2007）",
+        "constructs": [
+          "能动性",
+          "体验性"
+        ],
+        "id": "mind_perception",
+        "label": "心智知觉",
+        "references": [
+          {
+            "doi": "10.1126/science.1134475",
+            "full": "Gray, H. M., Gray, K., & Wegner, D. M. (2007). Dimensions of mind perception. Science, 315(5812), 619. https://doi.org/10.1126/science.1134475",
+            "url": "https://doi.org/10.1126/science.1134475"
+          }
+        ],
+        "role": "提供 agency / experience 的二维心智知觉框架。",
+        "usage": "参考量表构念，情境化改写"
+      },
+      {
+        "citation_short": "FWI（Nadelhoffer 等，2014）／ FAD-Plus（Paulhus 与 Carey，2011）",
+        "constructs": [
+          "自由意志",
+          "替代可能性",
+          "行动意向",
+          "决定论信念",
+          "责任"
+        ],
+        "id": "free_will_beliefs",
+        "label": "自由意志信念与归因",
+        "references": [
+          {
+            "doi": "10.1016/j.concog.2014.01.006",
+            "full": "Nadelhoffer, T., Shepard, J., Nahmias, E., Sripada, C. S., & Ross, L. T. (2014). The free will inventory: Measuring beliefs about agency and responsibility. Consciousness and Cognition, 25, 27–41. https://doi.org/10.1016/j.concog.2014.01.006",
+            "url": "https://doi.org/10.1016/j.concog.2014.01.006"
+          },
+          {
+            "doi": "10.1080/00223891.2010.528483",
+            "full": "Paulhus, D. L., & Carey, J. M. (2011). The FAD–Plus: Measuring lay beliefs regarding free will and related constructs. Journal of Personality Assessment, 93(1), 96–104. https://doi.org/10.1080/00223891.2010.528483",
+            "url": "https://doi.org/10.1080/00223891.2010.528483"
+          }
+        ],
+        "role": "当前项目将一般信念构念改写为对具体决策者的情境化归因。",
+        "usage": "参考量表构念，情境化改写"
+      },
+      {
+        "citation_short": "Godspeed（Bartneck 等，2009）",
+        "constructs": [
+          "情境理解",
+          "逻辑性",
+          "判断质量"
+        ],
+        "id": "perceived_intelligence",
+        "label": "感知智能",
+        "references": [
+          {
+            "doi": "10.1007/s12369-008-0001-3",
+            "full": "Bartneck, C., Kulić, D., Croft, E., & Zoghbi, S. (2009). Measurement instruments for the anthropomorphism, animacy, likeability, perceived intelligence, and perceived safety of robots. International Journal of Social Robotics, 1(1), 71–81. https://doi.org/10.1007/s12369-008-0001-3",
+            "url": "https://doi.org/10.1007/s12369-008-0001-3"
+          }
+        ],
+        "role": "参考 perceived intelligence 维度，改写为对文本决策者的评价。",
+        "usage": "参考量表维度，情境化改写"
+      },
+      {
+        "citation_short": "Fischer 与 Ravizza（1998）",
+        "constructs": [
+          "根据理由调整行动",
+          "行动控制",
+          "结果责任",
+          "过程责任"
+        ],
+        "id": "reasons_responsiveness_responsibility",
+        "label": "理由响应性与责任",
+        "references": [
+          {
+            "doi": "",
+            "full": "Fischer, J. M., & Ravizza, M. (1998). Responsibility and control: A theory of moral responsibility. Cambridge University Press.",
+            "url": "https://www.cambridge.org/core/books/responsibility-and-control/54D0EB8AEDEF4D5F4930D691EC214E01"
+          }
+        ],
+        "role": "属于理论背景，不是直接采用的心理量表。",
+        "usage": "理论背景，情境化编写"
+      },
+      {
+        "citation_short": "本研究自编",
+        "constructs": [
+          "候选方案是否明确",
+          "理由是否明确",
+          "反思与修正是否明确",
+          "主观过程完整度"
+        ],
+        "id": "self_authored_checks",
+        "label": "自编操纵检验",
+        "references": [],
+        "role": "根据六种过程条件自行编写，用于检查过程结构是否按设计呈现。",
+        "usage": "本研究自编"
+      }
+    ],
+    "usage_note": "当前题项池基于既有理论与量表构念进行情境化改写，并非对原量表的完整直接使用；原研究的信度、效度和因素结构不能直接继承。"
+  },
   "result_takeaways": [
     "把决策过程讲得更完整（从只报结论到给出理由、反思与修正），模型对决策者的能动性评分总体升高，这是最稳定的差异。",
     "身份标签本身影响明显：在自由意志、责任与体验维度上，模型对人类与 AI 决策者的评分存在系统差异，但在感知智能与操纵检验上差异很弱。",

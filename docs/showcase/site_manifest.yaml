@@ -92,6 +92,70 @@ experimental_design:
   diagnostic_note_zh: "direct_choice_long 与 reasons_concise 是诊断条件，用于区分文本长度效应与决策结构效应。"
   data_note_zh: "数据来源为历史 DeepSeek API 基线（真实 API 调用生成的模型响应）。mock（规则生成）仅用于工程与持续集成流程测试，不进入研究结果。"
 
+# 研究与测量来源（SHOWCASE-FIX-002）。这里只放人工核验过的参考文献；
+# 各构念都是对既有理论 / 量表构念的“情境化改写”，不是对完整成熟量表的直接使用；
+# 自编操纵检验没有外部量表来源。页面、docs/research_and_measurement_sources.md 与
+# docs/scale_source_mapping.md 使用同一套核验文献。DOI 必须为合法的 10.xxxx/ 形式。
+research_sources:
+  intro_zh: "题项池以既有理论和量表构念为基础，再根据具体决策情境改写为归因评分。不同来源在项目中的作用并不相同：有些提供构念框架，有些提供量表维度，操纵检验则由本研究根据实验材料自行编写。"
+  usage_note_zh: "当前题项池基于既有理论与量表构念进行情境化改写，并非对原量表的完整直接使用；原研究的信度、效度和因素结构不能直接继承。"
+  detail_docs:
+    - path: "docs/research_and_measurement_sources.md"
+      note_zh: "研究与测量来源（完整文献与题项映射）"
+    - path: "docs/scale_source_mapping.md"
+      note_zh: "题项与理论来源映射（逐题）"
+  sources:
+    - id: "mind_perception"
+      label_zh: "心智知觉"
+      citation_short: "Gray、Gray 与 Wegner（2007）"
+      constructs_zh: ["能动性", "体验性"]
+      role_zh: "提供 agency / experience 的二维心智知觉框架。"
+      usage_zh: "参考量表构念，情境化改写"
+      references:
+        - full: "Gray, H. M., Gray, K., & Wegner, D. M. (2007). Dimensions of mind perception. Science, 315(5812), 619. https://doi.org/10.1126/science.1134475"
+          doi: "10.1126/science.1134475"
+          url: "https://doi.org/10.1126/science.1134475"
+    - id: "free_will_beliefs"
+      label_zh: "自由意志信念与归因"
+      citation_short: "FWI（Nadelhoffer 等，2014）／ FAD-Plus（Paulhus 与 Carey，2011）"
+      constructs_zh: ["自由意志", "替代可能性", "行动意向", "决定论信念", "责任"]
+      role_zh: "当前项目将一般信念构念改写为对具体决策者的情境化归因。"
+      usage_zh: "参考量表构念，情境化改写"
+      references:
+        - full: "Nadelhoffer, T., Shepard, J., Nahmias, E., Sripada, C. S., & Ross, L. T. (2014). The free will inventory: Measuring beliefs about agency and responsibility. Consciousness and Cognition, 25, 27–41. https://doi.org/10.1016/j.concog.2014.01.006"
+          doi: "10.1016/j.concog.2014.01.006"
+          url: "https://doi.org/10.1016/j.concog.2014.01.006"
+        - full: "Paulhus, D. L., & Carey, J. M. (2011). The FAD–Plus: Measuring lay beliefs regarding free will and related constructs. Journal of Personality Assessment, 93(1), 96–104. https://doi.org/10.1080/00223891.2010.528483"
+          doi: "10.1080/00223891.2010.528483"
+          url: "https://doi.org/10.1080/00223891.2010.528483"
+    - id: "perceived_intelligence"
+      label_zh: "感知智能"
+      citation_short: "Godspeed（Bartneck 等，2009）"
+      constructs_zh: ["情境理解", "逻辑性", "判断质量"]
+      role_zh: "参考 perceived intelligence 维度，改写为对文本决策者的评价。"
+      usage_zh: "参考量表维度，情境化改写"
+      references:
+        - full: "Bartneck, C., Kulić, D., Croft, E., & Zoghbi, S. (2009). Measurement instruments for the anthropomorphism, animacy, likeability, perceived intelligence, and perceived safety of robots. International Journal of Social Robotics, 1(1), 71–81. https://doi.org/10.1007/s12369-008-0001-3"
+          doi: "10.1007/s12369-008-0001-3"
+          url: "https://doi.org/10.1007/s12369-008-0001-3"
+    - id: "reasons_responsiveness_responsibility"
+      label_zh: "理由响应性与责任"
+      citation_short: "Fischer 与 Ravizza（1998）"
+      constructs_zh: ["根据理由调整行动", "行动控制", "结果责任", "过程责任"]
+      role_zh: "属于理论背景，不是直接采用的心理量表。"
+      usage_zh: "理论背景，情境化编写"
+      references:
+        - full: "Fischer, J. M., & Ravizza, M. (1998). Responsibility and control: A theory of moral responsibility. Cambridge University Press."
+          doi: ""
+          url: "https://www.cambridge.org/core/books/responsibility-and-control/54D0EB8AEDEF4D5F4930D691EC214E01"
+    - id: "self_authored_checks"
+      label_zh: "自编操纵检验"
+      citation_short: "本研究自编"
+      constructs_zh: ["候选方案是否明确", "理由是否明确", "反思与修正是否明确", "主观过程完整度"]
+      role_zh: "根据六种过程条件自行编写，用于检查过程结构是否按设计呈现。"
+      usage_zh: "本研究自编"
+      references: []
+
 # Pipeline 分三层：历史研究路径（真实跑过）/ 当前工程层（v0.2 组件）/ 规划。
 # 注意：configs/ 与 src/freewill_attribution/ 属当前工程组件，不得标为历史运行步骤；
 # configs/prompt.v1.yaml 是当前配置组件，不能替代缺失的历史精确 prompt snapshot/hash。

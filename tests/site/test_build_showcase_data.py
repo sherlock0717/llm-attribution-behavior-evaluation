@@ -76,6 +76,43 @@ def test_story_scenarios_carry_case_content():
         assert c["label"]
 
 
+def test_research_sources_structure_and_dois():
+    s = bsc.build_showcase_story()
+    rs = s["research_sources"]
+    assert rs["intro"] and rs["usage_note"]
+    ids = [x["id"] for x in rs["sources"]]
+    assert ids == [
+        "mind_perception", "free_will_beliefs", "perceived_intelligence",
+        "reasons_responsiveness_responsibility", "self_authored_checks",
+    ]
+    import re
+    doi_re = re.compile(r"^10\.\d{4,9}/\S+$")
+    for src in rs["sources"]:
+        assert src["constructs"] and src["role"] and src["usage"]
+        for ref in src["references"]:
+            assert ref["full"].strip()
+            if ref["doi"]:
+                assert doi_re.match(ref["doi"]), ref["doi"]
+    # self-authored checks carry no external scale reference
+    self_authored = next(x for x in rs["sources"] if x["id"] == "self_authored_checks")
+    assert self_authored["references"] == []
+    # the full reference list is non-empty; four journal refs carry DOIs
+    assert rs["references"]
+    assert sum(1 for r in rs["references"] if r["doi"]) >= 4
+    assert rs["detail_docs"]
+
+
+def test_research_sources_do_not_claim_complete_scale_use():
+    s = bsc.build_showcase_story()
+    import json as _json
+    blob = _json.dumps(s["research_sources"], ensure_ascii=False)
+    # positive over-claims must never appear (the legitimate negation
+    # "并非对原量表的完整直接使用" is expected and allowed)
+    for bad in ["直接使用完整量表", "直接使用成熟量表", "继承原量表信效度",
+                "沿用原量表信效度"]:
+        assert bad not in blob, bad
+
+
 def test_reproducibility_summary_shape():
     r = bsc.build_reproducibility_summary()
     assert len(r["eval_steps"]) == 5
