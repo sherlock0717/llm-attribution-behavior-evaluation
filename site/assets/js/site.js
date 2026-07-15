@@ -53,6 +53,12 @@ function svgNS(tag, attrs) {
 // Distinct, defined series colours (kept in CSS-var-free JS for the SVG chart).
 const SERIES_COLORS = ["#2f6fed", "#e8590c", "#2f9e44", "#7048e8", "#c2255c"];
 
+function repoPathURL(path, kind) {
+  const clean = String(path || "").replace(/^\/+|\/+$/g, "");
+  return ["https:", "", "github.com", "sherlock0717", "llm-attribution-behavior-evaluation",
+    kind === "tree" ? "tree" : "blob", "main", clean].join("/");
+}
+
 // ---------------------------------------------------------------------------
 // 1. Overview / hero core facts
 // ---------------------------------------------------------------------------
@@ -204,7 +210,12 @@ function renderResearchSources(story) {
   (rs.detail_docs || []).forEach((d) => {
     const li = el("li", { className: "ref-doc" });
     li.appendChild(el("span", { className: "ref-doc-note", text: d.note }));
-    li.appendChild(el("code", { text: d.path }));
+    const a = el("a", { className: "ref-doc-link" });
+    a.href = repoPathURL(d.path, "blob");
+    a.target = "_blank";
+    a.rel = "noopener";
+    a.appendChild(el("code", { text: d.path }));
+    li.appendChild(a);
     docs.appendChild(li);
   });
 }
@@ -643,7 +654,12 @@ function renderKeyDirectories(repro) {
   host.textContent = "";
   repro.key_directories.forEach((d) => {
     const li = el("li", { className: "kd-row" });
-    li.appendChild(el("code", { text: d.path }));
+    const a = el("a", { className: "repo-path-link" });
+    a.href = repoPathURL(d.path, "tree");
+    a.target = "_blank";
+    a.rel = "noopener";
+    a.appendChild(el("code", { text: d.path }));
+    li.appendChild(a);
     li.appendChild(el("span", { className: "kd-note", text: d.note }));
     host.appendChild(li);
   });
@@ -655,7 +671,12 @@ function renderDocEntries(repro) {
   repro.doc_entries.forEach((d) => {
     const li = el("li", { className: "doc-row" });
     li.appendChild(el("span", { className: "doc-label", text: d.label }));
-    li.appendChild(el("code", { text: d.path }));
+    const a = el("a", { className: "repo-path-link" });
+    a.href = repoPathURL(d.path, "blob");
+    a.target = "_blank";
+    a.rel = "noopener";
+    a.appendChild(el("code", { text: d.path }));
+    li.appendChild(a);
     host.appendChild(li);
   });
 }
