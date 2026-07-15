@@ -4,11 +4,11 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>LLM 归因行为评测｜A Reproducible Study and Evaluation Prototype</title>
-  <meta name="description" content="围绕模型能动性、自由意志与责任归因构建的可复现研究与测试型评测基准，包含历史研究、任务契约、评测运行器、证据审计和真实模型接入准备。" />
+  <meta name="description" content="围绕模型对能动性、自由意志与责任的归因构建的可复现研究与测试型评测基准，包含历史研究、实验设计、统计结果、评测工程与真实模型接入。" />
   <link rel="canonical" href="https://sherlock0717.github.io/llm-attribution-behavior-evaluation/" />
   <meta property="og:type" content="website" />
   <meta property="og:title" content="LLM 归因行为评测｜A Reproducible Study and Evaluation Prototype" />
-  <meta property="og:description" content="围绕模型能动性、自由意志与责任归因构建的可复现研究与测试型评测基准，包含历史研究、任务契约、评测运行器、证据审计和真实模型接入准备。" />
+  <meta property="og:description" content="围绕模型对能动性、自由意志与责任的归因构建的可复现研究与测试型评测基准。" />
   <meta property="og:url" content="https://sherlock0717.github.io/llm-attribution-behavior-evaluation/" />
   <link rel="stylesheet" href="assets/css/site.css" />
 </head>
@@ -24,15 +24,16 @@
       <nav class="site-nav" aria-label="主导航">
         <ul id="site-nav-list">
           <li><a href="#research-question">研究问题</a></li>
-          <li><a href="#design-measurement">实验设计与测量</a></li>
+          <li><a href="#design-measurement">实验设计</a></li>
+          <li><a href="#research-sources">研究与测量来源</a></li>
           <li><a href="#historical-data">历史数据</a></li>
-          <li><a href="#analysis">完整分析链</a></li>
+          <li><a href="#analysis">分析链</a></li>
           <li><a href="#results-summary">结果总结</a></li>
           <li><a href="#evaluation-core">评测核心</a></li>
-          <li><a href="#mock-validation">Mock 工程验证</a></li>
-          <li><a href="#real-provider">真实接入准备</a></li>
-          <li><a href="#evidence-boundary">证据边界</a></li>
+          <li><a href="#mock-validation">模拟运行验证</a></li>
+          <li><a href="#real-provider">真实模型接入</a></li>
           <li><a href="#reproducibility">可复现运行</a></li>
+          <li><a href="#future-work">通用评测</a></li>
         </ul>
       </nav>
     </div>
@@ -59,9 +60,6 @@
             <a class="btn" href="#analysis">看结果</a>
             <a class="btn" href="#evaluation-core">看评测工程</a>
           </div>
-          <p class="hero-boundary">
-            页面评价的是模型输出中的归因行为，不判断模型本身是否拥有自由意志，也不把模型输出当作人类总体心理结论。
-          </p>
         </div>
         <aside class="hero-panel" aria-label="核心事实">
           <h2 class="panel-title">核心事实</h2>
@@ -76,21 +74,17 @@
       <div class="wrap">
         <h2>研究问题</h2>
         <p class="reading lead">
-          本项目研究的是：不同的<strong>决策过程描述</strong>与<strong>行动者身份标签</strong>，如何影响模型对行动者的
-          能动性、自由意志与责任作出的归因。
+          本项目考察不同的<strong>决策过程描述</strong>与<strong>行动者身份标签</strong>，如何改变模型对能动性、自由意志和责任的评分。
         </p>
         <div class="research-question-layout">
           <div class="rq-text">
             <div class="rq-block">
-              <h3>研究范围</h3>
-              <ul class="reading tight">
-                <li>评价的是模型输出中的归因行为；</li>
-                <li>不判断模型本身是否具有自由意志；</li>
-                <li>不把模型输出当作人类总体心理结论。</li>
-              </ul>
               <p class="reading">
                 同一个决定分别贴上「AI 决策者」或「人类决策者」标签，并用六种方式呈现其决策过程——从只报结论，
                 到给出理由、反思与修正——观察模型作为旁观者给出的能动性、自由意志与责任评分是否随之变化。
+              </p>
+              <p class="reading boundary-once">
+                这些评分反映模型在给定材料中的归因反应；它与模型本身是否具有自由意志，以及能否代表人类总体心理规律之间仍有很大距离。
               </p>
             </div>
           </div>
@@ -116,14 +110,14 @@
           </figure>
         </div>
 
-        <h3>过程结构梯度</h3>
+        <h3>六个决策过程条件</h3>
         <p class="reading">
-          六种过程从<strong>低结构</strong>到<strong>高结构</strong>排列。<code>direct_choice_long</code>（长文本直接选择）
-          只加长度、不加真正的理由结构，因此单独标为长度对照条件，不属于结构等级递增的一环。
+          六种过程从只报结论逐步走向给出候选方案、比较理由、再到反思与修正。它们的文本长度并不相同，
+          因此设计里特意区分了「文本更长」与「过程更完整」两件事，用来判断评分的变化来自哪一种。
         </p>
-        <div class="gradient" data-slot="process-gradient" aria-label="决策过程结构梯度"></div>
+        <div class="process-cards" data-slot="process-cards" aria-label="六个决策过程条件"></div>
         <noscript>
-          <p>过程结构由低到高：直接选择（基线）、长文本直接选择（长度对照）、列出可选方案、简洁理由权衡、完整理由权衡、反思与反馈修正（最高结构）。</p>
+          <p>六个过程条件：直接选择、长文本直接选择、列出可选方案、简洁理由权衡、完整理由权衡、反思与反馈修正。</p>
         </noscript>
       </div>
     </section>
@@ -133,9 +127,8 @@
       <div class="wrap">
         <h2>实验设计与测量</h2>
         <p class="reading">
-          设计链条是：<strong>情境 → 过程条件 → 身份标签 → 题项响应 → 构念分数 → 条件与身份比较</strong>。
-          六种决策过程 × 两种身份标签，每格重复相同次数；诊断条件
-          <code>direct_choice_long</code> 与 <code>reasons_concise</code> 分别用于分离「文本更长」与「过程更完整」两件事。
+          设计链条是<strong>情境 → 过程条件 → 身份标签 → 题项响应 → 构念分数 → 条件与身份比较</strong>。
+          六种决策过程与两种身份标签交叉，每格重复相同次数。
         </p>
 
         <dl class="design-stats" data-slot="design-stats" aria-label="设计规模"></dl>
@@ -147,15 +140,18 @@
           </table>
         </div>
 
-        <h3>八个情境与六个领域</h3>
-        <p class="note">每个实验单元的材料覆盖以下情境；情境跨越多个决策领域。</p>
-        <ul class="scenario-list" data-slot="scenario-list" aria-label="情境列表"></ul>
+        <h3>八个情境案例</h3>
+        <p class="reading">
+          材料涵盖道德冲突、自我控制、人际关系、风险决策、责任困境以及服从与自主。
+          部分领域由多个情境共同覆盖，用于观察结果是否依赖某一个具体故事。
+        </p>
+        <div class="scenario-cards" data-slot="scenario-cards" aria-label="八个情境案例"></div>
 
         <h3>构念与题项</h3>
         <p class="reading">
           共 <strong data-slot="construct-count">…</strong> 个构念、<strong data-slot="item-count">…</strong> 个题项。每个构念的分数为其题项均值（事实操纵检验计 0–2，其余题项计 1–7）。
           「责任归因总分」由结果责任、道德褒贬、过程可归责三个子维度聚合，属探索性结果。
-          完整题项见文末文档入口；此处给出构念、题项数、评分范围与聚合方式。
+          完整题项见文末文档入口；这里给出构念、题项数、评分范围与聚合方式。
         </p>
         <div class="construct-table-scroll">
           <table class="construct-table" data-slot="construct-table">
@@ -165,26 +161,35 @@
       </div>
     </section>
 
-    <!-- 4. 历史数据与证据基础 -->
+    <!-- 3b. 研究与测量来源 -->
+    <section id="research-sources" class="section">
+      <div class="wrap">
+        <h2>研究与测量来源</h2>
+        <p class="reading lead" data-slot="research-sources-intro"></p>
+        <div class="source-cards" data-slot="research-source-cards" aria-label="研究与测量来源"></div>
+        <p class="reading annotation" data-slot="research-sources-usage"></p>
+        <details class="references-details">
+          <summary>查看完整参考文献与题项映射</summary>
+          <ul class="reference-list" data-slot="research-references" aria-label="完整参考文献"></ul>
+          <ul class="reference-docs" data-slot="research-source-docs" aria-label="来源文档入口"></ul>
+        </details>
+      </div>
+    </section>
+
+    <!-- 4. 历史数据 -->
     <section id="historical-data" class="section">
       <div class="wrap">
-        <h2>历史数据与证据基础</h2>
+        <h2>历史数据</h2>
         <p class="reading">
           公开的历史结果共 <strong data-slot="record-count">…</strong> 条，按 6 过程 × 2 身份分为 12 个实验单元。
           历史结果由作者说明来自 <code>DeepSeek API</code> 的模型输出（模型模拟，非人类被试）。
-          当前仓库可以直接核查聚合数据、代码、统计产物与设计结构；历史精确模型快照、Prompt 快照与逐请求元数据不完整。
+          仓库可以直接核查聚合数据、代码、统计产物与设计结构；历史的精确模型快照、Prompt 快照和逐请求元数据并不完整，
+          因此数据来源真实与逐字节复现是两件不同的事。
         </p>
 
         <h3>12 个实验单元的历史记录组成</h3>
-        <p class="note">每个色块为一个过程 × 身份单元，各单元样本量相同；合计见下方。数据来源：<code>outputs/scale_scores.csv</code>。</p>
+        <p class="note">每个色块为一个过程 × 身份单元，各单元样本量相同；合计见下方。数据取自 <code>outputs/scale_scores.csv</code>。</p>
         <div class="history-composition" data-slot="history-composition" aria-label="12 个实验单元组成"></div>
-
-        <div class="evidence-basis">
-          <p class="reading">
-            证据边界（此处只说明一次，详见文末「证据与来源边界」矩阵）：<strong>数据来源真实</strong>已由作者说明确认；
-            但历史运行级元数据缺失，<strong>无法逐字节重放</strong>当时的模型响应。数据来源真实与完全可复现是两件事。
-          </p>
-        </div>
       </div>
     </section>
 
@@ -193,97 +198,65 @@
       <div class="wrap">
         <h2>从测量到结果的完整分析链</h2>
         <p class="reading">
-          下面按<strong>数据质量与可靠性 → 六条件描述性结果 → 身份标签差异 → 预设对比 → 控制回归 → 关联性路径诊断 → 稳定性复核</strong>
-          的顺序连续展开。每个数字都由 <code>scripts/build_showcase_data.py</code> 从 <code>outputs/</code> 读出，
-          没有重新分析、没有改动原结论。全部结果只描述单一模型在这套材料下的输出行为。
+          下面按测量是否稳定、过程信息如何改变评分、身份标签带来的差异、文本长度能否解释变化、加入控制变量后的结果、
+          能动性与自由意志归因的关联路径、稳定性复核的顺序连续展开。每个数字都由 <code>scripts/build_showcase_data.py</code>
+          从 <code>outputs/</code> 读出，没有重新分析，也没有改动原结论。
         </p>
 
-        <!-- A. 数据质量与测量可靠性 -->
-        <h3>A. 数据质量与测量可靠性</h3>
-        <p class="note">
-          全部历史记录的 JSON/API 失败为 0、缺失为 0；下图为各构念在合成数据上的内部一致性（Cronbach α）。
-          数据来源：<code>outputs/reliability_summary.csv</code>。
-        </p>
+        <h3>测量是否稳定</h3>
+        <p class="note">全部历史记录的 JSON/API 失败为 0、缺失为 0；下图为各构念的内部一致性（Cronbach α）。数据取自 <code>outputs/reliability_summary.csv</code>。</p>
         <div class="reliability-bars" data-slot="reliability-bars" aria-label="各构念内部一致性"></div>
         <p class="reading annotation">
-          读图：横条为各构念的 α 值（0–1）；α 是<strong>内部一致性</strong>，不是效度。样本基础为全部历史合成响应。
-          该指标只说明题项是否测得较一致，<strong>不能</strong>据此声称量表已具备人类被试的信效度。
+          各构念题项在当前历史数据中的内部一致性整体较高。该指标反映同一构念下题项回答的一致程度，
+          量表是否适合其他模型或人类样本仍需另外检验。
         </p>
 
-        <!-- B. 六个条件的描述性结果 -->
-        <h3>B. 六个条件的描述性结果</h3>
-        <p class="note">
-          下图为五个核心构念在六个过程条件下的均值剖面，统一使用 1–7 坐标。
-          数据来源：<code>outputs/n30_stability_replication_report.md</code>。
-        </p>
+        <h3>过程信息如何改变评分</h3>
+        <p class="note">下图为五个核心构念在六个过程条件下的均值剖面，统一使用 1–7 坐标。数据取自 <code>outputs/n30_stability_replication_report.md</code>。</p>
         <div class="condition-profile" data-slot="condition-profile" aria-label="六条件核心构念均值剖面"></div>
         <p class="reading annotation">
-          读图：横轴为六个过程条件（低结构在左、高结构在右），纵轴为构念均值（1–7），不同颜色为不同构念。
-          最清楚的模式是<strong>能动性与主观过程完整性随结构上升</strong>；这支持「过程讲得更完整，模型给的能动性更高」。
-          不能由此推出模型拥有自由意志，也不能外推到人类或其他模型。
+          能动性和主观过程完整性随过程信息增加而整体上升，其中能动性的变化最稳定。
+          自由意志与责任相关评分的变化相对有限，说明不同归因维度并不会同步移动。
         </p>
 
-        <h3>历史结果图（既有分析产物）</h3>
-        <p class="note">以下三张图来自历史 DeepSeek API 输出的既有分析结果，点击可放大；图下标注读图说明、来源与证据边界。</p>
+        <h3>既有分析图表</h3>
+        <p class="note">以下三张图来自历史 DeepSeek API 输出的既有分析结果，点击可放大。</p>
         <div class="figures" data-slot="figures">
-          <noscript><p>启用 JavaScript 后可查看三张历史结果图表及其来源说明。</p></noscript>
+          <noscript><p>启用 JavaScript 后可查看三张历史结果图表及其说明。</p></noscript>
         </div>
 
-        <!-- C. 身份标签差异 -->
-        <h3>C. 身份标签差异（AI 决策者 vs 人类决策者）</h3>
-        <p class="note">
-          估计量为两因素方差分析（过程 × 身份）的<strong>身份主效应</strong>，效应量为 partial η²；
-          源文件为 F 检验，未提供均值差的置信区间。数据来源：<code>outputs/anova_summary.csv</code>、<code>outputs/scale_scores.csv</code>。
-        </p>
+        <h3>身份标签带来的差异</h3>
+        <p class="note">估计量为两因素方差分析（过程 × 身份）的身份主效应，效应量为 partial η²；源文件为 F 检验，未提供均值差的置信区间。数据取自 <code>outputs/anova_summary.csv</code>。</p>
         <div class="identity-effect" data-slot="identity-effect" aria-label="身份标签效应"></div>
         <p class="reading annotation">
-          读图：每行一个构念，横条按 partial η² 缩放（效应大小），并标注更高的一方与两身份均值。
-          最清楚的模式是<strong>身份差异在自由意志、责任与体验维度上很强，在感知智能与操纵检验上很弱</strong>——
-          说明身份效应并非在所有构念上一致。这只描述模型评分行为，不代表人类判断。
+          身份标签对自由意志、责任与体验评分的影响较明显，对感知智能和操纵检验的影响较弱。
+          模型对「AI」与「人类」标签的反应并不是统一的整体偏移。
         </p>
 
-        <!-- D. 预设条件对比 -->
-        <h3>D. 预先登记的条件对比</h3>
-        <p class="note">
-          下列对比为源文件中<strong>实际登记</strong>的过程条件对比；源文件提供差值、<code>t</code> 与 <code>p</code>，
-          <strong>未提供置信区间</strong>，页面不计算源文件中不存在的区间或显著性。数据来源：<code>outputs/planned_contrasts.csv</code>。
-        </p>
+        <h3>文本长度能否解释变化</h3>
+        <p class="note">下列为源文件中实际登记的过程条件对比；源文件提供差值、<code>t</code> 与 <code>p</code>，未提供置信区间。数据取自 <code>outputs/planned_contrasts.csv</code>。</p>
         <div class="planned-contrasts" data-slot="planned-contrasts" aria-label="预设条件对比"></div>
         <p class="reading annotation">
-          读图：每条为一个对比，点位为差值（a−b），标注 <code>t</code> 与 <code>p</code> 与方向。
-          关键模式是<strong>简洁理由权衡显著高于长文本直接选择</strong>、<strong>反思反馈显著高于长文本直接选择</strong>，
-          而仅列出可选方案与基线无显著差异——理由/反思结构比单纯拉长文本更能提高能动性评分。
+          简洁理由和反思反馈相较长文本直接选择产生了更高的能动性评分，而只列出候选方案与直接选择之间的差异较小。
+          文本长度不足以解释主要变化，理由结构更关键。
         </p>
 
-        <!-- E. 控制变量回归 -->
-        <h3>E. 控制变量回归</h3>
-        <p class="note">
-          展示过程条件的整体效应在加入控制变量前后的变化；<code>control_both</code> 同时控制感知智能与文本长度。
-          数据来源：<code>outputs/controlled_regression_summary.csv</code>。
-        </p>
+        <h3>加入控制变量后的结果</h3>
+        <p class="note">展示过程条件的整体效应在加入控制变量前后的变化；同时控制感知智能与文本长度。数据取自 <code>outputs/controlled_regression_summary.csv</code>。</p>
         <div class="controlled-regression" data-slot="controlled-regression" aria-label="控制变量回归"></div>
         <p class="reading annotation">
-          读图：每个构念显示「仅过程」与「同时控制感知智能与文本长度」两种设定下的过程效应（F、p、R²）。
-          连续来看：描述性差异 → 加入控制变量后，<strong>能动性的过程效应仍显著保留</strong>，
-          而<strong>自由意志、自主性、过程可归责的直接过程效应在控制后不再显著</strong>。
-          因此自由意志类结果应谨慎理解为直接效应。
+          加入感知智能和文本长度后，过程条件对能动性的影响仍然存在；自由意志、自主性和过程责任的直接关系则明显减弱。
         </p>
 
-        <!-- F. 关联性路径诊断 -->
-        <h3>F. 关联性间接路径诊断</h3>
-        <p class="note">
-          以路径诊断方式展示：过程结构 → 能动性 → 自由意志归因，及并行的感知智能路径。
-          <strong>这是关联性间接路径诊断，不是因果中介证明、不是心理机制已验证。</strong>
-          数据来源：<code>outputs/parallel_mediation_summary.json</code>。
-        </p>
+        <h3>能动性与自由意志归因的关联路径</h3>
+        <p class="note">以路径诊断方式展示过程结构 → 能动性 → 自由意志归因，及并行的感知智能路径。数据取自 <code>outputs/parallel_mediation_summary.json</code>。</p>
         <div class="mediation-path" data-slot="mediation-path" aria-label="关联性间接路径诊断"></div>
         <p class="reading annotation">
-          读图：主路径经能动性的间接效应区间<strong>不跨 0</strong>（方向一致），次路径经感知智能的间接效应区间<strong>跨 0</strong>。
-          仅当区间不跨 0 才说该探索性估计方向一致；不能据此断言因果中介。
+          能动性路径的区间未跨 0，感知智能路径的区间跨 0。这说明自由意志评分与能动性的变化关系更稳定，
+          目前只作变量关联的路径分析。
         </p>
 
-        <!-- G. 稳定性与复核 -->
-        <h3>G. 稳定性与复核</h3>
+        <h3>稳定性复核</h3>
         <ol class="stability-list" data-slot="stability-list" aria-label="稳定性与复核结论"></ol>
       </div>
     </section>
@@ -293,9 +266,6 @@
       <div class="wrap">
         <h2>结果总结</h2>
         <ol class="results-takeaways" data-slot="results-takeaways" aria-label="结果总结"></ol>
-        <p class="reading annotation">
-          全部结论对应的是<strong>模型输出行为</strong>：不使用「证明了」「揭示了真实心理机制」「模型具备自由意志」「与人类完全一致」等表述。
-        </p>
       </div>
     </section>
 
@@ -304,82 +274,57 @@
       <div class="wrap">
         <h2>可复现评测核心</h2>
         <p class="reading">
-          从研究问题到评测执行的工程链：任务规格 → 刺激快照 → Prompt → 模型接口 → 原始响应 → 解析 → 校验 → 修复 → 计分 → 聚合报告 → 运行清单。
-          代码对象如 <code>TaskSpec</code>（任务规格）、<code>ResponseRecord</code>（原始响应记录）、<code>ScoreRecord</code>（计分记录）、
-          <code>AggregateReport</code>（聚合报告）、<code>RunManifest</code>（运行清单）承载各环节，中文含义见下。
+          一次评测运行按同一套步骤执行，从任务与模型配置到运行清单和聚合报告。代码对象如
+          <code>TaskSpec</code>（任务规格）、<code>Provider</code>（模型接口）、<code>ScoreRecord</code>（计分记录）、
+          <code>AggregateReport</code>（聚合报告）、<code>RunManifest</code>（运行清单）承载各环节。
         </p>
 
-        <h3>评测流水线</h3>
-        <ol class="pipeline" data-slot="pipeline-stages" aria-label="评测流水线"></ol>
+        <h3>运行五步</h3>
+        <ol class="eval-steps" data-slot="eval-steps" aria-label="评测运行五步"></ol>
 
-        <h3>产物生命周期</h3>
-        <p class="note">每次运行按固定顺序产出以下带哈希的产物，写入 <code>artifacts/runs/&lt;run_id&gt;/</code>；历史 <code>outputs/</code> 永久只读、互不覆盖。</p>
-        <ol class="artifact-chain" data-slot="artifact-lifecycle" aria-label="产物生命周期"></ol>
+        <h3>一条命令跑通</h3>
+        <div class="eval-commands" data-slot="eval-commands" aria-label="可直接执行的命令"></div>
 
-        <h3>哈希与可追溯性</h3>
-        <p class="note">以下输入与产物各自记录 SHA-256，运行清单据此把一次运行关联起来（此处仅列字段，完整哈希在产物中）。</p>
-        <div class="hash-fields" data-slot="hash-fields" aria-label="哈希字段"></div>
+        <h3>运行产物</h3>
+        <p class="note">每次运行按固定顺序产出以下产物，写入独立目录；历史 <code>outputs/</code> 永久只读、互不覆盖。</p>
+        <div class="artifact-table-scroll">
+          <table class="artifact-table" data-slot="artifact-table">
+            <caption class="sr-only">运行产物及其用途</caption>
+          </table>
+        </div>
+        <p class="reading annotation" data-slot="hash-note"></p>
       </div>
     </section>
 
-    <!-- 8. Mock 工程验证 -->
+    <!-- 8. 模拟运行验证 -->
     <section id="mock-validation" class="section">
       <div class="wrap">
-        <h2>Mock 工程验证</h2>
+        <h2>模拟运行验证</h2>
         <p class="reading">
-          下列比率来自确定性 <code>mock</code> 验收运行（每格 2 条；smoke 为每格 1 条），
-          用于验证运行器、解析、计分、恢复与产物链能否按契约工作。
-          <strong>确定性 mock：非真实模型输出，不代表 DeepSeek 或其他真实模型的研究表现，也不代表已完成任何公开基准。</strong>
+          模拟运行用于检查任务配置、解析、校验、计分、恢复和产物生成是否能够完整执行。下列比率来自确定性
+          <code>mock</code> 运行。
         </p>
-        <div class="mock-quality" data-slot="mock-quality" aria-label="mock 运行质量"></div>
+        <div class="mock-quality" data-slot="mock-quality" aria-label="模拟运行质量"></div>
       </div>
     </section>
 
-    <!-- 9. 真实模型接入准备 -->
+    <!-- 9. 真实模型接入 -->
     <section id="real-provider" class="section alt">
       <div class="wrap">
-        <h2>真实模型接入准备</h2>
+        <h2>真实模型接入</h2>
         <p class="reading lead" data-slot="readiness-statement"></p>
-
-        <h3>准备流程</h3>
-        <ol class="readiness-flow" data-slot="readiness-flow" aria-label="真实接入准备流程"></ol>
-
-        <h3>当前状态</h3>
-        <p class="note">下列状态直接来自公开数据文件；未运行的真实指标一律显示为 <code>null</code> / <code>not run</code>，页面不出现任何真实 token、费用、延迟或性能数字。</p>
-        <div class="readiness-status" data-slot="readiness-status" aria-label="真实接入当前状态"></div>
-
-        <h3>运行前检查</h3>
-        <p class="note">真实运行前必须逐项满足；未满足前 CLI 会在发送任何请求前拒绝，并且不会读取 API Key。</p>
-        <ol class="readiness-checklist" data-slot="readiness-checklist" aria-label="运行前检查"></ol>
-
-        <h3>未来真实 Pilot 计划（12 / 60）</h3>
-        <p class="note">下列数字来自计划配置，按 6 过程 × 2 身份的单元格分布，<strong>不是真实运行结果</strong>。</p>
-        <div class="readiness-plan" data-slot="readiness-plan" aria-label="真实运行计划"></div>
-        <p class="reading annotation" data-slot="readiness-future"></p>
+        <h3>接入流程</h3>
+        <ol class="readiness-flow" data-slot="readiness-flow" aria-label="真实模型接入流程"></ol>
       </div>
     </section>
 
-    <!-- 10. 证据与来源边界 -->
-    <section id="evidence-boundary" class="section">
-      <div class="wrap">
-        <h2>证据与来源边界</h2>
-        <p class="reading">
-          下面用四态标注每个维度可被核查到什么程度：<strong>仓库可核查</strong>、<strong>作者记录</strong>、
-          <strong>现有材料重建</strong>、<strong>当前未知</strong>。四态互不等价；作者记录与重建都不会被显示为「已核查」，
-          标为未知的维度也不会被补写成确定事实。
-        </p>
-        <div class="provenance-counts" data-slot="provenance-counts" aria-label="四态计数"></div>
-        <div class="prov-matrix" data-slot="provenance-matrix" aria-label="证据来源四态矩阵"></div>
-      </div>
-    </section>
-
-    <!-- 11. 可复现运行与仓库 -->
-    <section id="reproducibility" class="section alt">
+    <!-- 10. 可复现运行与仓库 -->
+    <section id="reproducibility" class="section">
       <div class="wrap">
         <h2>可复现运行与仓库</h2>
         <p class="reading">
           当前能复现的是<strong>工程流程</strong>：从锁定依赖到 mock 运行、离线 dry-run、测试、数据构建与本地预览；
-          历史模型运行本身因元数据缺失尚不能逐字节复现。命令保持原样。
+          历史模型运行本身因元数据缺失尚不能逐字节复现。
         </p>
 
         <h3>常用命令</h3>
@@ -393,26 +338,23 @@
       </div>
     </section>
 
-    <!-- 12. 后续扩展 -->
-    <section id="future-work" class="section">
+    <!-- 11. 从单一任务到通用评测 -->
+    <section id="future-work" class="section alt">
       <div class="wrap">
-        <h2>后续扩展</h2>
-        <ul class="reading tight future-list">
-          <li>运行日确认 <code>DeepSeek</code> 模型、价格与凭据；</li>
-          <li>执行 12 条真实 smoke；</li>
-          <li>执行 60 条真实 pilot；</li>
-          <li>生成真实运行的脱敏公开报告；</li>
-          <li>后续可加入其他模型与相关任务。</li>
-        </ul>
+        <h2>从单一任务到通用评测</h2>
+        <p class="reading">
+          后续建设将从单一归因任务扩展到可比较的评测体系。首先固定任务、数据和计分版本，再通过统一接口接入不同模型；
+          随后加入跨情境扰动、重复运行和失败类型统计，检验模型在不同提示与运行条件下的一致性、敏感性和稳健性；
+          在此基础上引入人工校准、标准化任务卡和统一报告格式，逐步形成可复用的归因行为 benchmark。
+        </p>
+        <ol class="benchmark-flow" data-slot="benchmark-flow" aria-label="通用评测建设流程"></ol>
       </div>
     </section>
   </main>
 
   <footer class="site-footer">
     <div class="wrap">
-      <p>研究数据源提交：<code data-slot="source-commit">…</code> · 数据日期：<span data-slot="data-as-of">…</span> · 构建时间：<span data-slot="generated-at">…</span></p>
-      <p class="fineprint">「研究数据源提交」指站点研究数据与设计输入最近一次变化的 commit，不是页面构建或部署 commit。</p>
-      <p class="fineprint">历史 DeepSeek API 模型输出；AI 模拟数据；非人类被试；单一模型。测试型评测基准原型。</p>
+      <p class="footer-title">LLM 归因行为评测</p>
       <p class="fineprint"><a href="https://github.com/sherlock0717/llm-attribution-behavior-evaluation">github.com/sherlock0717/llm-attribution-behavior-evaluation</a></p>
     </div>
   </footer>

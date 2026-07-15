@@ -1,6 +1,6 @@
 # 静态展示页（site/）
 
-**LLM 归因行为评测 · A Reproducible Study and Evaluation Prototype** 的静态展示页。原生 HTML/CSS/JavaScript + 静态 JSON，无框架、无 CDN、无外部字体、无第三方 JS、无后端、无远程 API。页面组织为一篇连续的研究与工程报告：项目概览 → 研究问题 → 实验设计与测量 → 历史数据 → 完整分析链 → 结果总结 → 可复现评测核心 → Mock 工程验证 → 真实模型接入准备 → 证据与来源边界 → 可复现运行 → 后续扩展。
+**LLM 归因行为评测 · A Reproducible Study and Evaluation Prototype** 的静态展示页。原生 HTML/CSS/JavaScript + 静态 JSON，无框架、无 CDN、无外部字体、无第三方 JS、无后端、无远程 API。页面组织为一篇连续的研究与工程报告：项目概览 → 研究问题 → 实验设计与测量 → 研究与测量来源 → 历史数据 → 完整分析链 → 结果总结 → 可复现评测核心 → 模拟运行验证 → 真实模型接入 → 可复现运行 → 从单一任务到通用评测。
 
 ## 本地预览
 
@@ -14,7 +14,7 @@ python -m http.server 8000 --directory site
 
 ## 数据来源
 
-页面上的所有动态数字（记录数、条件数、构念/题项、信度、条件均值、身份效应、对比、回归、路径、mock 质量、provenance 计数、状态等）都来自 `site/data/*.json`，由仓库脚本从源文件生成，**不在 HTML 中硬编码**：
+页面上的所有动态数字（记录数、条件数、构念/题项、信度、条件均值、身份效应、对比、回归、路径、mock 质量、情境案例等）都来自 `site/data/*.json`，由仓库脚本从源文件生成，**不在 HTML 中硬编码**：
 
 ```bash
 python scripts/build_site_data.py        # site_summary / roadmap / version_history / historical_results
@@ -23,15 +23,15 @@ python scripts/build_showcase_data.py    # showcase_story / measurement_summary 
 # 各脚本均支持 --check，校验 site/data 与源文件一致
 ```
 
-页面加载的 JSON：`site_summary.json`、`showcase_story.json`、`measurement_summary.json`、`analysis_results.json`、`historical_results.json`、`engineering_status.json`、`evidence_matrix.json`、`reproducibility_summary.json`。
+页面加载的 JSON：`site_summary.json`、`showcase_story.json`、`measurement_summary.json`、`analysis_results.json`、`historical_results.json`、`engineering_status.json`、`reproducibility_summary.json`。（`evidence_matrix.json` 仍由 `build_public_report.py` 生成、供内部审计，但不在主页渲染。）
 
-图表以原生 SVG / HTML-CSS 渲染，支持中文标签与 390px 窄屏；三张历史结果图为既有分析产物（`outputs/plots/`），经哈希校验后复制到 `assets/figures/`。Research Question 栏目的研究问题概念图 `assets/figures/attribution-research-concept.png` 为概念插图，仅解释研究结构，不承载统计结果，也不计入三张历史结果图。
+图表以原生 SVG / HTML-CSS 渲染，支持中文标签与 390px 窄屏；三张历史结果图为既有分析产物（`outputs/plots/`），经哈希校验后复制到 `assets/figures/`。研究问题栏目的概念图 `assets/figures/attribution-research-concept.png` 为概念插图，仅解释研究结构，不承载统计结果，也不计入三张历史结果图。
 
-页脚「研究数据源提交」指研究数据与设计输入最近一次变化的 git commit，不是页面构建/HEAD/部署 commit；因此页面文件后续提交不会使 `--check` 失效。
+「研究与测量来源」区块的来源卡与参考文献由 `docs/showcase/site_manifest.yaml` 的 `research_sources` 维护，经 `build_showcase_data.py` 生成到 `showcase_story.json`。完整参考文献与逐题映射见 `docs/research_and_measurement_sources.md` 与 `docs/scale_source_mapping.md`；页面只展示简短来源信息，不复制逐题映射表。当前题项池基于既有理论与量表构念进行情境化改写，并非对原量表的完整直接使用。
 
 ## 边界声明
 
-历史结果为历史真实 DeepSeek API 的模型输出（AI 模拟数据，非人类被试，单一模型）。mock 仅用于工程/CI 流程验证，不进入研究结论。真实模型接入方案已完成离线验证，但尚未真正运行——页面不出现任何真实 token、费用、延迟或模型表现。本页评价的是模型输出中的归因行为，不构成关于 AI 是否拥有自由意志的任何断言。
+历史结果为历史真实 DeepSeek API 的模型输出（AI 模拟数据，非人类被试，单一模型）。`mock` 仅用于工程/CI 流程验证。真实模型接入流程已完成离线验证但尚未真正运行——页面不出现任何真实 token、费用、延迟或模型表现。页面上的评分反映模型在给定材料中的归因反应，它与模型本身是否具有自由意志、以及能否代表人类总体心理规律之间仍有很大距离。
 
 ## 部署
 

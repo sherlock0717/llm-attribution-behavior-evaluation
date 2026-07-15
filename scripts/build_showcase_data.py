@@ -27,6 +27,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import statistics
 import sys
 from datetime import datetime, timezone
@@ -35,8 +36,11 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT / "scripts") not in sys.path:
     sys.path.insert(0, str(ROOT / "scripts"))
+if str(ROOT / "src") not in sys.path:
+    sys.path.insert(0, str(ROOT / "src"))
 
 import build_site_data as bsd  # noqa: E402  (sibling script, validated extractors)
+import stimuli  # noqa: E402  (v1 stimulus materials; scenario case content, read-only)
 import yaml  # noqa: E402
 
 BuildError = bsd.BuildError
@@ -129,15 +133,16 @@ DV_LABELS = {k: v["label"] for k, v in CONSTRUCT_META.items()}
 DV_LABELS["responsibility_total"] = RESPONSIBILITY_TOTAL_META["label"]
 
 # Scenario display names (prose only; scenario_id set is validated from data).
+# domain is shown separately on the card, so the label here is just the case name.
 SCENARIO_LABELS = {
-    "moral_friend_report": "道德冲突：是否举报朋友",
-    "obedience_unfair_order": "服从与自主：面对不公命令",
-    "privacy_shortcut": "责任困境：隐私捷径",
-    "relationship_honesty": "人际关系：坦诚与否",
-    "responsibility_mistake": "责任困境：面对失误",
-    "risk_project_choice": "风险决策：项目取舍",
-    "self_control_deadline": "自我控制：截止期限",
-    "team_credit": "人际关系：团队功劳分配",
+    "moral_friend_report": "是否举报朋友的错误",
+    "self_control_deadline": "截止期限前的取舍",
+    "relationship_honesty": "对朋友作品是否坦诚",
+    "risk_project_choice": "稳妥还是创新方案",
+    "responsibility_mistake": "是否主动承认失误",
+    "obedience_unfair_order": "面对不公平的上级要求",
+    "privacy_shortcut": "是否走隐私捷径",
+    "team_credit": "团队功劳如何归属",
 }
 
 STABILITY_POINTS = [
@@ -153,46 +158,43 @@ RESULT_TAKEAWAYS = [
     "身份标签本身影响明显：在自由意志、责任与体验维度上，模型对人类与 AI 决策者的评分存在系统差异，但在感知智能与操纵检验上差异很弱。",
     "在同时控制感知智能与文本长度后，过程对能动性的效应仍然显著；对自由意志的直接效应则不再显著。",
     "自由意志归因更像经由能动性的关联性间接路径发生，而非过程的直接效应；感知智能的间接路径区间跨 0。",
-    "以上均为单一模型历史输出的归因行为描述，不证明模型拥有自由意志，也不等同于人类心理结论。",
+    "以上都是单一模型在这套材料下的输出行为描述，对应的是模型的归因反应本身。",
 ]
 
-PIPELINE_STAGES = [
-    {"stage": "任务规格", "code_object": "TaskSpec", "role": "冻结任务、条件与解析契约"},
-    {"stage": "刺激快照", "code_object": "stimulus_set", "role": "记录本次运行使用的刺激材料与其哈希"},
-    {"stage": "Prompt", "code_object": "prompt_template", "role": "由模板与刺激拼装并快照 Prompt"},
-    {"stage": "模型接口", "code_object": "Provider", "role": "统一的模型调用接口（mock / 真实 provider）"},
-    {"stage": "原始响应", "code_object": "ResponseRecord", "role": "保存逐条原始模型响应"},
-    {"stage": "解析", "code_object": "parser", "role": "把原始响应解析为结构化题项"},
-    {"stage": "校验", "code_object": "validator", "role": "schema 校验、范围检查、缺失检查"},
-    {"stage": "修复", "code_object": "repair", "role": "对可修复的解析问题触发重试/修复"},
-    {"stage": "计分", "code_object": "ScoreRecord", "role": "按计分规格聚合为构念分数"},
-    {"stage": "聚合报告", "code_object": "AggregateReport", "role": "汇总执行质量与输出质量指标"},
-    {"stage": "运行清单", "code_object": "RunManifest", "role": "记录配置、哈希与产物引用，支持审计"},
+# Evaluation core: a five-step flow, one executable command block, and a single
+# compact artifact table (replacing the former 11-stage pipeline + 11 artifact
+# nodes + 7 hash cards).
+EVAL_STEPS = [
+    {"step": "选择任务和模型配置",
+     "note": "确定任务规格（TaskSpec）与模型配置，可用 mock 或真实 provider。"},
+    {"step": "执行统一命令",
+     "note": "用同一条命令行入口发起一次运行。"},
+    {"step": "解析、校验并计分",
+     "note": "解析响应、做 schema 与范围校验，聚合为构念分数。"},
+    {"step": "将运行产物写入独立目录",
+     "note": "每次运行写入独立目录，历史 outputs/ 只读、互不覆盖。"},
+    {"step": "查看运行清单和聚合报告",
+     "note": "运行清单（RunManifest）记录配置与产物哈希，聚合报告（AggregateReport）汇总执行与输出质量。"},
 ]
 
-ARTIFACT_LIFECYCLE = [
-    {"role": "resolved_config", "label": "解析后配置"},
-    {"role": "task_spec", "label": "任务规格"},
-    {"role": "model_spec", "label": "模型规格"},
-    {"role": "prompt_snapshots", "label": "Prompt 快照"},
-    {"role": "stimuli_snapshot", "label": "刺激快照"},
-    {"role": "raw_response", "label": "原始响应"},
-    {"role": "normalized_response", "label": "规范化响应"},
-    {"role": "score", "label": "计分记录"},
-    {"role": "failure", "label": "失败记录"},
-    {"role": "aggregate_report", "label": "聚合报告"},
-    {"role": "manifest", "label": "运行清单"},
+EVAL_COMMANDS = [
+    "uv sync --frozen",
+    "python -m freewill_attribution.cli run --mock --n-per-cell 2 --out <临时目录>",
+    "python -m pytest -q",
 ]
 
-HASH_FIELDS = [
-    {"field": "resolved_config_hash", "label": "解析后配置"},
-    {"field": "task_spec_hash", "label": "任务规格"},
-    {"field": "model_spec_hash", "label": "模型规格"},
-    {"field": "prompt_template_hash", "label": "Prompt 模板"},
-    {"field": "prompt_snapshot_set_hash", "label": "Prompt 快照集"},
-    {"field": "stimulus_set_hash", "label": "刺激集"},
-    {"field": "scoring_spec_hash", "label": "计分规格"},
+ARTIFACT_TABLE = [
+    {"label": "配置快照", "purpose": "冻结解析后配置、任务规格与模型规格。"},
+    {"label": "Prompt 与刺激快照", "purpose": "记录本次运行使用的 Prompt 模板与刺激材料。"},
+    {"label": "原始与规范化响应", "purpose": "保存逐条原始响应及其解析后的结构化结果。"},
+    {"label": "计分与失败记录", "purpose": "记录构念分数与无法解析或校验失败的条目。"},
+    {"label": "聚合报告", "purpose": "汇总完成率、解析成功率与 schema 合规等执行指标。"},
+    {"label": "运行清单", "purpose": "串联上述输入与产物的 SHA-256，支持追溯与审计。"},
 ]
+
+EVAL_HASH_NOTE = (
+    "任务规格、模型配置、Prompt、刺激集、计分规格与运行产物各自记录 SHA-256，"
+    "运行清单据此把一次运行的输入与产物关联起来，使运行可被逐步骤追溯。")
 
 REPRO_COMMANDS = [
     {"label": "环境安装（锁定依赖）", "cmd": "uv sync --frozen"},
@@ -222,28 +224,20 @@ KEY_DIRECTORIES = [
     {"path": "docs/", "note": "研究协议、证据审计与运行手册"},
 ]
 
-DRY_RUN_PLAN = [
-    {"name": "smoke", "records": 12, "n_per_cell": 1,
-     "note": "每个实验单元 1 条，用于最小连通与解析校验"},
-    {"name": "pilot", "records": 60, "n_per_cell": 5,
-     "note": "每个实验单元 5 条，用于首次真实小规模试点"},
+# Real model access: a single statement + a five-step flow. Precise smoke/pilot
+# counts stay in the runbook (docs/runs/*), not on the public page.
+REAL_PROVIDER_STATEMENT = (
+    "真实模型接入流程已经预设。运行时核验模型、价格和凭据后，"
+    "可以沿用同一套任务配置、解析、计分和产物规范执行真实运行。")
+
+REAL_PROVIDER_FLOW = [
+    "核验运行配置", "小规模连通性检查", "分层试运行", "质量复核", "生成脱敏报告",
 ]
 
-READINESS_CHECKLIST = [
-    {"step": "verify_current_official_base_url", "label": "核验当前官方 API 基础地址"},
-    {"step": "verify_current_official_model_id", "label": "核验当前官方模型 ID"},
-    {"step": "verify_current_official_pricing", "label": "核验当前官方价格"},
-    {"step": "configure_api_key_in_environment", "label": "在环境变量中配置 API Key"},
-    {"step": "explicitly_enable_live_api", "label": "显式开启 live 模式"},
-    {"step": "explicitly_confirm_paid_run", "label": "显式确认这是一次付费运行"},
+# From a single attribution task toward a general, comparable evaluation.
+BENCHMARK_ROADMAP_FLOW = [
+    "任务契约", "数据版本", "多模型运行", "稳健性评测", "人工校准", "基准卡与标准报告",
 ]
-
-READINESS_FLOW = [
-    "离线 Provider", "凭据隔离", "价格与模型核验", "dry-run",
-    "12 条 smoke", "60 条 pilot", "脱敏公开报告",
-]
-
-FUTURE_RECORD_FIELDS = ["token", "费用", "延迟", "解析与 schema 质量", "条件与身份结果"]
 
 
 # ---------------------------------------------------------------------------
@@ -276,6 +270,125 @@ def _identity_means() -> dict[str, dict[str, float]]:
 # ---------------------------------------------------------------------------
 # showcase_story.json
 # ---------------------------------------------------------------------------
+
+def _scenario_cards(data_ids: set[str]) -> list[dict]:
+    """Scenario case cards, read faithfully from src/stimuli.py (never rewritten).
+
+    The scenario_id set is cross-checked against the historical data so the page
+    can never show a case that is not backed by the actual materials.
+    """
+    stim_ids = {s.scenario_id for s in stimuli.SCENARIOS}
+    if stim_ids != data_ids:
+        raise BuildError(
+            f"scenario id mismatch: stimuli={sorted(stim_ids)} data={sorted(data_ids)}")
+    cards = []
+    for s in stimuli.SCENARIOS:  # keep the canonical stimuli order
+        label = SCENARIO_LABELS.get(s.scenario_id)
+        if not label:
+            raise BuildError(f"missing SCENARIO_LABELS entry for '{s.scenario_id}'")
+        cards.append({
+            "id": s.scenario_id,
+            "domain": s.domain,
+            "label": label,
+            "context": s.context,
+            "option_a": s.option_a,
+            "option_b": s.option_b,
+            "fixed_choice": s.fixed_choice,
+        })
+    return cards
+
+
+# DOI must look like a real DOI (10.<registrant>/<suffix>); empty is allowed for
+# a book-only theoretical source that carries a publisher URL instead.
+_DOI_RE = re.compile(r"^10\.\d{4,9}/\S+$")
+
+# Expected research-source ids and their canonical page order. This guards the
+# page against silently gaining/losing a source card.
+RESEARCH_SOURCE_IDS = [
+    "mind_perception",
+    "free_will_beliefs",
+    "perceived_intelligence",
+    "reasons_responsiveness_responsibility",
+    "self_authored_checks",
+]
+
+
+def _research_sources() -> dict:
+    """Research & measurement sources, read from the human-verified manifest.
+
+    Every card is a contextual adaptation of prior theory/scale constructs, not a
+    direct reuse of a complete published scale; the self-authored checks carry no
+    external scale. DOIs are format-checked so a malformed reference fails loudly.
+    """
+    block = bsd._manifest().get("research_sources")
+    if not isinstance(block, dict):
+        raise BuildError("site_manifest.yaml research_sources block missing")
+    for field in ("intro_zh", "usage_note_zh"):
+        if not block.get(field):
+            raise BuildError(f"research_sources missing '{field}'")
+    raw = block.get("sources")
+    if not isinstance(raw, list) or not raw:
+        raise BuildError("research_sources.sources missing")
+    by_id = {}
+    for s in raw:
+        if not isinstance(s, dict) or not s.get("id"):
+            raise BuildError("research_sources entry missing id")
+        by_id[s["id"]] = s
+    if set(by_id) != set(RESEARCH_SOURCE_IDS):
+        raise BuildError(
+            f"research_sources id mismatch: manifest={sorted(by_id)} "
+            f"expected={sorted(RESEARCH_SOURCE_IDS)}")
+
+    sources = []
+    all_refs = []
+    for sid in RESEARCH_SOURCE_IDS:  # stable canonical order
+        s = by_id[sid]
+        for field in ("label_zh", "citation_short", "role_zh", "usage_zh"):
+            if not s.get(field):
+                raise BuildError(f"research_source '{sid}' missing '{field}'")
+        constructs = s.get("constructs_zh")
+        if not isinstance(constructs, list) or not constructs:
+            raise BuildError(f"research_source '{sid}' missing constructs_zh")
+        refs = []
+        for ref in (s.get("references") or []):
+            full = (ref.get("full") or "").strip()
+            if not full:
+                raise BuildError(f"research_source '{sid}' reference missing 'full'")
+            doi = (ref.get("doi") or "").strip()
+            if doi and not _DOI_RE.match(doi):
+                raise BuildError(f"research_source '{sid}' has malformed DOI '{doi}'")
+            entry = {"full": full, "doi": doi, "url": (ref.get("url") or "").strip()}
+            refs.append(entry)
+            all_refs.append({"source": sid, **entry})
+        # self-authored sources legitimately have no external reference
+        if sid != "self_authored_checks" and not refs:
+            raise BuildError(f"research_source '{sid}' must carry at least one reference")
+        sources.append({
+            "id": sid,
+            "label": s["label_zh"],
+            "citation_short": s["citation_short"],
+            "constructs": list(constructs),
+            "role": s["role_zh"],
+            "usage": s["usage_zh"],
+            "references": refs,
+        })
+
+    detail_docs = []
+    for d in (block.get("detail_docs") or []):
+        if not isinstance(d, dict) or not d.get("path") or not d.get("note_zh"):
+            raise BuildError("research_sources.detail_docs entry malformed")
+        detail_docs.append({"path": d["path"], "note": d["note_zh"]})
+    if not detail_docs:
+        raise BuildError("research_sources.detail_docs missing")
+
+    return {
+        "intro": block["intro_zh"],
+        "usage_note": block["usage_note_zh"],
+        "sources": sources,
+        "references": all_refs,
+        "detail_docs": detail_docs,
+    }
+
 
 def build_showcase_story() -> dict:
     rows = bsd._read_csv("outputs/scale_scores.csv")
@@ -312,10 +425,9 @@ def build_showcase_story() -> dict:
             "围绕模型如何对行动者的能动性、自由意志与责任作出归因，"
             "构建从历史研究、任务契约到可复现运行与证据审计的测试型评测基准。"),
         "core_facts": core_facts,
-        "scenarios": [
-            {"id": s, "label": SCENARIO_LABELS.get(s, s)} for s in scenarios
-        ],
+        "scenarios": _scenario_cards(set(scenarios)),
         "domains": domains,
+        "research_sources": _research_sources(),
         "result_takeaways": RESULT_TAKEAWAYS,
     }
 
@@ -529,23 +641,19 @@ def build_analysis_results() -> dict:
 def build_reproducibility_summary() -> dict:
     return {
         "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-        "pipeline_stages": PIPELINE_STAGES,
-        "artifact_lifecycle": ARTIFACT_LIFECYCLE,
-        "hash_fields": HASH_FIELDS,
-        "hash_note": ("任务规格、模型配置、Prompt、刺激集、计分规格与运行产物"
-                      "各自记录 SHA-256，运行清单据此把一次运行的输入与产物关联起来。"),
+        "eval_steps": EVAL_STEPS,
+        "eval_commands": EVAL_COMMANDS,
+        "artifact_table": ARTIFACT_TABLE,
+        "hash_note": EVAL_HASH_NOTE,
         "repro_commands": REPRO_COMMANDS,
         "doc_entries": DOC_ENTRIES,
         "key_directories": KEY_DIRECTORIES,
         "real_provider": {
-            "statement": ("真实模型接入方案已完成离线验证；在运行日核验模型、价格与凭据后，"
-                          "可直接执行真实运行。"),
-            "flow": READINESS_FLOW,
-            "checklist": READINESS_CHECKLIST,
-            "dry_run_plan": DRY_RUN_PLAN,
-            "future_record_fields": FUTURE_RECORD_FIELDS,
+            "statement": REAL_PROVIDER_STATEMENT,
+            "flow": REAL_PROVIDER_FLOW,
             "runbook": "docs/runs/REAL_PILOT_RUNBOOK.md",
         },
+        "benchmark_roadmap": {"flow": BENCHMARK_ROADMAP_FLOW},
     }
 
 

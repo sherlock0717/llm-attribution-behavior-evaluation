@@ -61,6 +61,70 @@ def test_story_core_facts_are_derived():
     assert s["subtitle_en"] == "A Reproducible Study and Evaluation Prototype"
 
 
+def test_story_scenarios_carry_case_content():
+    s = bsc.build_showcase_story()
+    cards = {c["id"]: c for c in s["scenarios"]}
+    assert len(cards) == 8
+    # scenario case content is read faithfully from src/stimuli.py
+    for stim in bsc.stimuli.SCENARIOS:
+        c = cards[stim.scenario_id]
+        assert c["context"] == stim.context
+        assert c["option_a"] == stim.option_a
+        assert c["option_b"] == stim.option_b
+        assert c["fixed_choice"] == stim.fixed_choice
+        assert c["domain"] == stim.domain
+        assert c["label"]
+
+
+def test_research_sources_structure_and_dois():
+    s = bsc.build_showcase_story()
+    rs = s["research_sources"]
+    assert rs["intro"] and rs["usage_note"]
+    ids = [x["id"] for x in rs["sources"]]
+    assert ids == [
+        "mind_perception", "free_will_beliefs", "perceived_intelligence",
+        "reasons_responsiveness_responsibility", "self_authored_checks",
+    ]
+    import re
+    doi_re = re.compile(r"^10\.\d{4,9}/\S+$")
+    for src in rs["sources"]:
+        assert src["constructs"] and src["role"] and src["usage"]
+        for ref in src["references"]:
+            assert ref["full"].strip()
+            if ref["doi"]:
+                assert doi_re.match(ref["doi"]), ref["doi"]
+    # self-authored checks carry no external scale reference
+    self_authored = next(x for x in rs["sources"] if x["id"] == "self_authored_checks")
+    assert self_authored["references"] == []
+    # the full reference list is non-empty; four journal refs carry DOIs
+    assert rs["references"]
+    assert sum(1 for r in rs["references"] if r["doi"]) >= 4
+    assert rs["detail_docs"]
+
+
+def test_research_sources_do_not_claim_complete_scale_use():
+    s = bsc.build_showcase_story()
+    import json as _json
+    blob = _json.dumps(s["research_sources"], ensure_ascii=False)
+    # positive over-claims must never appear (the legitimate negation
+    # "并非对原量表的完整直接使用" is expected and allowed)
+    for bad in ["直接使用完整量表", "直接使用成熟量表", "继承原量表信效度",
+                "沿用原量表信效度"]:
+        assert bad not in blob, bad
+
+
+def test_reproducibility_summary_shape():
+    r = bsc.build_reproducibility_summary()
+    assert len(r["eval_steps"]) == 5
+    assert r["eval_commands"] and all(isinstance(c, str) for c in r["eval_commands"])
+    assert len(r["artifact_table"]) == 6
+    assert len(r["real_provider"]["flow"]) == 5
+    assert len(r["benchmark_roadmap"]["flow"]) == 6
+    # precise smoke/pilot counts must not leak into the public JSON
+    blob = str(r["real_provider"]) + str(r["benchmark_roadmap"])
+    assert "12" not in blob and "60" not in blob
+
+
 def test_analysis_mediation_crosses_zero_flags():
     a = bsc.build_analysis_results()
     paths = {p["name"]: p for p in a["mediation"]["paths"]}
