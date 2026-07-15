@@ -1,0 +1,547 @@
+{
+  "condition_profile": {
+    "condition_labels": {
+      "alternatives": "列出可选方案",
+      "direct_choice": "直接选择",
+      "direct_choice_long": "长文本直接选择",
+      "reasons": "完整理由权衡",
+      "reasons_concise": "简洁理由权衡",
+      "reflection_feedback": "反思与反馈修正"
+    },
+    "conditions": [
+      "direct_choice",
+      "direct_choice_long",
+      "alternatives",
+      "reasons_concise",
+      "reasons",
+      "reflection_feedback"
+    ],
+    "scale_note": "构念分数区间 1–7，各序列使用同一坐标便于比较。",
+    "series": [
+      {
+        "construct": "subjective_process_completeness",
+        "label": "主观过程完整性",
+        "points": [
+          {
+            "condition": "direct_choice",
+            "label": "直接选择",
+            "value": 3.75
+          },
+          {
+            "condition": "direct_choice_long",
+            "label": "长文本直接选择",
+            "value": 3.228
+          },
+          {
+            "condition": "alternatives",
+            "label": "列出可选方案",
+            "value": 4.217
+          },
+          {
+            "condition": "reasons_concise",
+            "label": "简洁理由权衡",
+            "value": 4.65
+          },
+          {
+            "condition": "reasons",
+            "label": "完整理由权衡",
+            "value": 5.028
+          },
+          {
+            "condition": "reflection_feedback",
+            "label": "反思与反馈修正",
+            "value": 5.567
+          }
+        ]
+      },
+      {
+        "construct": "agency",
+        "label": "能动性",
+        "points": [
+          {
+            "condition": "direct_choice",
+            "label": "直接选择",
+            "value": 4.308
+          },
+          {
+            "condition": "direct_choice_long",
+            "label": "长文本直接选择",
+            "value": 3.942
+          },
+          {
+            "condition": "alternatives",
+            "label": "列出可选方案",
+            "value": 4.25
+          },
+          {
+            "condition": "reasons_concise",
+            "label": "简洁理由权衡",
+            "value": 4.433
+          },
+          {
+            "condition": "reasons",
+            "label": "完整理由权衡",
+            "value": 4.583
+          },
+          {
+            "condition": "reflection_feedback",
+            "label": "反思与反馈修正",
+            "value": 5.2
+          }
+        ]
+      },
+      {
+        "construct": "free_will_attribution",
+        "label": "自由意志归因",
+        "points": [
+          {
+            "condition": "direct_choice",
+            "label": "直接选择",
+            "value": 4.44
+          },
+          {
+            "condition": "direct_choice_long",
+            "label": "长文本直接选择",
+            "value": 4.087
+          },
+          {
+            "condition": "alternatives",
+            "label": "列出可选方案",
+            "value": 4.413
+          },
+          {
+            "condition": "reasons_concise",
+            "label": "简洁理由权衡",
+            "value": 4.503
+          },
+          {
+            "condition": "reasons",
+            "label": "完整理由权衡",
+            "value": 4.69
+          },
+          {
+            "condition": "reflection_feedback",
+            "label": "反思与反馈修正",
+            "value": 4.87
+          }
+        ]
+      },
+      {
+        "construct": "perceived_intelligence",
+        "label": "感知智能",
+        "points": [
+          {
+            "condition": "direct_choice",
+            "label": "直接选择",
+            "value": 5.0
+          },
+          {
+            "condition": "direct_choice_long",
+            "label": "长文本直接选择",
+            "value": 4.628
+          },
+          {
+            "condition": "alternatives",
+            "label": "列出可选方案",
+            "value": 5.056
+          },
+          {
+            "condition": "reasons_concise",
+            "label": "简洁理由权衡",
+            "value": 5.144
+          },
+          {
+            "condition": "reasons",
+            "label": "完整理由权衡",
+            "value": 5.267
+          },
+          {
+            "condition": "reflection_feedback",
+            "label": "反思与反馈修正",
+            "value": 5.533
+          }
+        ]
+      },
+      {
+        "construct": "responsibility_total",
+        "label": "责任归因总分",
+        "points": [
+          {
+            "condition": "direct_choice",
+            "label": "直接选择",
+            "value": 4.828
+          },
+          {
+            "condition": "direct_choice_long",
+            "label": "长文本直接选择",
+            "value": 4.75
+          },
+          {
+            "condition": "alternatives",
+            "label": "列出可选方案",
+            "value": 4.706
+          },
+          {
+            "condition": "reasons_concise",
+            "label": "简洁理由权衡",
+            "value": 4.658
+          },
+          {
+            "condition": "reasons",
+            "label": "完整理由权衡",
+            "value": 4.881
+          },
+          {
+            "condition": "reflection_feedback",
+            "label": "反思与反馈修正",
+            "value": 4.864
+          }
+        ]
+      }
+    ]
+  },
+  "controlled_regression": {
+    "note": "展示过程条件的整体效应在加入控制变量前后的变化；control_both 同时控制感知智能与文本长度。",
+    "rows": [
+      {
+        "dv": "agency",
+        "label": "能动性",
+        "specs": [
+          {
+            "process_F": 33.999,
+            "process_p": 2.644730981663745e-28,
+            "r_squared": 0.559,
+            "spec": "dummy_process_only",
+            "survives": true
+          },
+          {
+            "process_F": 12.189,
+            "process_p": 6.692456451340258e-11,
+            "r_squared": 0.74,
+            "spec": "control_both",
+            "survives": true
+          }
+        ]
+      },
+      {
+        "dv": "free_will_attribution",
+        "label": "自由意志归因",
+        "specs": [
+          {
+            "process_F": 8.208,
+            "process_p": 2.402836855767544e-07,
+            "r_squared": 0.452,
+            "spec": "dummy_process_only",
+            "survives": true
+          },
+          {
+            "process_F": 0.711,
+            "process_p": 0.6157460882167596,
+            "r_squared": 0.602,
+            "spec": "control_both",
+            "survives": false
+          }
+        ]
+      },
+      {
+        "dv": "responsibility_total",
+        "label": "责任归因总分",
+        "specs": [
+          {
+            "process_F": 1.195,
+            "process_p": 0.31111914021739806,
+            "r_squared": 0.461,
+            "spec": "dummy_process_only",
+            "survives": false
+          },
+          {
+            "process_F": 3.304,
+            "process_p": 0.006268966347599904,
+            "r_squared": 0.563,
+            "spec": "control_both",
+            "survives": true
+          }
+        ]
+      },
+      {
+        "dv": "autonomy",
+        "label": "自主性",
+        "specs": [
+          {
+            "process_F": 11.225,
+            "process_p": 4.713153262370286e-10,
+            "r_squared": 0.479,
+            "spec": "dummy_process_only",
+            "survives": true
+          },
+          {
+            "process_F": 1.511,
+            "process_p": 0.18556600968259515,
+            "r_squared": 0.659,
+            "spec": "control_both",
+            "survives": false
+          }
+        ]
+      },
+      {
+        "dv": "process_accountability",
+        "label": "过程可归责",
+        "specs": [
+          {
+            "process_F": 6.219,
+            "process_p": 1.5287757844424887e-05,
+            "r_squared": 0.231,
+            "spec": "dummy_process_only",
+            "survives": true
+          },
+          {
+            "process_F": 0.499,
+            "process_p": 0.7772382992319101,
+            "r_squared": 0.402,
+            "spec": "control_both",
+            "survives": false
+          }
+        ]
+      }
+    ],
+    "spec_labels": {
+      "control_both": "同时控制感知智能与文本长度",
+      "dummy_process_only": "仅过程（未加控制）"
+    }
+  },
+  "generated_at": "2026-07-14T10:26:37+00:00",
+  "identity_effect": {
+    "effects": [
+      {
+        "F": 11.45,
+        "construct": "agency",
+        "higher_identity": "人类决策者",
+        "label": "能动性",
+        "means_by_identity": {
+          "AI 决策者": 4.321,
+          "人类决策者": 4.584
+        },
+        "p": 0.0007957419563972466,
+        "partial_eta_sq": 0.032
+      },
+      {
+        "F": 73.84,
+        "construct": "free_will_attribution",
+        "higher_identity": "人类决策者",
+        "label": "自由意志归因",
+        "means_by_identity": {
+          "AI 决策者": 4.116,
+          "人类决策者": 4.886
+        },
+        "p": 2.9054507261225694e-16,
+        "partial_eta_sq": 0.175
+      },
+      {
+        "F": 17.99,
+        "construct": "autonomy",
+        "higher_identity": "人类决策者",
+        "label": "自主性",
+        "means_by_identity": {
+          "AI 决策者": 4.42,
+          "人类决策者": 4.822
+        },
+        "p": 2.848360069656942e-05,
+        "partial_eta_sq": 0.049
+      },
+      {
+        "F": 1296.23,
+        "construct": "experience",
+        "higher_identity": "人类决策者",
+        "label": "体验感受",
+        "means_by_identity": {
+          "AI 决策者": 1.568,
+          "人类决策者": 4.054
+        },
+        "p": 2.1843064066090298e-119,
+        "partial_eta_sq": 0.788
+      },
+      {
+        "F": 294.96,
+        "construct": "outcome_accountability",
+        "higher_identity": "人类决策者",
+        "label": "结果责任",
+        "means_by_identity": {
+          "AI 决策者": 4.458,
+          "人类决策者": 5.819
+        },
+        "p": 2.5645212612198115e-48,
+        "partial_eta_sq": 0.459
+      },
+      {
+        "F": 1.0,
+        "construct": "perceived_intelligence",
+        "higher_identity": "AI 决策者",
+        "label": "感知智能",
+        "means_by_identity": {
+          "AI 决策者": 5.141,
+          "人类决策者": 5.069
+        },
+        "p": 0.31759962340072573,
+        "partial_eta_sq": 0.003
+      },
+      {
+        "F": 7.48,
+        "construct": "subjective_process_completeness",
+        "higher_identity": "人类决策者",
+        "label": "主观过程完整性",
+        "means_by_identity": {
+          "AI 决策者": 4.319,
+          "人类决策者": 4.494
+        },
+        "p": 0.006549885790020089,
+        "partial_eta_sq": 0.021
+      }
+    ],
+    "estimator": "两因素方差分析（过程 × 身份）的身份主效应",
+    "identities": [
+      "AI 决策者",
+      "人类决策者"
+    ],
+    "note": "效应量为 partial η²；源文件为 F 检验，未提供均值差的置信区间。"
+  },
+  "mediation": {
+    "controls": [
+      "identity_ordinal",
+      "char_len"
+    ],
+    "direct_c_prime": -0.0884,
+    "note": "关联性间接路径诊断，非因果中介证明、非机制验证；仅当自助区间不跨 0 时说该探索性估计方向一致。",
+    "outcome": "自由意志归因",
+    "paths": [
+      {
+        "a": 0.3045,
+        "b": 0.8863,
+        "ci_high": 0.3507,
+        "ci_low": 0.1985,
+        "crosses_zero": false,
+        "indirect": 0.2699,
+        "label": "关联性主路径",
+        "mid": "能动性",
+        "name": "agency"
+      },
+      {
+        "a": 0.2347,
+        "b": 0.0783,
+        "ci_high": 0.0442,
+        "ci_low": -0.0068,
+        "crosses_zero": true,
+        "indirect": 0.0184,
+        "label": "关联性次路径",
+        "mid": "感知智能",
+        "name": "perceived_intelligence"
+      }
+    ],
+    "predictor": "过程结构等级"
+  },
+  "planned_contrasts": {
+    "groups": [
+      {
+        "contrasts": [
+          {
+            "contrast": "alternatives_vs_direct_choice",
+            "diff": -0.058,
+            "direction": "a<b",
+            "label": "列出可选方案 vs 直接选择",
+            "mean_a": 4.25,
+            "mean_b": 4.308,
+            "p": 0.6890439181273944,
+            "t": -0.401
+          },
+          {
+            "contrast": "reasons_concise_vs_direct_choice_long",
+            "diff": 0.492,
+            "direction": "a>b",
+            "label": "简洁理由权衡 vs 长文本直接选择",
+            "mean_a": 4.433,
+            "mean_b": 3.942,
+            "p": 0.00113362900011447,
+            "t": 3.34
+          },
+          {
+            "contrast": "reflection_feedback_vs_reasons",
+            "diff": 0.617,
+            "direction": "a>b",
+            "label": "反思与反馈修正 vs 完整理由权衡",
+            "mean_a": 5.2,
+            "mean_b": 4.583,
+            "p": 4.913489752022003e-07,
+            "t": 5.341
+          },
+          {
+            "contrast": "reflection_feedback_vs_direct_choice_long",
+            "diff": 1.258,
+            "direction": "a>b",
+            "label": "反思与反馈修正 vs 长文本直接选择",
+            "mean_a": 5.2,
+            "mean_b": 3.942,
+            "p": 2.1454416235133006e-15,
+            "t": 9.401
+          }
+        ],
+        "dv": "agency",
+        "label": "能动性"
+      },
+      {
+        "contrasts": [
+          {
+            "contrast": "alternatives_vs_direct_choice",
+            "diff": -0.027,
+            "direction": "a<b",
+            "label": "列出可选方案 vs 直接选择",
+            "mean_a": 4.413,
+            "mean_b": 4.44,
+            "p": 0.8883205461829056,
+            "t": -0.141
+          },
+          {
+            "contrast": "reasons_concise_vs_direct_choice_long",
+            "diff": 0.417,
+            "direction": "a>b",
+            "label": "简洁理由权衡 vs 长文本直接选择",
+            "mean_a": 4.503,
+            "mean_b": 4.087,
+            "p": 0.02375461247931587,
+            "t": 2.292
+          },
+          {
+            "contrast": "reflection_feedback_vs_reasons",
+            "diff": 0.18,
+            "direction": "a>b",
+            "label": "反思与反馈修正 vs 完整理由权衡",
+            "mean_a": 4.87,
+            "mean_b": 4.69,
+            "p": 0.19321984937327272,
+            "t": 1.309
+          },
+          {
+            "contrast": "reflection_feedback_vs_direct_choice_long",
+            "diff": 0.783,
+            "direction": "a>b",
+            "label": "反思与反馈修正 vs 长文本直接选择",
+            "mean_a": 4.87,
+            "mean_b": 4.087,
+            "p": 1.2073641130545292e-05,
+            "t": 4.593
+          }
+        ],
+        "dv": "free_will_attribution",
+        "label": "自由意志归因"
+      }
+    ],
+    "note": "对比为源文件中实际登记的过程条件对比；源文件提供差值、t 与 p，未提供置信区间，页面不计算源文件中不存在的区间或显著性。"
+  },
+  "stability": {
+    "points": [
+      "能动性随过程结构总体上升，是方向最稳定的主结果；n=30 稳定性复核维持同一方向。",
+      "自由意志归因的直接过程效应在加入控制变量后并不稳定，更像经由能动性间接发生，属探索性诊断。",
+      "责任相关维度（结果责任、道德褒贬、过程可归责）方向不如能动性稳定，仅作探索性呈现。",
+      "已识别的方法问题——历史 prompt 同时暴露构念名与判断规则、构念间高相关——在 v2 协议中通过盲化构念名与修订暴露策略处理。",
+      "当前结论仅描述单一模型在这套材料下的输出行为，稳定性与复核均在同一历史数据内进行，不外推为人类心理规律。"
+    ]
+  }
+}

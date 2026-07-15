@@ -1,0 +1,342 @@
+# Site manifest (SITE-003) — human-maintained STATIC content only.
+# HARD RULE: do NOT hand-write any number that can be computed from the repo
+# (record count, condition counts, n-per-cell, regression F, p, mediation
+#  estimates, figure hashes, project version, git sha). Those are produced by
+# scripts/build_site_data.py into site/data/*.json and read by the page.
+
+project:
+  name_zh: "LLM 归因行为评测"
+  name_en: "A Reproducible Study and Evaluation Prototype"
+  tagline_zh: "围绕模型如何对行动者的能动性、自由意志与责任作出归因，构建从历史研究、任务契约到可复现运行与证据审计的测试型评测基准。"
+  tagline_en: "A reproducible test-style evaluation benchmark for how models attribute agency, free will and responsibility."
+  subtitle_zh: "通过系统改变“决策过程”的呈现方式，观察模型在扮演观察者时，如何对 AI 与人类决策者作出能动性、自由意志与责任归因。"
+
+hero:
+  status_labels:
+    - text_zh: "研究原型"
+      kind: "historical"
+    - text_zh: "历史真实 API 基线（DeepSeek）"
+      kind: "historical"
+    - text_zh: "Phase 1 本地工程基础完成"
+      kind: "completed"
+    - text_zh: "发布验证待完成"
+      kind: "pending_verification"
+  # These metric slots are filled at runtime from site_summary.json / historical_results.json.
+  metric_slots:
+    - key: "historical_record_count"
+      label_zh: "历史记录"
+    - key: "design"
+      label_zh: "实验设计"
+    - key: "n_per_cell"
+      label_zh: "每格样本"
+    - key: "historical_provider"
+      label_zh: "历史基线"
+    - key: "local_engineering_status"
+      label_zh: "本地工程基础"
+    - key: "release_verification_status"
+      label_zh: "发布验证"
+
+navigation:
+  - id: "hero"
+    label_zh: "概览"
+  - id: "research-question"
+    label_zh: "研究问题"
+  - id: "experimental-design"
+    label_zh: "实验设计"
+  - id: "pipeline"
+    label_zh: "流程"
+  - id: "historical-results"
+    label_zh: "历史结果"
+  - id: "evidence-limitations"
+    label_zh: "证据与局限"
+  - id: "reproducibility"
+    label_zh: "可复现性"
+  - id: "version-history"
+    label_zh: "版本历史"
+  - id: "roadmap"
+    label_zh: "路线图"
+  - id: "repository-links"
+    label_zh: "仓库链接"
+
+research_question:
+  paragraphs_zh:
+    - "自由意志归因：当我们看到某个对象做出选择时，会不自觉地判断它是不是在“自己做主”——是否有能力权衡、是否可以做出别的选择、是否要为结果负责。这是一种观察者的主观归因，而不是关于对象内部是否“真的自由”的事实结论。"
+    - "为什么比较 AI 与人类决策者：同一段决策过程，贴上“AI 决策者”或“人类决策者”标签后，观察者的归因可能不同。"
+    - "为什么改变过程描述：决策者可以只给结论，也可以展示候选方案、理由权衡、反思与修正。项目系统改变这种“决策过程”结构，观察它是否比单纯文本长度更能影响归因。"
+    - "重要说明：项目测量的是模型输出的归因行为，不是在证明模型拥有自由意志，也不是在测量真实人类的心理规律。"
+
+experimental_design:
+  intro_zh: "6 × 2 设计，每格样本量固定，合计为历史记录总数（具体数字见页面动态数据）。"
+  process_conditions:
+    - key: "direct_choice"
+      label_zh: "直接选择"
+      note_zh: "只给出最终选择，最低结构，作为基线"
+    - key: "direct_choice_long"
+      label_zh: "长文本直接选择"
+      note_zh: "拉长文本但不加入真正理由结构，用于分离文本长度效应"
+    - key: "alternatives"
+      label_zh: "列出可选方案"
+      note_zh: "呈现多个候选行动"
+    - key: "reasons_concise"
+      label_zh: "简洁理由权衡"
+      note_zh: "较短文本中的理由权衡"
+    - key: "reasons"
+      label_zh: "完整理由权衡"
+      note_zh: "较完整的理由比较"
+    - key: "reflection_feedback"
+      label_zh: "反思与反馈修正"
+      note_zh: "理由 + 反思 + 反馈修正，最高结构"
+  identity_labels_zh:
+    - "AI 决策者"
+    - "人类决策者"
+  diagnostic_note_zh: "direct_choice_long 与 reasons_concise 是诊断条件，用于区分文本长度效应与决策结构效应。"
+  data_note_zh: "数据来源为历史 DeepSeek API 基线（真实 API 调用生成的模型响应）。mock（规则生成）仅用于工程与持续集成流程测试，不进入研究结果。"
+
+# Pipeline 分三层：历史研究路径（真实跑过）/ 当前工程层（v0.2 组件）/ 规划。
+# 注意：configs/ 与 src/freewill_attribution/ 属当前工程组件，不得标为历史运行步骤；
+# configs/prompt.v1.yaml 是当前配置组件，不能替代缺失的历史精确 prompt snapshot/hash。
+pipeline_historical:
+  - label_zh: "条件与刺激"
+    kind: "historical"
+    ref: "src/stimuli.py / src/scales.py"
+  - label_zh: "Prompt 构造"
+    kind: "historical"
+    ref: "历史运行脚本；exact prompt snapshot/hash unavailable"
+  - label_zh: "DeepSeek API 响应"
+    kind: "historical"
+    ref: "历史运行"
+  - label_zh: "解析与量表记录"
+    kind: "historical"
+    ref: "outputs/scale_scores.csv"
+  - label_zh: "分析与报告"
+    kind: "historical"
+    ref: "outputs/*.md、outputs/plots/"
+
+pipeline_engineering_layer:
+  - label_zh: "Package / safe paths / wrapper"
+    kind: "completed"
+    ref: "src/freewill_attribution/、scripts/run_all.*"
+  - label_zh: "Schema / config"
+    kind: "partial"
+    ref: "configs/（未接入正式 runner）"
+  - label_zh: "站点数据导出 / 静态展示页"
+    kind: "current"
+    ref: "site/、scripts/build_site_data.py"
+
+pipeline_planned:
+  - label_zh: "正式 runner / RunManifest / provider abstraction"
+    kind: "planned"
+
+evidence_limitations_zh:
+  - "历史记录是历史真实 DeepSeek API 输出（模型生成的观察者评分），不是 mock。"
+  - "mock（规则生成数据）只用于验证工程流程与持续集成，不进入研究结论。"
+  - "历史运行的 provenance（溯源元数据）不完整：缺少完整运行清单、服务端精确模型版本、时间戳、token、费用、prompt 哈希、依赖锁定哈希、完整环境快照与调用日志；原始逐条响应文件不在公开仓库。"
+  - "数据真实性不等于完全可复现：数据来源真实已确认，但历史运行级元数据缺失，无法逐字节重放当时的模型响应。"
+  - "当前不是多模型 benchmark：结果来自单一模型（DeepSeek）与单一 prompt 模板。"
+  - "当前不包含人类被试验证：无内容效度、EFA/CFA、区分效度或测量等价性检验。"
+  - "历史 prompt 同时暴露构念名、题项与判断规则，模型可能迎合提示。"
+  - "页面所有结论仅限当前实验条件与历史模型输出，不外推为人类心理规律或所有模型的普遍规律，不构成关于 AI 是否拥有自由意志的任何断言。"
+
+reproducibility_zh:
+  completed:
+    - "基线内容哈希（SHA-256 清单）"
+    - "依赖锁定（uv.lock）"
+    - "Python package 与命令行入口（mock-only）"
+    - "安全输出隔离（显式输出目录，永不写入历史 outputs/）"
+    - "数据模型（schema）与配置加载"
+    - "单元 / 集成 / 特征化测试"
+    - "跨平台运行脚本（PowerShell 与 Bash）"
+    - "持续集成配置（Windows 与 Linux 矩阵）"
+  ci_statement_zh: "持续集成为 configured, remote verification pending（已配置，远程验证待完成）。"
+  cross_platform_statement_zh: "在 Windows 本地使用锁定依赖跑通 mock 流程；Bash wrapper 完成 Git Bash compatibility validation。真实 Linux 与 GitHub-hosted Windows/Linux 验证仍待发布阶段完成。不得把 Git Bash 称为 Linux 验证。"
+
+version_history:
+  - version: "v0.1"
+    title_zh: "历史研究原型与 DeepSeek API 数据"
+    highlights_zh:
+      - "已有：真实 DeepSeek API 记录、6×2 设计、分析产物与图表"
+      - "证据：公开的聚合结果与均值图来自这批历史记录"
+      - "限制：历史运行的完整 provenance 元数据缺失"
+    is_future: false
+  - version: "v0.2"
+    title_zh: "工程专业化与本地可复现基础"
+    highlights_zh:
+      - "已有：mock-only 命令行入口、安全输出隔离、schema/config、跨平台运行脚本"
+      - "证据：本地测试与静态展示页可直接运行"
+      - "限制：持续集成为 configured, remote verification pending；历史基线保持不变"
+      - "与下一版差异：还没有正式可追溯 runner，无法重放历史运行"
+    is_future: false
+  - version: "next"
+    title_zh: "Next：研究协议冻结与可追溯 runner"
+    highlights_zh:
+      - "计划：冻结 v1/v2 研究协议、假设、条件与解析契约"
+      - "计划：正式 runner + RunManifest + resolved config + prompt/hash 快照"
+      - "目标：让一次运行可被逐步骤审计，而不只是数据来源可信"
+    is_future: true
+  - version: "future"
+    title_zh: "Future：多模型执行与 benchmark 方向"
+    highlights_zh:
+      - "方向：provider 抽象与多模型执行矩阵"
+      - "方向：benchmark track（长期方向，非当前能力，未经批准不提前执行）"
+    is_future: true
+
+figures_selected:
+  caption_boundary_zh: "历史 DeepSeek API 模型输出；AI 模拟数据；非人类被试；单一模型。"
+  items:
+    - id: "mean-agency"
+      source_file: "outputs/plots/mean_agency.png"
+      site_file: "assets/figures/mean_agency.png"
+      title_zh: "行动者感（agency）按决策过程条件的均值"
+      alt_zh: "六个决策过程条件下 agency 均值的柱状图"
+      read_note_zh: "行动者感从直接选择到反思反馈总体抬升，是趋势最清晰的一张。"
+    - id: "mean-free-will-attribution"
+      source_file: "outputs/plots/mean_free_will_attribution.png"
+      site_file: "assets/figures/mean_free_will_attribution.png"
+      title_zh: "自由意志归因按决策过程条件的均值"
+      alt_zh: "六个决策过程条件下自由意志归因均值的柱状图"
+      read_note_zh: "自由意志的条件差异比行动者感平缓，呼应“直接效应不稳定”。"
+    - id: "mean-subjective-process-completeness"
+      source_file: "outputs/plots/mean_subjective_process_completeness.png"
+      site_file: "assets/figures/mean_subjective_process_completeness.png"
+      title_zh: "主观过程完整性按决策过程条件的均值"
+      alt_zh: "六个决策过程条件下主观过程完整性均值的柱状图"
+      read_note_zh: "作为操纵检验，高结构条件的过程完整性整体高于低结构条件。"
+
+# SITE-005.2：概念插图（不进入 historical_results.figures，不计入三张研究图；build 脚本不读取此节）。
+conceptual_visuals:
+  - id: VIS-001
+    file: assets/figures/attribution-research-concept.png
+    location: research-question
+    role: explanatory_concept_visual
+    evidence_level: conceptual
+    width: 1586
+    height: 992
+    sha256: FFCC3139FD2FBE71CC9049F06CF718BBBFBB6C56E2BF37210C8268FF702BC7F7
+    alt_zh: "AI 决策系统与人类决策者经过不同决策过程后，被模型评估其能动性、自由意志归因和责任归因的概念示意"
+    caption_zh: "概念图展示本研究的比较结构：同一类决策过程分别与 AI 和人类身份标签组合，再观察模型如何作出能动性、自由意志和责任归因。该图只用于解释研究结构，不承载统计结果。"
+    local_preview_status: approved
+    public_release_status: pending_user_approval
+
+# 链接策略（SITE-005.1）：页面内部入口用锚点；外部仅保留已确认的 GitHub repo 根链接；
+# 具体仓库文件以 <code> 路径展示并注明“位于 GitHub 仓库中”，不生成可能失效的 blob URL，
+# 永久链接等 REL-001 确定发布分支/commit 后再生成。不得写 ../ 或 /docs/ /outputs/ 本地链接。
+repository_links:
+  anchors:
+    - id: "overview"
+      label_zh: "项目概览"
+      target: "#hero"
+    - id: "method"
+      label_zh: "研究方法"
+      target: "#experimental-design"
+    - id: "results"
+      label_zh: "历史结果"
+      target: "#historical-results"
+    - id: "limitations"
+      label_zh: "证据与局限"
+      target: "#evidence-limitations"
+    - id: "reproducibility"
+      label_zh: "可复现性"
+      target: "#reproducibility"
+    - id: "roadmap"
+      label_zh: "路线图"
+      target: "#roadmap"
+  external:
+    - id: "repo"
+      label_zh: "GitHub 仓库"
+      target: "https://github.com/sherlock0717/llm-attribution-behavior-evaluation"
+  repo_file_paths:
+    - path: "docs/research_design_blueprint.md"
+      note_zh: "研究方法，位于 GitHub 仓库中"
+    - path: "outputs/final_simulated_pilot_report.md"
+      note_zh: "结果报告，位于 GitHub 仓库中"
+    - path: "docs/audit/v1_provenance_statement.md"
+      note_zh: "provenance 声明，位于 GitHub 仓库中"
+
+roadmap:
+  phases:
+    - id: "phase-1"
+      name: "Engineering Foundation And Historical Baseline"
+      status: "current"
+      local_status: "completed"
+      release_status: "pending_verification"
+      summary_zh: "本地工程基础完成；发布验证待完成。"
+      depends_on: []
+      evidence_ref:
+        - "docs/audit/repository_rebaseline_assessment.md"
+    - id: "phase-2"
+      name: "Research Protocol Definition"
+      status: "planned"
+      summary_zh: "冻结 v1/v2 研究协议、假设、条件、prompt 暴露策略、解析契约与分析计划。"
+      depends_on: ["phase-1"]
+    - id: "phase-3a"
+      name: "Reproducible V1 Run"
+      status: "planned"
+      summary_zh: "正式 runner、RunManifest、resolved config、prompt snapshot、hashes、结构化失败。"
+      depends_on: ["phase-2"]
+    - id: "phase-3b"
+      name: "Improved V2 Protocol And Run"
+      status: "planned"
+      summary_zh: "盲化构念名、改进 prompt、修订批次、retry/repair、v1/v2 比较。"
+      depends_on: ["phase-3a"]
+    - id: "phase-4"
+      name: "Providers And Multi-Model Execution"
+      status: "planned"
+      summary_zh: "provider abstraction、模型矩阵、并发、retry、rate limit、cost/token、模型快照。"
+      depends_on: ["phase-3a"]
+    - id: "phase-5"
+      name: "Analysis And Reporting"
+      status: "planned"
+      summary_zh: "标准化分析输入、自动报告、图表、v1/v2 比较、稳健性、失败分析。"
+      depends_on: ["phase-3a"]
+    - id: "phase-6"
+      name: "Benchmark Track"
+      status: "planned"
+      summary_zh: "task registry、benchmark_id、多任务/模型/运行（长期方向，非当前能力）。"
+      depends_on: ["phase-4", "phase-5"]
+    - id: "phase-7"
+      name: "Release And Audit"
+      status: "planned"
+      summary_zh: "完整回归、GitHub-hosted Windows/Linux CI、provenance 审计、release、Pages 部署、在线链接校验。"
+      depends_on: ["phase-5"]
+  track_s:
+    - id: "site-001"
+      name: "Showcase Content And Data Contract"
+      status: "completed"
+      summary_zh: "信息架构、页面文案、证据边界、资产清单、数据契约。"
+      depends_on: []
+      evidence_ref:
+        - "docs/showcase/SHOWCASE_CONTENT.md"
+        - "docs/showcase/SITE_DATA_CONTRACT.md"
+    - id: "site-002"
+      name: "Site Data Export"
+      status: "completed"
+      summary_zh: "build_site_data.py 从仓库源文件派生站点 JSON。"
+      depends_on: ["site-001"]
+    - id: "site-003"
+      name: "Static Showcase MVP"
+      status: "completed"
+      summary_zh: "原生 HTML/CSS/JS 静态展示页。"
+      depends_on: ["site-001", "site-002"]
+    - id: "site-004"
+      name: "Local Showcase Validation"
+      status: "completed"
+      summary_zh: "本地静态服务、JSON/路径校验、移动端布局、证据检查。"
+      depends_on: ["site-003"]
+    - id: "site-005"
+      name: "Public Showcase Content And Visual Redesign"
+      status: "current"
+      summary_zh: "内容去模板化、信息层级与视觉结构重构、原生数据可视化。"
+      depends_on: ["site-003", "site-004"]
+    - id: "rel-001"
+      name: "Push, CI And Pages Release"
+      status: "planned"
+      release_status: "pending_verification"
+      summary_zh: "统一发布验证：完整回归、远程 CI、Pages 部署、在线链接校验（需 push 授权）。"
+      depends_on: ["site-004", "phase-1"]
+
+status_legend:
+  historical: "历史基线数据"
+  completed: "已完成（本地）"
+  current: "进行中"
+  planned: "规划中"
+  pending_verification: "已配置，远程验证待完成"

@@ -1,0 +1,120 @@
+{
+  "constructs": [
+    {
+      "alpha": 0.896,
+      "key": "factual_manipulation_check",
+      "label": "事实操纵检验",
+      "n_cases": 360,
+      "n_items": 3,
+      "note": "只根据【决策过程】判断材料是否列出方案、比较理由、提到反思修正。",
+      "range": "0–2",
+      "role": "操纵检验"
+    },
+    {
+      "alpha": 0.92,
+      "key": "subjective_process_completeness",
+      "label": "主观过程完整性",
+      "n_cases": 360,
+      "n_items": 3,
+      "note": "观察者主观感到决策过程是否完整、可回应理由、非稀疏结论。",
+      "range": "1–7",
+      "role": "操纵检验"
+    },
+    {
+      "alpha": 0.88,
+      "key": "agency",
+      "label": "能动性",
+      "n_cases": 360,
+      "n_items": 6,
+      "note": "决策者是否像在自我控制、按理由行动、可调整与修正。",
+      "range": "1–7",
+      "role": "主要结果"
+    },
+    {
+      "alpha": 0.949,
+      "key": "free_will_attribution",
+      "label": "自由意志归因",
+      "n_cases": 360,
+      "n_items": 5,
+      "note": "决策者是否被看作本可选择、按自己意向、拥有选择自由。",
+      "range": "1–7",
+      "role": "主要结果"
+    },
+    {
+      "alpha": 0.905,
+      "key": "autonomy",
+      "label": "自主性",
+      "n_cases": 360,
+      "n_items": 3,
+      "note": "决策者是否自主作出选择、非被情境或指令推着走。",
+      "range": "1–7",
+      "role": "次要结果"
+    },
+    {
+      "alpha": 0.962,
+      "key": "experience",
+      "label": "体验感受",
+      "n_cases": 360,
+      "n_items": 5,
+      "note": "决策者是否被看作能感到痛苦、恐惧、愉悦等（心智知觉的体验维度）。",
+      "range": "1–7",
+      "role": "心智知觉对照"
+    },
+    {
+      "alpha": 0.859,
+      "key": "perceived_intelligence",
+      "label": "感知智能",
+      "n_cases": 360,
+      "n_items": 3,
+      "note": "决策者是否被看作理解情境、处理有逻辑、判断质量高。",
+      "range": "1–7",
+      "role": "协变量"
+    },
+    {
+      "alpha": 0.961,
+      "key": "moral_praise_blame",
+      "label": "道德褒贬",
+      "n_cases": 360,
+      "n_items": 2,
+      "note": "决策者是否可因选择受到赞扬或责备、可被道德评价。",
+      "range": "1–7",
+      "role": "责任子维度"
+    },
+    {
+      "alpha": 0.985,
+      "key": "outcome_accountability",
+      "label": "结果责任",
+      "n_cases": 360,
+      "n_items": 2,
+      "note": "决策者是否应为结果承担责任、与结果存在责任关系。",
+      "range": "1–7",
+      "role": "责任子维度"
+    },
+    {
+      "alpha": 0.934,
+      "key": "process_accountability",
+      "label": "过程可归责",
+      "n_cases": 360,
+      "n_items": 2,
+      "note": "决策者是否应为其判断过程作出解释、过程是否可归责。",
+      "range": "1–7",
+      "role": "责任子维度"
+    }
+  ],
+  "generated_at": "2026-07-14T10:26:37+00:00",
+  "reliability_note": "Cronbach α 为合成（模型模拟）数据上的内部一致性指标，不等于效度，也不构成人类被试的信效度证据。",
+  "responsibility_total": {
+    "components": [
+      "outcome_accountability",
+      "moral_praise_blame",
+      "process_accountability"
+    ],
+    "key": "responsibility_total",
+    "label": "责任归因总分",
+    "note": "由结果责任、道德褒贬、过程可归责三个子维度聚合，属探索性结果。",
+    "range": "1–7"
+  },
+  "scoring_note": "每个构念的分数为其题项的均值（事实操纵检验计 0–2，其余题项计 1–7）。",
+  "total_constructs": 10,
+  "total_items": 34
+}

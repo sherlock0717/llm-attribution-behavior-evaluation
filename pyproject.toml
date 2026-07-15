@@ -1,0 +1,63 @@
+[project]
+# NOTE: the distribution name is an internal technical identifier kept stable to
+# avoid breaking uv.lock / build compatibility. The public brand is
+# "LLM 归因行为评测 (LLM Attribution Behavior Evaluation)"; public URLs below use
+# the new repository slug.
+name = "llm-agent-free-will-attribution"
+version = "0.2.0.dev0"
+description = "LLM 归因行为评测｜A Reproducible Study and Evaluation Prototype: a reproducible test-style evaluation benchmark for how models attribute agency, free will and responsibility."
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "openai>=1.0.0",
+    "python-dotenv>=1.0.0",
+    "pandas>=2.0.0",
+    "numpy>=1.24.0",
+    "scipy>=1.10.0",
+    "statsmodels>=0.14.0",
+    "matplotlib>=3.7.0",
+    "tqdm>=4.66.0",
+    "pydantic>=2.12,<3",
+    "PyYAML>=6.0,<7",
+]
+
+[project.urls]
+Homepage = "https://sherlock0717.github.io/llm-attribution-behavior-evaluation/"
+Repository = "https://github.com/sherlock0717/llm-attribution-behavior-evaluation"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.9.0",
+]
+
+[build-system]
+requires = ["setuptools>=77.0.3"]
+build-backend = "setuptools.build_meta"
+
+[tool.uv]
+package = true
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["freewill_attribution*"]
+namespaces = false
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+extend-exclude = [
+    ".venv",
+    "artifacts",
+    "outputs",
+]
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"

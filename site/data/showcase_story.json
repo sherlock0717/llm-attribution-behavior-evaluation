@@ -1,0 +1,97 @@
+{
+  "core_facts": [
+    {
+      "key": "process_condition_count",
+      "label": "过程条件",
+      "value": 6
+    },
+    {
+      "key": "identity_condition_count",
+      "label": "行动者身份",
+      "value": 2
+    },
+    {
+      "key": "historical_record_count",
+      "label": "历史记录",
+      "value": 360
+    },
+    {
+      "key": "scenario_count",
+      "label": "情境",
+      "value": 8
+    },
+    {
+      "key": "item_count",
+      "label": "测量题项",
+      "value": 34
+    },
+    {
+      "key": "construct_count",
+      "label": "测量构念",
+      "value": 10
+    },
+    {
+      "key": "mock_reproducible_run",
+      "label": "可复现 mock 运行",
+      "value": "已实现"
+    },
+    {
+      "key": "offline_provider_ready",
+      "label": "真实接口离线准备",
+      "value": "已完成"
+    }
+  ],
+  "domains": [
+    "人际关系",
+    "服从与自主",
+    "自我控制",
+    "责任困境",
+    "道德冲突",
+    "风险决策"
+  ],
+  "generated_at": "2026-07-14T10:26:37+00:00",
+  "positioning_zh": "围绕模型如何对行动者的能动性、自由意志与责任作出归因，构建从历史研究、任务契约到可复现运行与证据审计的测试型评测基准。",
+  "result_takeaways": [
+    "把决策过程讲得更完整（从只报结论到给出理由、反思与修正），模型对决策者的能动性评分总体升高，这是最稳定的差异。",
+    "身份标签本身影响明显：在自由意志、责任与体验维度上，模型对人类与 AI 决策者的评分存在系统差异，但在感知智能与操纵检验上差异很弱。",
+    "在同时控制感知智能与文本长度后，过程对能动性的效应仍然显著；对自由意志的直接效应则不再显著。",
+    "自由意志归因更像经由能动性的关联性间接路径发生，而非过程的直接效应；感知智能的间接路径区间跨 0。",
+    "以上均为单一模型历史输出的归因行为描述，不证明模型拥有自由意志，也不等同于人类心理结论。"
+  ],
+  "scenarios": [
+    {
+      "id": "moral_friend_report",
+      "label": "道德冲突：是否举报朋友"
+    },
+    {
+      "id": "obedience_unfair_order",
+      "label": "服从与自主：面对不公命令"
+    },
+    {
+      "id": "privacy_shortcut",
+      "label": "责任困境：隐私捷径"
+    },
+    {
+      "id": "relationship_honesty",
+      "label": "人际关系：坦诚与否"
+    },
+    {
+      "id": "responsibility_mistake",
+      "label": "责任困境：面对失误"
+    },
+    {
+      "id": "risk_project_choice",
+      "label": "风险决策：项目取舍"
+    },
+    {
+      "id": "self_control_deadline",
+      "label": "自我控制：截止期限"
+    },
+    {
+      "id": "team_credit",
+      "label": "人际关系：团队功劳分配"
+    }
+  ],
+  "subtitle_en": "A Reproducible Study and Evaluation Prototype",
+  "title_zh": "LLM 归因行为评测"
+}

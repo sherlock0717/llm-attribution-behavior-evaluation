@@ -1,0 +1,44 @@
+{
+  "versions": [
+    {
+      "highlights": [
+        "已有：真实 DeepSeek API 记录、6×2 设计、分析产物与图表",
+        "证据：公开的聚合结果与均值图来自这批历史记录",
+        "限制：历史运行的完整 provenance 元数据缺失"
+      ],
+      "is_future": false,
+      "title": "历史研究原型与 DeepSeek API 数据",
+      "version": "v0.1"
+    },
+    {
+      "highlights": [
+        "已有：mock-only 命令行入口、安全输出隔离、schema/config、跨平台运行脚本",
+        "证据：本地测试与静态展示页可直接运行",
+        "限制：持续集成为 configured, remote verification pending；历史基线保持不变",
+        "与下一版差异：还没有正式可追溯 runner，无法重放历史运行"
+      ],
+      "is_future": false,
+      "title": "工程专业化与本地可复现基础",
+      "version": "v0.2"
+    },
+    {
+      "highlights": [
+        "计划：冻结 v1/v2 研究协议、假设、条件与解析契约",
+        "计划：正式 runner + RunManifest + resolved config + prompt/hash 快照",
+        "目标：让一次运行可被逐步骤审计，而不只是数据来源可信"
+      ],
+      "is_future": true,
+      "title": "Next：研究协议冻结与可追溯 runner",
+      "version": "next"
+    },
+    {
+      "highlights": [
+        "方向：provider 抽象与多模型执行矩阵",
+        "方向：benchmark track（长期方向，非当前能力，未经批准不提前执行）"
+      ],
+      "is_future": true,
+      "title": "Future：多模型执行与 benchmark 方向",
+      "version": "future"
+    }
+  ]
+}

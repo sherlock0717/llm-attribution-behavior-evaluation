@@ -6,6 +6,8 @@ venv/
 __pycache__/
 *.pyc
 .pytest_cache/
+# Python packaging metadata
+*.egg-info/
 .DS_Store
 node_modules/
 logs/
@@ -21,6 +23,14 @@ outputs/*request*
 outputs/*response*
 outputs/*token*
 outputs/*key*
+
+# New benchmark run artifacts (never committed; historical outputs/ stays separate & read-only)
+artifacts/
+artifacts/runs/
+
+# Real-provider LOCAL run config (copied from the .example; never committed).
+# The key itself lives only in the environment, never in this file.
+configs/model.deepseek.local.yaml
 
 # Temporary files
 *.tmp

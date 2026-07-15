@@ -1,3 +1,4 @@
+import argparse
 import json
 from pathlib import Path
 from typing import Dict, List, Tuple
@@ -11,27 +12,12 @@ from statsmodels.stats.anova import anova_lm
 
 from scales import ITEMS, SCALE_ITEMS
 from stimuli import PROCESS_CONDITIONS
+from path_safety import resolve_input_dir, resolve_output_dir
 
 
 ROOT = Path(__file__).resolve().parents[1]
-OUT = ROOT / "outputs"
-PLOTS = OUT / "plots"
-PLOTS.mkdir(exist_ok=True)
-WIDE_PATH = OUT / "simulated_responses_wide.csv"
-SCORES_PATH = OUT / "scale_scores.csv"
-RELIABILITY_PATH = OUT / "reliability_summary.csv"
-ANOVA_PATH = OUT / "anova_summary.csv"
-MEDIATION_PATH = OUT / "mediation_summary.json"
-CHAR_LEN_PATH = OUT / "char_len_summary.csv"
-CONTROLLED_REGRESSION_PATH = OUT / "controlled_regression_summary.csv"
-PROCESS_COEFFICIENTS_PATH = OUT / "process_dummy_coefficients.csv"
-CONTRASTS_PATH = OUT / "planned_contrasts.csv"
-GROUPED_MEDIATION_PATH = OUT / "grouped_mediation_summary.csv"
-DOMAIN_ROBUSTNESS_PATH = OUT / "domain_robustness_summary.csv"
-SCENARIO_ROBUSTNESS_PATH = OUT / "scenario_robustness_summary.csv"
-METHOD_REPORT_PATH = OUT / "method_revision_report.md"
-PARALLEL_MEDIATION_PATH = OUT / "parallel_mediation_summary.json"
-MEASUREMENT_REPORT_PATH = OUT / "measurement_and_construct_revision_report.md"
+
+WIDE_FILENAME = "simulated_responses_wide.csv"
 
 TARGETS = [
     "agency",
@@ -417,7 +403,7 @@ def robustness_by_group(scores: pd.DataFrame, group_col: str, targets: List[str]
     return pd.DataFrame(rows)
 
 
-def plot_means(scores: pd.DataFrame, dv: str) -> None:
+def plot_means(scores: pd.DataFrame, dv: str, plots_dir: Path) -> None:
     identities = list(scores["identity_label"].dropna().unique())
     fig, ax = plt.subplots(figsize=(11, 5))
     for identity in identities:
@@ -432,7 +418,7 @@ def plot_means(scores: pd.DataFrame, dv: str) -> None:
     ax.legend()
     ax.tick_params(axis="x", rotation=25)
     fig.tight_layout()
-    fig.savefig(PLOTS / f"mean_{dv}.png", dpi=160)
+    fig.savefig(plots_dir / f"mean_{dv}.png", dpi=160)
     plt.close(fig)
 
 
@@ -444,6 +430,7 @@ def generate_method_report(
     contrasts: pd.DataFrame,
     grouped_med: pd.DataFrame,
     domain_robust: pd.DataFrame,
+    report_path: Path,
 ) -> None:
     means = scores.groupby("process_condition")[TARGETS].mean().reindex(PROCESS_CONDITIONS).round(3).reset_index()
     cell_means = scores.groupby(["process_condition", "identity_label"])[TARGETS].mean().round(3).reset_index()
@@ -539,7 +526,7 @@ def generate_method_report(
 
 本阶段是 LLM-simulated respondents 的材料预演和流程验证，不是正式心理学实验，不可替代真实被试，不可用于证明 AI 具有自由意志。
 """
-    METHOD_REPORT_PATH.write_text(report, encoding="utf-8")
+    report_path.write_text(report, encoding="utf-8")
 
 
 def generate_measurement_report(
@@ -547,6 +534,7 @@ def generate_measurement_report(
     rel: pd.DataFrame,
     controlled: pd.DataFrame,
     parallel_med: Dict[str, object],
+    report_path: Path,
 ) -> None:
     source_rows = []
     for item in ITEMS:
@@ -656,63 +644,102 @@ factual check 已改为 0/1/2 编码：0=未出现，1=有模糊暗示，2=明�
 
 当前仍是 LLM-simulated respondents 的材料预演和流程验证，不是正式心理学实验，不可替代真实被试，不可用于证明 AI 具有自由意志。
 """
-    MEASUREMENT_REPORT_PATH.write_text(report, encoding="utf-8")
+    report_path.write_text(report, encoding="utf-8")
 
 
 def main() -> None:
-    if not WIDE_PATH.exists():
-        raise FileNotFoundError(f"Missing {WIDE_PATH}. Run run_simulated_study.py first.")
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--input",
+        required=True,
+        help="Explicit input directory containing simulated_responses_wide.csv. "
+        "Fail fast if omitted.",
+    )
+    parser.add_argument(
+        "--out",
+        required=True,
+        help="Explicit output directory for analysis artifacts. Must not be the "
+        "repository outputs/ directory. Fail fast if omitted.",
+    )
+    args = parser.parse_args()
+
+    input_dir = resolve_input_dir(args.input)
+    out_dir = resolve_output_dir(args.out)
+    plots_dir = out_dir / "plots"
+    plots_dir.mkdir(parents=True, exist_ok=True)
+
+    wide_path = input_dir / WIDE_FILENAME
+    if not wide_path.exists():
+        raise FileNotFoundError(
+            f"Missing {wide_path}. Run run_simulated_study.py --out {input_dir} first."
+        )
+
+    scores_path = out_dir / "scale_scores.csv"
+    reliability_path = out_dir / "reliability_summary.csv"
+    anova_path = out_dir / "anova_summary.csv"
+    mediation_path = out_dir / "mediation_summary.json"
+    char_len_path = out_dir / "char_len_summary.csv"
+    controlled_regression_path = out_dir / "controlled_regression_summary.csv"
+    process_coefficients_path = out_dir / "process_dummy_coefficients.csv"
+    contrasts_path = out_dir / "planned_contrasts.csv"
+    grouped_mediation_path = out_dir / "grouped_mediation_summary.csv"
+    domain_robustness_path = out_dir / "domain_robustness_summary.csv"
+    scenario_robustness_path = out_dir / "scenario_robustness_summary.csv"
+    method_report_path = out_dir / "method_revision_report.md"
+    parallel_mediation_path = out_dir / "parallel_mediation_summary.json"
+    measurement_report_path = out_dir / "measurement_and_construct_revision_report.md"
+
     configure_plot_fonts()
-    df = pd.read_csv(WIDE_PATH)
+    df = pd.read_csv(wide_path)
     scores = scale_scores(df)
-    scores.to_csv(SCORES_PATH, index=False, encoding="utf-8-sig")
+    scores.to_csv(scores_path, index=False, encoding="utf-8-sig")
 
     rel = reliability_summary(df)
-    rel.to_csv(RELIABILITY_PATH, index=False, encoding="utf-8-sig")
+    rel.to_csv(reliability_path, index=False, encoding="utf-8-sig")
 
     char_summary = char_len_summary(scores)
-    char_summary.to_csv(CHAR_LEN_PATH, index=False, encoding="utf-8-sig")
+    char_summary.to_csv(char_len_path, index=False, encoding="utf-8-sig")
 
     anova = run_anova(scores, TARGETS)
-    anova.to_csv(ANOVA_PATH, index=False, encoding="utf-8-sig")
+    anova.to_csv(anova_path, index=False, encoding="utf-8-sig")
 
     controlled, process_coefs = controlled_regressions(scores, CONTROL_TARGETS)
-    controlled.to_csv(CONTROLLED_REGRESSION_PATH, index=False, encoding="utf-8-sig")
-    process_coefs.to_csv(PROCESS_COEFFICIENTS_PATH, index=False, encoding="utf-8-sig")
+    controlled.to_csv(controlled_regression_path, index=False, encoding="utf-8-sig")
+    process_coefs.to_csv(process_coefficients_path, index=False, encoding="utf-8-sig")
 
     contrasts = planned_contrasts(scores, TARGETS)
-    contrasts.to_csv(CONTRASTS_PATH, index=False, encoding="utf-8-sig")
+    contrasts.to_csv(contrasts_path, index=False, encoding="utf-8-sig")
 
     med = bootstrap_mediation(scores)
-    MEDIATION_PATH.write_text(json.dumps(med, ensure_ascii=False, indent=2), encoding="utf-8")
+    mediation_path.write_text(json.dumps(med, ensure_ascii=False, indent=2), encoding="utf-8")
 
     grouped_med = grouped_mediation(scores)
-    grouped_med.to_csv(GROUPED_MEDIATION_PATH, index=False, encoding="utf-8-sig")
+    grouped_med.to_csv(grouped_mediation_path, index=False, encoding="utf-8-sig")
 
     domain_robust = robustness_by_group(scores, "domain", ["agency", "free_will_attribution", "responsibility_total", "process_accountability"])
     scenario_robust = robustness_by_group(scores, "scenario_id", ["agency", "free_will_attribution", "responsibility_total", "process_accountability"])
-    domain_robust.to_csv(DOMAIN_ROBUSTNESS_PATH, index=False, encoding="utf-8-sig")
-    scenario_robust.to_csv(SCENARIO_ROBUSTNESS_PATH, index=False, encoding="utf-8-sig")
+    domain_robust.to_csv(domain_robustness_path, index=False, encoding="utf-8-sig")
+    scenario_robust.to_csv(scenario_robustness_path, index=False, encoding="utf-8-sig")
 
     parallel_med = parallel_mediation(scores)
-    PARALLEL_MEDIATION_PATH.write_text(json.dumps(parallel_med, ensure_ascii=False, indent=2), encoding="utf-8")
+    parallel_mediation_path.write_text(json.dumps(parallel_med, ensure_ascii=False, indent=2), encoding="utf-8")
 
     for dv in ["agency", "free_will_attribution", "responsibility_total", "outcome_accountability", "moral_praise_blame", "process_accountability", "experience", "factual_manipulation_check", "subjective_process_completeness"]:
-        plot_means(scores, dv)
+        plot_means(scores, dv, plots_dir)
 
-    generate_method_report(scores, rel, char_summary, controlled, contrasts, grouped_med, domain_robust)
-    generate_measurement_report(scores, rel, controlled, parallel_med)
+    generate_method_report(scores, rel, char_summary, controlled, contrasts, grouped_med, domain_robust, method_report_path)
+    generate_measurement_report(scores, rel, controlled, parallel_med, measurement_report_path)
 
-    print(f"Saved scale scores: {SCORES_PATH}")
-    print(f"Saved reliability: {RELIABILITY_PATH}")
-    print(f"Saved ANOVA: {ANOVA_PATH}")
-    print(f"Saved controlled regressions: {CONTROLLED_REGRESSION_PATH}")
-    print(f"Saved planned contrasts: {CONTRASTS_PATH}")
-    print(f"Saved grouped mediation: {GROUPED_MEDIATION_PATH}")
-    print(f"Saved parallel mediation: {PARALLEL_MEDIATION_PATH}")
-    print(f"Saved method revision report: {METHOD_REPORT_PATH}")
-    print(f"Saved measurement revision report: {MEASUREMENT_REPORT_PATH}")
-    print(f"Saved plots: {PLOTS}")
+    print(f"Saved scale scores: {scores_path}")
+    print(f"Saved reliability: {reliability_path}")
+    print(f"Saved ANOVA: {anova_path}")
+    print(f"Saved controlled regressions: {controlled_regression_path}")
+    print(f"Saved planned contrasts: {contrasts_path}")
+    print(f"Saved grouped mediation: {grouped_mediation_path}")
+    print(f"Saved parallel mediation: {parallel_mediation_path}")
+    print(f"Saved method revision report: {method_report_path}")
+    print(f"Saved measurement revision report: {measurement_report_path}")
+    print(f"Saved plots: {plots_dir}")
 
 
 if __name__ == "__main__":

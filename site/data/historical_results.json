@@ -1,0 +1,309 @@
+{
+  "claims": [
+    {
+      "boundary_note": "单一模型的历史 AI 模拟数据；非人类被试。",
+      "evidence_level": "descriptive",
+      "figure_id": null,
+      "id": "factual-check",
+      "metrics": [
+        {
+          "display": "direct_choice = 0.09",
+          "evidence_level": "descriptive",
+          "name": "direct_choice",
+          "source_field": "factual check table / direct_choice",
+          "source_file": "outputs/n30_stability_replication_report.md",
+          "value": 0.094
+        },
+        {
+          "display": "direct_choice_long = 0.01",
+          "evidence_level": "descriptive",
+          "name": "direct_choice_long",
+          "source_field": "factual check table / direct_choice_long",
+          "source_file": "outputs/n30_stability_replication_report.md",
+          "value": 0.011
+        },
+        {
+          "display": "alternatives = 1.01",
+          "evidence_level": "descriptive",
+          "name": "alternatives",
+          "source_field": "factual check table / alternatives",
+          "source_file": "outputs/n30_stability_replication_report.md",
+          "value": 1.011
+        },
+        {
+          "display": "reasons_concise = 1.62",
+          "evidence_level": "descriptive",
+          "name": "reasons_concise",
+          "source_field": "factual check table / reasons_concise",
+          "source_file": "outputs/n30_stability_replication_report.md",
+          "value": 1.617
+        },
+        {
+          "display": "reasons = 1.94",
+          "evidence_level": "descriptive",
+          "name": "reasons",
+          "source_field": "factual check table / reasons",
+          "source_file": "outputs/n30_stability_replication_report.md",
+          "value": 1.939
+        },
+        {
+          "display": "reflection_feedback = 2.00",
+          "evidence_level": "descriptive",
+          "name": "reflection_feedback",
+          "source_field": "factual check table / reflection_feedback",
+          "source_file": "outputs/n30_stability_replication_report.md",
+          "value": 2.0
+        }
+      ],
+      "source_refs": [
+        "outputs/n30_stability_replication_report.md"
+      ],
+      "summary": "高结构条件的 factual manipulation check 整体高于低结构条件；两个低结构诊断条件（direct_choice、direct_choice_long）不构成严格单调序列，因此不宜说六类条件严格单调递增或两两显著不同。",
+      "title": "操纵检验反映出低结构与高结构条件的整体差异"
+    },
+    {
+      "boundary_note": "单一模型的历史 AI 模拟数据；非人类被试。",
+      "evidence_level": "descriptive",
+      "figure_id": "mean-agency",
+      "id": "agency-condition-means",
+      "metrics": [
+        {
+          "display": "direct_choice = 4.31",
+          "evidence_level": "descriptive",
+          "name": "direct_choice",
+          "source_field": "means table / agency / direct_choice",
+          "source_file": "outputs/n30_stability_replication_report.md",
+          "value": 4.308
+        },
+        {
+          "display": "direct_choice_long = 3.94",
+          "evidence_level": "descriptive",
+          "name": "direct_choice_long",
+          "source_field": "means table / agency / direct_choice_long",
+          "source_file": "outputs/n30_stability_replication_report.md",
+          "value": 3.942
+        },
+        {
+          "display": "alternatives = 4.25",
+          "evidence_level": "descriptive",
+          "name": "alternatives",
+          "source_field": "means table / agency / alternatives",
+          "source_file": "outputs/n30_stability_replication_report.md",
+          "value": 4.25
+        },
+        {
+          "display": "reasons_concise = 4.43",
+          "evidence_level": "descriptive",
+          "name": "reasons_concise",
+          "source_field": "means table / agency / reasons_concise",
+          "source_file": "outputs/n30_stability_replication_report.md",
+          "value": 4.433
+        },
+        {
+          "display": "reasons = 4.58",
+          "evidence_level": "descriptive",
+          "name": "reasons",
+          "source_field": "means table / agency / reasons",
+          "source_file": "outputs/n30_stability_replication_report.md",
+          "value": 4.583
+        },
+        {
+          "display": "reflection_feedback = 5.20",
+          "evidence_level": "descriptive",
+          "name": "reflection_feedback",
+          "source_field": "means table / agency / reflection_feedback",
+          "source_file": "outputs/n30_stability_replication_report.md",
+          "value": 5.2
+        }
+      ],
+      "source_refs": [
+        "outputs/n30_stability_replication_report.md",
+        "outputs/scale_scores.csv"
+      ],
+      "summary": "agency 随结构总体上升，是最稳定的主结果。",
+      "title": "行动者感（agency）按条件的均值"
+    },
+    {
+      "boundary_note": "单一模型的历史 AI 模拟数据；非人类被试。",
+      "evidence_level": "derived",
+      "figure_id": "mean-agency",
+      "id": "agency-controlled-regression",
+      "metrics": [
+        {
+          "display": "F = 12.19",
+          "evidence_level": "derived",
+          "name": "process_F",
+          "source_field": "dv=agency, spec=control_both, process_F",
+          "source_file": "outputs/controlled_regression_summary.csv",
+          "value": 12.188926991217073
+        },
+        {
+          "display": "p < .001",
+          "evidence_level": "derived",
+          "name": "process_p",
+          "source_field": "dv=agency, spec=control_both, process_p",
+          "source_file": "outputs/controlled_regression_summary.csv",
+          "value": 6.692456451340258e-11
+        }
+      ],
+      "source_refs": [
+        "outputs/controlled_regression_summary.csv"
+      ],
+      "summary": "同时控制 perceived_intelligence 与 char_len 后，process→agency 仍显著。",
+      "title": "控制感知智能与文本长度后，决策过程对 agency 仍显著"
+    },
+    {
+      "boundary_note": "单一模型的历史 AI 模拟数据；非人类被试。数值对应 agency。",
+      "evidence_level": "planned_contrast",
+      "figure_id": "mean-agency",
+      "id": "agency-planned-contrasts",
+      "metrics": [
+        {
+          "display": "alternatives_vs_direct_choice: Δ=-0.06, t=-0.40, p = 0.689",
+          "evidence_level": "planned_contrast",
+          "name": "alternatives_vs_direct_choice",
+          "source_field": "dv=agency, contrast=alternatives_vs_direct_choice, diff_a_minus_b/t/p",
+          "source_file": "outputs/planned_contrasts.csv",
+          "value": -0.05833333333333268
+        },
+        {
+          "display": "reasons_concise_vs_direct_choice_long: Δ=0.49, t=3.34, p = 0.001",
+          "evidence_level": "planned_contrast",
+          "name": "reasons_concise_vs_direct_choice_long",
+          "source_field": "dv=agency, contrast=reasons_concise_vs_direct_choice_long, diff_a_minus_b/t/p",
+          "source_file": "outputs/planned_contrasts.csv",
+          "value": 0.49166666666666625
+        },
+        {
+          "display": "reflection_feedback_vs_direct_choice_long: Δ=1.26, t=9.40, p < .001",
+          "evidence_level": "planned_contrast",
+          "name": "reflection_feedback_vs_direct_choice_long",
+          "source_field": "dv=agency, contrast=reflection_feedback_vs_direct_choice_long, diff_a_minus_b/t/p",
+          "source_file": "outputs/planned_contrasts.csv",
+          "value": 1.2583333333333337
+        }
+      ],
+      "source_refs": [
+        "outputs/planned_contrasts.csv"
+      ],
+      "summary": "以下为 agency 的计划对比：理由权衡/反思反馈显著高于长文本直接选择；仅列出候选方案不足以提高 agency。注意这些是 agency 而非 free_will_attribution 的对比。",
+      "title": "理由结构不是单纯的文本长度效应（agency 计划对比）"
+    },
+    {
+      "boundary_note": "单一模型的历史 AI 模拟数据；非人类被试。",
+      "evidence_level": "derived",
+      "figure_id": "mean-free-will-attribution",
+      "id": "freewill-controlled-regression",
+      "metrics": [
+        {
+          "display": "F = 0.71",
+          "evidence_level": "derived",
+          "name": "process_F",
+          "source_field": "dv=free_will_attribution, spec=control_both, process_F",
+          "source_file": "outputs/controlled_regression_summary.csv",
+          "value": 0.7106812682851693
+        },
+        {
+          "display": "p = 0.616",
+          "evidence_level": "derived",
+          "name": "process_p",
+          "source_field": "dv=free_will_attribution, spec=control_both, process_p",
+          "source_file": "outputs/controlled_regression_summary.csv",
+          "value": 0.6157460882167596
+        }
+      ],
+      "source_refs": [
+        "outputs/controlled_regression_summary.csv"
+      ],
+      "summary": "控制感知智能与文本长度后，process 对 free_will_attribution 的直接效应不稳定。",
+      "title": "自由意志归因：直接 process 效应不稳定"
+    },
+    {
+      "boundary_note": "探索性路径诊断，非机制证明；单一模型的历史 AI 模拟数据。",
+      "evidence_level": "exploratory_path_diagnostic",
+      "figure_id": null,
+      "id": "parallel-mediation",
+      "metrics": [
+        {
+          "ci_high": 0.350718199199972,
+          "ci_low": 0.19849095001984263,
+          "crosses_zero": false,
+          "display": "agency_indirect = 0.2699 [0.1985, 0.3507]",
+          "estimate": 0.26986329076850624,
+          "evidence_level": "exploratory_path_diagnostic",
+          "name": "agency_indirect",
+          "path_role": "primary_exploratory_path",
+          "source_field": "indirect_agency, agency_indirect_ci_2.5/97.5",
+          "source_file": "outputs/parallel_mediation_summary.json",
+          "value": 0.26986329076850624
+        },
+        {
+          "ci_high": 0.04419581368758236,
+          "ci_low": -0.00683401098922944,
+          "crosses_zero": true,
+          "display": "perceived_intelligence_indirect = 0.0184 [-0.0068, 0.0442]",
+          "estimate": 0.018376680079363508,
+          "evidence_level": "exploratory_path_diagnostic",
+          "name": "perceived_intelligence_indirect",
+          "path_role": "secondary_exploratory_path",
+          "source_field": "indirect_intelligence, intelligence_indirect_ci_2.5/97.5",
+          "source_file": "outputs/parallel_mediation_summary.json",
+          "value": 0.018376680079363508
+        }
+      ],
+      "source_refs": [
+        "outputs/parallel_mediation_summary.json"
+      ],
+      "summary": "在该探索性分析中，agency 间接效应的区间未跨 0；perceived_intelligence 间接效应区间跨 0。这是探索性路径诊断，不是机制证明，不能据此断言因果中介。",
+      "title": "间接路径：process → agency → free_will_attribution"
+    },
+    {
+      "boundary_note": "探索性结果；单一模型的历史 AI 模拟数据；非人类被试。",
+      "evidence_level": "exploratory_path_diagnostic",
+      "figure_id": null,
+      "id": "responsibility-exploratory",
+      "metrics": [],
+      "source_refs": [
+        "outputs/n30_stability_replication_report.md",
+        "outputs/controlled_regression_summary.csv"
+      ],
+      "summary": "责任相关维度方向不如 agency 稳定，仅作为探索性结果呈现。",
+      "title": "责任归因（仅探索性）"
+    }
+  ],
+  "figures": [
+    {
+      "alt": "六个决策过程条件下 agency 均值的柱状图",
+      "boundary_note": "历史 DeepSeek API 模型输出；AI 模拟数据；非人类被试；单一模型。",
+      "evidence_level": "descriptive",
+      "file": "assets/figures/mean_agency.png",
+      "id": "mean-agency",
+      "read_note": "行动者感从直接选择到反思反馈总体抬升，是趋势最清晰的一张。",
+      "sha256": "8611dbd905130582fc49a1af44724854eafe5ea62d756379cda5f1a851b6ce04",
+      "source_file": "outputs/plots/mean_agency.png",
+      "title": "Agency by process condition"
+    },
+    {
+      "alt": "六个决策过程条件下自由意志归因均值的柱状图",
+      "boundary_note": "历史 DeepSeek API 模型输出；AI 模拟数据；非人类被试；单一模型。",
+      "evidence_level": "descriptive",
+      "file": "assets/figures/mean_free_will_attribution.png",
+      "id": "mean-free-will-attribution",
+      "read_note": "自由意志的条件差异比行动者感平缓，呼应“直接效应不稳定”。",
+      "sha256": "0814ee77e3b09815f1cf1545f8da4de50433e528f3183b627d4c92eab3dc10c7",
+      "source_file": "outputs/plots/mean_free_will_attribution.png",
+      "title": "Free-will attribution by process condition"
+    },
+    {
+      "alt": "六个决策过程条件下主观过程完整性均值的柱状图",
+      "boundary_note": "历史 DeepSeek API 模型输出；AI 模拟数据；非人类被试；单一模型。",
+      "evidence_level": "descriptive",
+      "file": "assets/figures/mean_subjective_process_completeness.png",
+      "id": "mean-subjective-process-completeness",
+      "read_note": "作为操纵检验，高结构条件的过程完整性整体高于低结构条件。",
+      "sha256": "66810828d1b9816d7f41ea624be82b4c2be958fb2a7a0d91e0a30c058736fe54",
+      "source_file": "outputs/plots/mean_subjective_process_completeness.png",
+      "title": "Subjective process completeness by process condition"
+    }
+  ]
+}

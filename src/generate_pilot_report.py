@@ -1,3 +1,4 @@
+import argparse
 import json
 import os
 import platform
@@ -7,10 +8,11 @@ from typing import Dict, Iterable, List
 
 import pandas as pd
 
+from path_safety import resolve_input_dir, resolve_output_dir
+
 
 ROOT = Path(__file__).resolve().parents[1]
-OUT = ROOT / "outputs"
-REPORT_PATH = OUT / "deepseek_simulated_pilot_report.md"
+REPORT_FILENAME = "deepseek_simulated_pilot_report.md"
 PROCESS_ORDER = ["direct_choice", "alternatives", "reasons", "reflection_feedback"]
 SCALE_COLS = [
     "manipulation_check",
@@ -61,10 +63,10 @@ def markdown_table(df: pd.DataFrame, index: bool = False) -> str:
     return "\n".join(lines)
 
 
-def output_file_status() -> pd.DataFrame:
+def output_file_status(input_dir: Path) -> pd.DataFrame:
     rows = []
     for name in KEY_FILES:
-        path = OUT / name
+        path = input_dir / name
         if path.is_dir():
             count = len(list(path.glob("*.png")))
             rows.append({"output": name, "exists": "yes", "detail": f"{count} PNG"})
@@ -127,18 +129,36 @@ def anova_focus(anova: pd.DataFrame) -> pd.DataFrame:
 
 
 def main() -> None:
-    OUT.mkdir(exist_ok=True)
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--input",
+        required=True,
+        help="Explicit input directory containing the generated run/analysis "
+        "artifacts. Fail fast if omitted.",
+    )
+    parser.add_argument(
+        "--out",
+        required=True,
+        help="Explicit output directory for the report. Must not be the "
+        "repository outputs/ directory. Fail fast if omitted.",
+    )
+    args = parser.parse_args()
+
+    input_dir = resolve_input_dir(args.input)
+    out_dir = resolve_output_dir(args.out)
+    report_path = out_dir / REPORT_FILENAME
+
     key = os.getenv("DEEPSEEK_API_KEY")
     key_exists = "yes" if key else "no"
     key_length = len(key) if key else 0
     model = os.getenv("DEEPSEEK_MODEL", "deepseek-chat")
 
-    raw = read_raw_jsonl(OUT / "raw_simulated_responses.jsonl")
-    wide = pd.read_csv(OUT / "simulated_responses_wide.csv")
-    scores = pd.read_csv(OUT / "scale_scores.csv")
-    reliability = pd.read_csv(OUT / "reliability_summary.csv")
-    anova = pd.read_csv(OUT / "anova_summary.csv")
-    mediation = json.loads((OUT / "mediation_summary.json").read_text(encoding="utf-8"))
+    raw = read_raw_jsonl(input_dir / "raw_simulated_responses.jsonl")
+    wide = pd.read_csv(input_dir / "simulated_responses_wide.csv")
+    scores = pd.read_csv(input_dir / "scale_scores.csv")
+    reliability = pd.read_csv(input_dir / "reliability_summary.csv")
+    anova = pd.read_csv(input_dir / "anova_summary.csv")
+    mediation = json.loads((input_dir / "mediation_summary.json").read_text(encoding="utf-8"))
 
     item_cols = [
         col
@@ -192,7 +212,7 @@ def main() -> None:
 
 ## 2. 输出文件清单
 
-{markdown_table(output_file_status())}
+{markdown_table(output_file_status(input_dir))}
 
 ## 3. 数据质量检查
 
@@ -262,8 +282,8 @@ def main() -> None:
 扫描范围：项目目录中 `.py`、`.md`、`.txt`、`.csv`、`.json`、`.jsonl`、`.log` 文件，跳过 `.venv` 和 `__pycache__`。报告只列文件名，不输出任何疑似 key 内容。
 """
 
-    REPORT_PATH.write_text(report, encoding="utf-8")
-    print(f"Saved report: {REPORT_PATH}")
+    report_path.write_text(report, encoding="utf-8")
+    print(f"Saved report: {report_path}")
     print(f"suspicious leak found: {leak_status}")
     print(f"files: {leak_file_text}")
 
