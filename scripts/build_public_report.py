@@ -41,7 +41,6 @@ for _p in (str(ROOT / "scripts"), str(SRC)):
         sys.path.insert(0, _p)
 
 import build_site_data as bsd  # noqa: E402  (sibling script, validated extractors)
-import yaml  # noqa: E402
 
 from freewill_attribution import runner  # noqa: E402
 from freewill_attribution.benchmark import registry  # noqa: E402
@@ -62,23 +61,63 @@ VERIFICATION_STATES = (
     "reconstructed",
     "unknown",
 )
+# Each dimension: (name, verification_status, chinese_label, chinese_group).
+# The Chinese label/group are display metadata so the public matrix renders in
+# Chinese without hardcoding text in HTML. Statuses are never softened.
+G_DESIGN = "历史数据与设计"
+G_RUN = "历史运行元数据"
+G_REAL = "真实接入与运行"
 PROVENANCE_DIMENSIONS = [
-    ("record_count", "repository_verified"),
-    ("condition_design_6x2x30", "repository_verified"),
-    ("scale_item_definitions", "repository_verified"),
-    ("historical_provider_is_deepseek", "author_attested"),
-    ("exact_model_server_snapshot", "unknown"),
-    ("exact_prompt_snapshot", "unknown"),
-    ("historical_stimulus_hash", "unknown"),
-    ("current_stimulus_definition", "reconstructed"),
-    ("request_timestamp", "unknown"),
-    ("provider_request_id", "unknown"),
-    ("token_usage", "unknown"),
-    ("estimated_cost_usd", "unknown"),
-    ("retry_information", "unknown"),
-    ("item_level_missingness", "unknown"),
-    ("raw_response_public_availability", "unknown"),
+    ("record_count", "repository_verified", "历史记录数", G_DESIGN),
+    ("condition_design_6x2x30", "repository_verified", "实验设计（6×2×30）", G_DESIGN),
+    ("scale_item_definitions", "repository_verified", "量表题项定义", G_DESIGN),
+    ("current_stimulus_definition", "reconstructed", "当前刺激定义", G_DESIGN),
+    ("historical_provider_is_deepseek", "author_attested", "历史 Provider 为 DeepSeek", G_RUN),
+    ("exact_model_server_snapshot", "unknown", "历史精确模型快照", G_RUN),
+    ("exact_prompt_snapshot", "unknown", "历史精确 Prompt", G_RUN),
+    ("historical_stimulus_hash", "unknown", "历史刺激哈希", G_RUN),
+    ("request_timestamp", "unknown", "历史请求时间戳", G_RUN),
+    ("provider_request_id", "unknown", "历史请求 ID", G_RUN),
+    ("token_usage", "unknown", "历史 token 用量", G_RUN),
+    ("estimated_cost_usd", "unknown", "历史费用估计", G_RUN),
+    ("retry_information", "unknown", "历史 retry 信息", G_RUN),
+    ("item_level_missingness", "unknown", "逐题缺失情况", G_RUN),
+    ("raw_response_public_availability", "unknown", "原始响应公开可得性", G_RUN),
+    # REAL-SETUP-001: real-provider readiness dimensions. Only the adapter code
+    # is repository-verifiable; nothing about a real run exists yet.
+    ("provider_adapter_code", "repository_verified", "离线 Provider 代码", G_REAL),
+    ("provider_live_connectivity", "unknown", "真实连接", G_REAL),
+    ("actual_model_id", "unknown", "真实模型 ID", G_REAL),
+    ("actual_model_snapshot", "unknown", "真实模型快照", G_REAL),
+    ("actual_pricing", "unknown", "真实价格", G_REAL),
+    ("actual_request_ids", "unknown", "真实请求 ID", G_REAL),
+    ("actual_token_usage", "unknown", "真实 token 用量", G_REAL),
+    ("actual_cost", "unknown", "真实费用", G_REAL),
+    ("actual_smoke_run", "unknown", "真实 smoke 运行", G_REAL),
+    ("actual_pilot_run", "unknown", "真实 pilot 运行", G_REAL),
 ]
+
+# Real-provider readiness status block. Unrun real metrics MUST be null /
+# not_run / not_applicable — never 0, 0.0 or false.
+REAL_PROVIDER_READINESS = {
+    "adapter_status": "offline_validated",
+    "credential_status": "not_configured",
+    "live_api_status": "not_run",
+    "smoke_status": "not_run",
+    "pilot_status": "not_run",
+    "model_id_status": "requires_runtime_verification",
+    "pricing_status": "requires_runtime_verification",
+    "actual_token_usage": None,
+    "actual_cost_usd": None,
+    "actual_latency_ms": None,
+    "actual_completion_rate": None,
+    "actual_parse_success_rate": None,
+    "result_analysis_status": "not_applicable",
+    "dry_run_planning": "available",
+    "network_calls_made": 0,
+    "real_smoke": "not_run",
+    "real_pilot": "not_run",
+}
 
 
 class ReportError(RuntimeError):
@@ -136,6 +175,7 @@ def build_engineering_status() -> dict:
         "artifact_lifecycle": mock["artifact_roles"],
         "mock_execution_quality": mock["execution_quality"],
         "mock_output_quality": mock["output_quality"],
+        "real_provider_readiness": dict(REAL_PROVIDER_READINESS),
         "data_source": "mock_engineering_validation",
         "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
     }
@@ -175,9 +215,10 @@ def build_evaluation_summary() -> dict:
             "status": "planned_not_run",
             "real_smoke_n_per_cell": 1,
             "real_pilot_n_per_cell": 5,
-            "provider_model": "decided_in_RUN-003",
+            "provider_model": "verify_on_run_day",
             "boundary": "尚未运行；无任何真实模型结果；需单独授权。",
         },
+        "real_provider_readiness": dict(REAL_PROVIDER_READINESS),
     }
 
 
@@ -189,11 +230,12 @@ def build_evidence_matrix() -> dict:
         for c in historical["claims"]
     ]
     provenance = [
-        {"dimension": name, "verification_status": status}
-        for name, status in PROVENANCE_DIMENSIONS
+        {"dimension": name, "verification_status": status,
+         "label": label, "group": group}
+        for name, status, label, group in PROVENANCE_DIMENSIONS
     ]
     counts = {
-        state: sum(1 for _n, st in PROVENANCE_DIMENSIONS if st == state)
+        state: sum(1 for _n, st, _l, _g in PROVENANCE_DIMENSIONS if st == state)
         for state in VERIFICATION_STATES
     }
     benchmark_objects = [

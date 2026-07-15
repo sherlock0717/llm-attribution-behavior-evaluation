@@ -20,6 +20,7 @@ TASK_V1_YAML = CONFIGS_DIR / "tasks" / "freewill_attribution.v1.yaml"
 TASK_V2_YAML = CONFIGS_DIR / "tasks" / "freewill_attribution.v2.yaml"
 METRICS_YAML = CONFIGS_DIR / "metrics" / "attribution_metrics.v1.yaml"
 MODEL_MOCK_YAML = CONFIGS_DIR / "model.mock.yaml"
+MODEL_DEEPSEEK_EXAMPLE_YAML = CONFIGS_DIR / "model.deepseek.example.yaml"
 
 
 class RegistryError(RuntimeError):

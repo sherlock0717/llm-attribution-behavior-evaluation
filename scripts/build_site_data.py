@@ -605,11 +605,24 @@ def _dumps(obj: dict) -> str:
     return json.dumps(obj, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
 
 
+# Pure run-context metadata for site_summary.json, excluded from --check
+# data-content equality. These are NOT research data:
+#   generated_at    - wall-clock build time.
+#   source_commit   - `git log -1` over the research source paths; this is
+#                     unstable under a shallow checkout. GitHub's PR merge
+#                     commit is built with fetch-depth=1, so only the merge
+#                     commit is visible and `git log` collapses to that SHA,
+#                     which differs from the committed value produced on a
+#                     full-history checkout.
+#   data_as_of_date - derived from source_commit's commit date, same issue.
+# Research data, statistics, SHA-256 hashes and all content fields are still
+# compared strictly, so genuine drift is still detected.
+RUN_CONTEXT_FIELDS = frozenset({"generated_at", "source_commit", "data_as_of_date"})
+
+
 def _comparable(name: str, obj: dict) -> dict:
-    # generated_at is build metadata only, excluded from data-content equality.
     if name == "site_summary.json":
-        obj = dict(obj)
-        obj.pop("generated_at", None)
+        obj = {k: v for k, v in obj.items() if k not in RUN_CONTEXT_FIELDS}
     return obj
 
 

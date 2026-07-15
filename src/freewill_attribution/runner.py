@@ -25,6 +25,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+import yaml
+
 from .paths import PROJECT_ROOT, SOURCE_DIR, get_legacy_run_script
 
 # --- path_safety bootstrap (top-level module lives at the src/ layout root) ---
@@ -364,6 +366,7 @@ def run_benchmark(
         final_ratings: dict[str, int] = {}
         final_status = AttemptValidationStatus.NOT_VALIDATED
         parent_attempt_id: str | None = None
+        last_detail: dict = {}
 
         while True:
             base_prompt = prompting.render_prompt(row)
@@ -696,6 +699,183 @@ def _validation_failure_code(
     return mapping.get(validation_status, "SCHEMA_FAILURE")
 
 
+# ===========================================================================
+# 3. Offline dry-run planner for the (deferred) real DeepSeek provider
+# ===========================================================================
+
+RUN_PROFILE_DEFAULTS = {"smoke": 1, "pilot": 5}
+
+
+@dataclass
+class DryRunResult:
+    plan_id: str
+    plan_dir: Path
+    planned_records: int
+    blockers: list[str]
+    readiness: dict[str, Any]
+
+
+def _scrub_model_config(config: dict[str, Any]) -> dict[str, Any]:
+    """Return a snapshot of the model config with any credential value removed.
+
+    The template never stores a key, but we defensively drop anything that
+    could carry one and assert the credential is environment-sourced.
+    """
+    snapshot = dict(config)
+    cred = dict(snapshot.get("credential") or {})
+    cred.pop("value", None)
+    cred["value_stored_in_config"] = False
+    snapshot["credential"] = cred
+    # never carry a resolved key anywhere
+    snapshot.pop("api_key", None)
+    return snapshot
+
+
+def plan_dry_run(
+    *,
+    model_config: str | Path,
+    run_profile: str = "smoke",
+    seed: int = 20260425,
+    artifact_root: str | Path = "artifacts",
+    task_config: str | Path | None = None,
+    plan_id: str | None = None,
+    real_api: bool = False,
+    confirm_paid_run: bool = False,
+) -> DryRunResult:
+    """Plan a future real run WITHOUT any network or credential access.
+
+    Writes plan artifacts under ``artifacts/plans/<plan_id>/`` (Git ignored).
+    Generates NO responses, scores, usage, cost or latency. Reads NO API key.
+    """
+    from .providers import deepseek as _deepseek  # local import: no networking
+    from . import budget as _budget
+
+    task_config = Path(task_config) if task_config else registry.TASK_V2_YAML
+    model_config = Path(model_config)
+
+    raw_model = yaml.safe_load(model_config.read_text(encoding="utf-8")) or {}
+    profiles = raw_model.get("run_profiles") or {}
+    profile_cfg = profiles.get(run_profile) or {}
+    n_per_cell = int(profile_cfg.get("n_per_cell", RUN_PROFILE_DEFAULTS.get(run_profile, 1)))
+
+    task_spec = registry.load_task_spec(task_config)
+    # Consistency with the implemented task pack (same guard as the mock runner).
+    problems = spec.taskspec_consistency_problems(task_spec)
+    if problems:
+        raise RunConfigError("task config incompatible with task pack: " + "; ".join(problems))
+
+    design = stimuli.build_design(n_per_cell, seed)
+    planned = len(design)
+
+    plan_id = plan_id or f"dryrun-deepseek-{run_profile}-seed{seed}"
+    plan_dir = resolve_output_dir(Path(artifact_root) / "plans" / plan_id, create=False)
+    if plan_dir.exists():
+        shutil.rmtree(plan_dir)
+    plan_dir.mkdir(parents=True, exist_ok=True)
+
+    prompt_template = prompting.prompt_template_text()
+
+    # request plan: one entry per planned record (no response, no cost).
+    request_rows: list[dict[str, Any]] = []
+    for row in design:
+        prompt_text = prompting.render_prompt(row)
+        request_rows.append(
+            {
+                "record_id": row["record_id"],
+                "condition": row["condition"],
+                "identity": row["identity"],
+                "scenario_id": row["scenario_id"],
+                "stimulus_id": row["stimulus_id"],
+                "prompt_sha256": hash_text(prompt_text),
+                "max_tokens": int(raw_model.get("max_tokens", 2048)),
+                "temperature": raw_model.get("temperature", 0),
+                "response_format": (raw_model.get("response_format") or {}).get("type", "json_object"),
+            }
+        )
+    stimuli_rows = stimuli.stimulus_snapshot(design)
+
+    blockers = _deepseek.live_run_blockers(
+        raw_model, real_api=real_api, confirm_paid_run=confirm_paid_run
+    )
+    pricing = _budget.PricingSnapshot.from_config(raw_model.get("pricing_snapshot"))
+    cost_estimate = _budget.dry_run_cost_estimate(pricing)
+
+    model_snapshot = _scrub_model_config(raw_model)
+    task_payload = task_spec.model_dump(mode="json")
+    resolved_config = {
+        "benchmark_id": BENCHMARK_ID,
+        "benchmark_version": BENCHMARK_VERSION,
+        "task_config_ref": _repo_relative(task_config),
+        "task_config_sha256": hash_file(task_config),
+        "model_config_ref": _repo_relative(model_config),
+        "model_config_sha256": hash_file(model_config),
+        "task_id": task_spec.task_id,
+        "task_version": task_spec.task_version,
+        "provider": raw_model.get("provider", "deepseek"),
+        "run_profile": run_profile,
+        "seed": seed,
+        "n_per_cell": n_per_cell,
+        "planned_records": planned,
+        "max_tokens": int(raw_model.get("max_tokens", 2048)),
+        "artifact_root_relative": f"plans/{plan_id}",
+        "prompt_template_id": prompting.PROMPT_TEMPLATE_ID,
+        "prompt_template_version": prompting.PROMPT_TEMPLATE_VERSION,
+    }
+
+    cells: dict[str, int] = {}
+    for row in design:
+        key = f"{row['condition']}|{row['identity']}"
+        cells[key] = cells.get(key, 0) + 1
+
+    readiness = {
+        "provider_adapter_status": "offline_validated",
+        "credential_status": "not_configured",
+        "live_api_status": "not_run",
+        "real_smoke_status": "not_run",
+        "real_pilot_status": "not_run",
+        "model_id_status": "requires_runtime_verification",
+        "pricing_status": "requires_runtime_verification",
+        "result_analysis_status": "not_applicable",
+        "network_calls_made": 0,
+        "api_key_read": False,
+        "live_run_blockers": blockers,
+        "cost_estimate": cost_estimate,
+        "requirements_before_live_run": raw_model.get("requirements_before_live_run", []),
+    }
+    plan = {
+        "plan_id": plan_id,
+        "provider": raw_model.get("provider", "deepseek"),
+        "run_profile": run_profile,
+        "planned_records": planned,
+        "n_per_cell": n_per_cell,
+        "concurrency": int(profile_cfg.get("concurrency", 1)),
+        "cell_distribution": cells,
+        "prompt_template_sha256": hash_text(prompt_template),
+        "resolved_config_sha256": hash_object(resolved_config),
+        "task_spec_sha256": hash_object(task_payload),
+        "created_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "note": "OFFLINE dry-run plan only. No request was sent; no response, "
+        "usage, cost or latency exists. Not a real run.",
+    }
+
+    artifact_io.write_json_artifact(plan_dir / "plan.json", plan, role="plan", base_dir=plan_dir)
+    artifact_io.write_json_artifact(plan_dir / "resolved_config.json", resolved_config, role="resolved_config", base_dir=plan_dir)
+    artifact_io.write_json_artifact(plan_dir / "task_spec.json", task_payload, role="task_spec", base_dir=plan_dir)
+    artifact_io.write_json_artifact(plan_dir / "model_config_snapshot.json", model_snapshot, role="model_config_snapshot", base_dir=plan_dir)
+    artifact_io.write_text_artifact(plan_dir / "prompt_template.txt", prompt_template, role="prompt_template", base_dir=plan_dir)
+    artifact_io.write_jsonl_artifact(plan_dir / "stimuli_plan.jsonl", stimuli_rows, role="stimuli_plan", base_dir=plan_dir)
+    artifact_io.write_jsonl_artifact(plan_dir / "request_plan.jsonl", request_rows, role="request_plan", base_dir=plan_dir)
+    artifact_io.write_json_artifact(plan_dir / "readiness_report.json", readiness, role="readiness_report", base_dir=plan_dir)
+
+    return DryRunResult(
+        plan_id=plan_id,
+        plan_dir=plan_dir,
+        planned_records=planned,
+        blockers=blockers,
+        readiness=readiness,
+    )
+
+
 __all__ = [
     "build_legacy_run_command",
     "run_legacy_study",
@@ -703,6 +883,8 @@ __all__ = [
     "BENCHMARK_VERSION",
     "BenchmarkRunResult",
     "RunConfigError",
+    "DryRunResult",
     "default_run_id",
     "run_benchmark",
+    "plan_dry_run",
 ]

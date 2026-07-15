@@ -369,7 +369,7 @@ def test_legacy_headings_are_marked():
 
 
 def test_run001_is_mock_run_core():
-    ids = dict(l.split("|", 1) for l in
+    ids = dict(line.split("|", 1) for line in
                re.search(r"START -->(.*?)<!-- ACTIVE", BACKLOG.read_text(encoding="utf-8"), re.S).group(1).strip().splitlines())
     title = ids["RUN-001 "].strip()
     assert "Mock Run Core" in title

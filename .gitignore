@@ -28,6 +28,10 @@ outputs/*key*
 artifacts/
 artifacts/runs/
 
+# Real-provider LOCAL run config (copied from the .example; never committed).
+# The key itself lives only in the environment, never in this file.
+configs/model.deepseek.local.yaml
+
 # Temporary files
 *.tmp
 *.bak

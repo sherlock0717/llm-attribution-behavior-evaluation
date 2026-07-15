@@ -1,120 +1,59 @@
-# 大语言模型 Agent 决策结构对自由意志归因的影响
+# LLM 归因行为评测
 
-## 项目一句话
+A Reproducible Study and Evaluation Prototype
 
-本项目将“AI 是否像是在自主选择”这一抽象问题，转化为一个可操作的心理学模拟实验原型，并用 DeepSeek 模拟被试预演 AI 决策解释、行动者感与自由意志归因之间的关系。
+> 围绕模型如何对行动者的能动性、自由意志与责任作出归因，构建从历史研究、任务契约到可复现运行与证据审计的**测试型评测基准**。
 
-## 版本与定位（v0.2）
+## 项目概述
 
-当前定位：一个面向可复现研究的大语言模型自由意志归因实验与模型行为评测原型。它不是成熟的通用 benchmark；多模型 / provider / benchmark 是未来方向，非当前已完成能力。
+本项目是一个**可复现的测试型评测基准原型**：以「模型如何对行动者作出归因」为对象，把一套 6×2 的决策情境材料、结构化题项、评测运行器与证据审计组织在同一个可复现的仓库里。
 
-数据边界：公开的 360 条历史记录来自 **真实 DeepSeek API** 调用（模型模拟被试，非人类被试）。仓库中的 **mock（规则生成）仅用于工程与持续集成流程验证，不进入研究结果**。历史运行的 provenance（溯源元数据）不完整——数据真实性已确认，但无法逐字节完全复现历史运行。
+它评价的是**模型输出中的归因行为**，不判断模型本身是否拥有自由意志，也不把模型输出当作人类总体心理结论。当前它不是成熟的多模型公开基准；多模型执行是未来方向，非当前已完成能力。
 
-v0.2 工程现状：
-- 已完成（本地）：依赖锁定、mock-only package CLI、安全输出隔离、schema/config、跨平台运行脚本、CI 配置。
-- Partial：`schema` 与 `config` 已实现基础组件，但**尚未接入正式 runner**。
-- Planned：正式可追溯 runner、RunManifest 实际产出、provider abstraction、多模型执行、benchmark。
-- 持续集成：**configured, remote verification pending**（已配置 Windows + Linux 矩阵，远程验证待完成）。
-
-## 项目背景
-
-AI 正在从回答工具变成参与判断的系统。它可能筛选简历、推荐内容、辅助办公、处理客服问题，也可能在游戏中扮演可行动的智能体。
-
-本项目关注：当 AI 不只给出结论，而是展示候选方案、理由权衡和反思修正时，用户是否更容易把它看成一个会判断、会行动、会承担后果的系统。
+数据边界：公开的历史记录来自**真实 DeepSeek API** 调用（模型模拟，非人类被试）。仓库中的 **mock（规则生成）仅用于工程与持续集成流程验证，不进入研究结论**。历史运行的 provenance（溯源元数据）不完整——数据来源真实已确认，但无法逐字节完全复现历史运行。
 
 ## 研究问题
 
-1. 决策过程是否会影响观察者对 AI 的行动者感？
-2. 自由意志归因是否通过行动者感间接发生？
-3. 这种效应是否只是因为文本更长或 AI 看起来更聪明？
+不同的**决策过程描述**与**行动者身份标签**，如何影响模型对行动者的能动性、自由意志与责任作出的归因。
+
+- 把决策过程讲得更完整，模型给的能动性评分会更高吗？
+- 自由意志的评分是直接跟着过程走，还是先经过能动性这一步？
+- 这种变化会不会只是因为文本更长、或模型觉得对方更聪明？
 
 ## 实验设计
 
-本项目采用 6 × 2 模拟实验设计。
+6 × 2 设计：六种决策过程 × 两种身份标签，每格样本量相同。
 
-6 种决策过程：
+- 六种决策过程（低结构到高结构）：直接选择、长文本直接选择、列出可选方案、简洁理由权衡、完整理由权衡、反思与反馈修正。
+- 两种身份标签：AI 决策者、人类决策者。
+- 诊断条件：`direct_choice_long`（长文本直接选择）只加长度不加结构；`reasons_concise`（简洁理由权衡）只给结构不给长度——两者用于分离「文本更长」与「过程更完整」。
+- 材料覆盖 8 个情境、6 个决策领域；测量共 10 个构念、34 个题项，构念分数为其题项均值（事实操纵检验计 0–2，其余题项计 1–7）。
 
-- 直接给出选择
-- 长文本直接选择
-- 列出可选方案
-- 简洁理由权衡
-- 完整理由权衡
-- 反思与反馈修正
+链条：情境 → 过程条件 → 身份标签 → 题项响应 → 构念分数 → 条件与身份比较。
 
-2 种身份标签：
+## 历史数据与主要结果
 
-- AI 决策者
-- 人类决策者
+历史结果按 6 过程 × 2 身份 × 每格相同样本组织为 12 个实验单元。以下结论只描述单一模型在这套材料下的输出行为，均由脚本从 `outputs/` 派生，未手工改动：
 
-其中，“长文本直接选择”和“简洁理由权衡”是诊断条件，用于区分文本长度效应与决策结构效应。
+- 能动性随过程结构总体上升，是方向最稳定的主结果；同时控制感知智能与文本长度后仍显著。
+- 自由意志归因的直接过程效应在控制后不再显著，更像经由能动性的**关联性间接路径**发生（该间接效应的自助区间不跨 0；感知智能路径区间跨 0）。这是关联性路径诊断，**不是**因果中介证明。
+- 身份标签本身影响明显：在自由意志、责任与体验维度上模型对人类与 AI 的评分存在系统差异，在感知智能与操纵检验上差异很弱。
+- 理由/反思结构比单纯拉长文本更能提高能动性评分（预设对比中，简洁理由权衡、反思反馈显著高于长文本直接选择）。
 
-## 模拟流程
+不使用「证明了」「揭示真实心理机制」「模型具备自由意志」「与人类完全一致」等表述。
 
-现实问题 → 变量拆解 → 6 × 2 材料设计 → DeepSeek 模拟被试 → 结构化数据保存 → 构念得分计算 → 事实操纵检验 → 控制回归 → 并行中介分析 → 自动报告生成
+## 测试型评测基准
 
-## 核心结果
+从研究问题到评测执行的工程链：任务规格（`TaskSpec`）→ 刺激快照 → Prompt → 模型接口（`Provider`）→ 原始响应（`ResponseRecord`）→ 解析 → 校验 → 修复 → 计分（`ScoreRecord`）→ 聚合报告（`AggregateReport`）→ 运行清单（`RunManifest`）。任务规格、模型配置、Prompt、刺激集、计分规格与运行产物各自记录 `SHA-256`，运行清单据此把一次运行的输入与产物关联起来，支持审计。
 
-基于 n-per-cell = 30 的模拟预实验：
+## 可复现运行
 
-- 总模拟响应：360
-- 条件格数量：12
-- 每格样本量：30
-- JSON / API 失败：0
-- 决策过程对行动者感的影响稳定
-- 自由意志归因的直接效应不稳定，更主要通过行动者感间接发生
-- 感知智能没有解释主要间接效应
-- 长文本直接选择没有带来稳定提升，说明单纯文本长度不是关键
-- 理由权衡和反思修正是更关键的过程线索
-
-## 重要边界
-
-本项目是 LLM 模拟被试的模拟预实验，不是真实人类被试研究。
-
-本项目不能证明 AI 具有自由意志。
-
-本项目不能替代正式心理测量信效度检验。
-
-本项目的价值在于材料预演、理论路径诊断、分析流程验证和后续真实被试研究设计。
-
-## 项目结构
-
-```text
-.
-├── src/
-│   ├── run_simulated_study.py
-│   ├── analyze_results.py
-│   ├── stimuli.py
-│   ├── scales.py
-│   └── validate_materials.py
-├── docs/
-│   ├── measurement_plan.md
-│   ├── scale_source_mapping.md
-│   ├── research_design_blueprint.md
-│   ├── portfolio_research_case.md
-│   └── project_one_page_summary.md
-├── outputs/
-│   ├── scale_scores.csv
-│   ├── reliability_summary.csv
-│   ├── anova_summary.csv
-│   ├── controlled_regression_summary.csv
-│   ├── planned_contrasts.csv
-│   ├── parallel_mediation_summary.json
-│   ├── final_simulated_pilot_report.md
-│   ├── n30_stability_replication_report.md
-│   └── plots/
-├── requirements.txt
-├── run_all.ps1
-└── README.md
-```
-
-说明：仓库不公开完整原始 API 响应、原始 JSONL、宽表原始响应文本、日志或任何密钥文件。
-
-## 如何运行（v0.2）
-
-推荐使用 mock-only 的 package CLI（不读取 API key、不写入历史 `outputs/`，必须显式提供输出目录）：
+当前可复现的是**工程流程**（历史模型运行本身因元数据缺失尚不能逐字节复现）。CLI 统一使用 `python -m freewill_attribution.cli`。
 
 ```bash
+uv sync --frozen                                   # 安装锁定依赖
 python -m freewill_attribution.cli run --mock --n-per-cell 2 --out <临时目录>
+python -m pytest -q                                # 测试
 ```
 
 跨平台运行脚本（统一转调上面的 CLI，默认写系统临时目录）：
@@ -129,43 +68,64 @@ scripts\run_all.ps1 -Mock -NPerCell 2
 bash scripts/run_all.sh --mock --n-per-cell 2
 ```
 
-说明：当前 package CLI 只暴露 **mock** 运行；`schema` / `config` 已实现基础组件但**尚未接入正式 runner**；真实 API 运行不由该 CLI 暴露（留待可追溯 runner 与相应授权）。
+package CLI 只暴露 **mock** 运行与真实运行的**离线 dry-run**；真实 API 运行需显式开启并单独授权（见「真实模型运行计划」）。运行产物写入 `artifacts/runs/<run_id>/`（gitignored），历史 `outputs/` 永久只读、互不覆盖。
 
-### 本地展示页预览
+## Mock 工程验证
+
+确定性 `mock` 验收运行（每格 2 条；smoke 为每格 1 条）用于验证运行器、解析、计分、恢复与产物链能否按契约工作。**确定性 mock 是非真实模型输出，不进入研究结论，也不代表已完成任何公开基准。**
+
+## 真实模型运行计划
+
+真实模型接入方案已完成**离线验证**（provider adapter、预算控制、错误分类、离线 dry-run、凭据隔离），但**尚未真正运行**。在运行日核验模型、价格与凭据后，可直接执行真实运行：
+
+- Smoke：12 条，每个实验单元 1 条；
+- Pilot：60 条，每个实验单元 5 条；
+- 未来真实运行将记录 token、费用、延迟、解析与 schema 质量、条件与身份结果，并生成脱敏公开报告。
+
+在真实运行发生前，任何 token、费用、延迟或模型表现都不会被伪造或写入公开页面。详见 `docs/runs/REAL_PILOT_RUNBOOK.md` 与 `docs/runs/REAL_PROVIDER_READINESS.md`。
+
+## 证据来源
+
+用四态标注每个维度可被核查到的程度：**仓库可核查**、**作者记录**、**现有材料重建**、**当前未知**。四态互不等价；作者记录与重建都不显示为已核查，标为未知的维度不会被补写成确定事实。历史记录数、实验设计、量表定义与离线 Provider 代码为仓库可核查；历史 Provider 为 DeepSeek 属作者记录；历史精确模型/Prompt 快照、token、费用、原始响应等属当前未知。
+
+## 仓库结构
+
+```text
+src/freewill_attribution/   评测运行器、Provider 接口与计分逻辑
+configs/                    任务、模型、Prompt 与研究配置契约
+outputs/                    历史聚合结果、统计产物与图表（只读、不覆盖）
+site/                       静态展示页与其数据
+scripts/                    数据构建脚本（build_site_data / build_public_report / build_showcase_data）
+docs/                       研究协议、证据审计与运行手册
+tests/                      单元 / 集成 / 特征化 / 站点测试
+```
+
+仓库不公开完整原始 API 响应、原始 JSONL、宽表原始响应文本、日志或任何密钥文件。
+
+## 快速开始
 
 ```bash
-python scripts/build_site_data.py            # 从仓库源文件生成 site/data/*.json
-python -m http.server 8000 --directory site  # 然后打开 http://localhost:8000/
+git clone https://github.com/sherlock0717/llm-attribution-behavior-evaluation.git
+cd llm-attribution-behavior-evaluation
+uv sync --frozen
+python -m pytest -q
+
+# 生成站点数据并本地预览展示页
+python scripts/build_site_data.py
+python scripts/build_public_report.py
+python scripts/build_showcase_data.py
+python -m http.server 8000 --directory site   # 打开 http://localhost:8000/
 ```
 
-### Legacy / Historical workflow（v0.1 历史入口，保留供参考）
+## 文档入口
 
-v0.1 的历史研究运行通过以下入口完成（历史真实 DeepSeek API 基线即由此产生）：
-
-```powershell
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-$env:DEEPSEEK_API_KEY = "你的 DeepSeek API Key"
-python .\src\run_simulated_study.py --n-per-cell 30 --out <显式输出目录> --fresh
-python .\src\analyze_results.py --input <目录> --out <目录>
-```
-
-注意：不要把真实 API key 写入 README、脚本、日志或 Git；不要提交 `.env`；旧入口需显式提供输出目录，永不写入受保护的 `outputs/`。
-
-## 展示页与文档
-
-静态展示页（`site/`）可本地预览（见上）。页面由原生 HTML/CSS/JavaScript 构建，读取 `site/data/*.json`（由 `scripts/build_site_data.py` 从仓库源文件派生），包含 6×2 设计矩阵、过程结构梯度、流程图、条件比较条、证据三栏边界、探索性路径图与路线图等原生可视化；历史结果与 mock 明确区分，当前能力与未来方向明确分开。Research Question 栏目另有一张研究问题概念图（`site/assets/figures/attribution-research-concept.png`），仅用于解释研究结构，不承载统计结果、不计入三张历史结果图。
-
-页面页脚的“研究数据源提交”指研究数据与设计输入最近一次变化的 commit（由 `build_site_data.py` 从这批源文件的 git 历史派生），**不是页面构建 commit、不是当前 HEAD、也不是部署 commit**；这样页面提交后 `python scripts/build_site_data.py --check` 不会因 HEAD 变化而失效。
-
-跨平台现状：在 Windows 本地使用锁定依赖跑通 mock 流程，Bash wrapper 完成 Git Bash compatibility validation；真实 Linux 与 GitHub-hosted Windows/Linux 验证仍待发布阶段完成（Git Bash 不等于 Linux 验证）。公开部署（GitHub Pages）尚未授权，统一留待后续发布阶段。
-
-- 研究方法（Method）：`docs/research_design_blueprint.md`
-- 结果报告（Results）：`outputs/final_simulated_pilot_report.md`
-- 局限与 provenance（Limitations）：`docs/audit/v1_provenance_statement.md`
-- 路线图与规划（Roadmap）：`docs/planning/SHOWCASE_PLAN.md`
+- 研究方法：`docs/research_design_blueprint.md`
+- 结果报告：`outputs/final_simulated_pilot_report.md`
+- 证据来源声明：`docs/audit/v1_provenance_statement.md`
+- 真实接入离线准备：`docs/runs/REAL_PROVIDER_READINESS.md`
+- 真实运行手册：`docs/runs/REAL_PILOT_RUNBOOK.md`
+- 在线展示页：https://sherlock0717.github.io/llm-attribution-behavior-evaluation/
 
 ## 许可
 
-暂未设置正式开源许可，仅用于作品集展示与研究原型说明。
+暂未设置正式开源许可，仅用于研究原型说明与可复现展示。

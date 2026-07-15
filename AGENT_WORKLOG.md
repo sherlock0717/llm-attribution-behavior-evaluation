@@ -670,3 +670,33 @@
 5. **公开 provenance 四态**：`build_public_report.py` / `evidence_matrix.json` / `site.js` / CSS 改用 `verification_status ∈ {repository_verified, author_attested, reconstructed, unknown}`；`historical_provider_is_deepseek=author_attested`、`current_stimulus_definition=reconstructed`、`historical_stimulus_hash=unknown`；分别输出 repository_verified/author_attested/reconstructed/unknown 计数；author_attested/reconstructed 不显示为“已验证”。
 6. **配置矛盾清理**：v2 `condition_schema.decision_status` / `prompt_config.batching.decision_status` = `frozen_for_mock_v2`；batching `core: all_items` + `max_repair_attempts: 1` + `future_variants`（by_construct/single_item/construct_label_exposed/explanation_variant）；`open_questions: []`；evidence_boundary 改为 mock-implemented 口径。
 7. **定向验证（未跑完整 pytest / 未 collect-only / 未出审核包 / 未浏览器自动化）**：`tests/unit/benchmark + providers + tasks + integration/test_mock_vertical_slice + contracts + site` = **173 passed**；`build_site_data.py --check` up to date；`build_public_report.py` + `--check` 幂等；mock smoke(12)/acceptance(24) 全 completed、`task_version=2.0-mock`、git_commit 非 null、ArtifactRef 全相对；HTTP smoke 12/12=200；`outputs/` 无变化；`artifacts/` Git ignored；无真实 API。
+
+## 2026-07-14 · REAL-SETUP-001 · Real Provider Readiness And Showcase Finalization
+
+真实 provider **离线就绪**（`offline_validated`），**未运行**任何真实调用。全程未读取/未检查真实 API Key、未联网、未计费、未生成或分析真实模型结果。
+
+1. **示例配置（非验证运行配置）**：`configs/model.deepseek.example.yaml`（`enabled:false`/`live_api_allowed:false`；`base_url`/`model_id`/`pricing` 留 null 或 `requires_runtime_verification`；credential 只声明环境变量名 `DEEPSEEK_API_KEY`，`value_stored_in_config:false`）；`configs/model.deepseek.local.yaml.example`（复制说明）；`.gitignore` 加入 `configs/model.deepseek.local.yaml`。**未填当前 model ID/价格/Key/endpoint 验证结果。**
+2. **离线 Provider adapter**（`providers/deepseek.py`）：依赖注入 `DeepSeekClientProtocol`（测试只注入 FakeDeepSeekClient）；import/init 不联网；`load_api_key` 只在显式 live 路径读取环境变量，dry-run/单测/展示构建从不读取；`live_run_blockers`/`assert_live_run_allowed` 在缺 `--real-api`/`--confirm-paid-run`/`enabled`/`live_api_allowed`/`base_url`/`model_id`/verified pricing 时拒绝；定义 DeepSeekRequest/DeepSeekProviderResponse（预留 request_id/system_fingerprint/token/cost 等，本轮均 fake/null）/DeepSeekUsage/DeepSeekError；401/402/429/500/503/400 → 稳定分类。
+3. **预算/成本**（`budget.py`）：Decimal；PricingSnapshot/UsageRecord/BudgetReservation/BudgetController/CostSummary；reserve_worst_case_cost/commit_actual_usage/release_reservation/check_hard_limit；pricing 未 verified 时 live 计价被拒、dry-run 报 `unavailable_until_pricing_verified`。
+4. **CLI 门禁**（`cli.py`）：新增 `--provider {mock,deepseek}`/`--dry-run`/`--run-profile {smoke,pilot}`/`--real-api`/`--confirm-paid-run`；本轮 live deepseek 一律拒绝（返回码 2，不读 Key、不联网）；`--dry-run` 生成 `artifacts/plans/<plan_id>/`（plan/resolved_config/task_spec/model_config_snapshot/prompt_template/stimuli_plan/request_plan/readiness_report），仅规划 12(smoke)/60(pilot)，不产响应/分数/usage/cost/latency。
+5. **文档**：`docs/runs/REAL_PROVIDER_READINESS.md`（状态块 + 已做/未做/凭据隔离）、`docs/runs/REAL_PILOT_RUNBOOK.md`（未来 11 步；不声称已完成真实运行）。
+6. **公开报告**（`build_public_report.py` + `site/data/*`）：新增 `real_provider_readiness`（adapter=offline_validated、credential=not_configured、live/smoke/pilot=not_run、actual_* = null、result_analysis_status=not_applicable、network_calls_made=0，未运行真实指标一律 null/not_run/not_applicable）；provenance 增补 8 个真实维度（provider_adapter_code=repository_verified，其余 unknown），四态计数（total=23，repository_verified=4）。
+7. **展示页最终完善**：新增 `#real-provider-readiness` 区块（数据驱动状态卡 + 运行前 checklist + dry-run 12/60 计划 + 凭据隔离/预算护栏说明；不含任何真实性能/token/cost/latency 图）；导航与仓库链接补充入口；roadmap 文案去内部编号化改写。保留既有 section 与 JS 渲染管线。
+8. **测试**：新增 `tests/unit/providers/test_deepseek_provider_offline.py`、`tests/unit/benchmark/test_budget_controller.py`、`tests/integration/test_deepseek_dry_run.py`、`tests/integration/test_real_provider_readiness.py`（禁网 monkeypatch socket；证明不读 Key）。**完整 pytest 一次 = 390 passed**；`build_site_data --check` / `build_public_report --check` 幂等；HTTP smoke 11/11=200；readiness 数据契约核验通过。浏览器 headless dump-dom 仍捕获到 JS 前 DOM（执行器已知波动），以静态 slot 契约 + HTTP smoke + 数据契约核验覆盖，登记浏览器视觉/390 自动确认为发布阶段完成。
+9. **保护/安全**：`outputs/` 无变化；`artifacts/` Git ignored；未读取/未检查真实 Key、未联网、未计费、未运行真实 smoke/pilot、未生成或分析真实模型结果；未合并 refactor/main、未部署 Pages、未 Release。停在 `feat/real-pilot-and-showcase-final`。
+
+---
+
+## 2026-07-14 · SHOWCASE-RELEASE-001 展示页重构与公开命名统一（本地部分）
+
+- 日期时间：2026-07-14（本地）
+- 分支：`feat/real-pilot-and-showcase-final`（起始 HEAD `e42bffd`）
+- 目标：统一公开命名为「LLM 归因行为评测 / A Reproducible Study and Evaluation Prototype」，重构展示页为连续研究+工程报告，中文化 README/文档，新增展示数据脚本与站点测试；本地完成，仓库改名/合并 main/Pages 因环境（无 gh）延后。
+- 新增文件：`scripts/build_showcase_data.py`、`site/data/{showcase_story,measurement_summary,analysis_results,reproducibility_summary}.json`、`tests/site/test_build_showcase_data.py`、`.github/workflows/pages.yml`
+- 修改文件：`site/index.html`、`site/assets/js/site.js`、`site/assets/css/site.css`、`site/README.md`、`README.md`、`scripts/build_public_report.py`（provenance 中文标签/分组 + 真实 smoke/pilot 维度）、`site/data/{evidence_matrix,engineering_status,evaluation_summary}.json`、`tests/site/test_static_site.py`、`docs/runs/REAL_PROVIDER_READINESS.md`、`docs/runs/REAL_PILOT_RUNBOOK.md`、`docs/showcase/{SHOWCASE_CONTENT.md,site_manifest.yaml}`、`pyproject.toml`
+- 决策：Python 分发名 `llm-agent-free-will-attribution` 与包名 `freewill_attribution` 保持不变（内部技术标识，避免破坏 uv.lock/兼容性）；公开品牌与 URL 使用新仓库名 `llm-attribution-behavior-evaluation`。展示图表全部以原生 SVG/HTML-CSS 渲染（规避 matplotlib 中文字体/确定性风险），故未新增 `build_showcase_figures.py`。
+- 受保护资产：`outputs/**` 无变化（`git diff -- outputs` 为空）；README 结果数字改为压缩说明，统计仍全部由脚本派生，未手写数字。
+- 真实测试结果：完整 `pytest -q` = 401 passed；三个 `build_*.py --check` 均 up to date；`uv sync --frozen` 成功；`git diff --check` 无空白错误；`git diff -- outputs` 为空。
+- 浏览器验证（Edge headless，--headless=new + virtual-time，`?diagnostics=1`）：桌面 1440×900 与移动 390×844 均 `renderComplete=true`、load-error 隐藏、empty_charts 空、`scrollWidth<=clientWidth`（无横向溢出）、标题/副标题正确、关键区块存在；已生成 desktop-1440.png / mobile-390.png / browser_validation.json（`artifacts/`，gitignored）。注：Edge headless 强制最小视口约 540px，390 断点未在精确 390 宽度执行，但文档级无横向溢出且 390 媒体查询已就位；无 gh/Playwright，console/CDP 级捕获不可用，以 renderComplete + 隐藏错误横幅作等价致命错误判定。
+- 未执行（本轮）：真实 API 调用、真实 smoke/pilot、读取真实 Key、仓库改名、合并 main、Pages 配置发布、创建 tag/Release、force push。
+- 线上阻断项：`gh` 未安装 → 仓库改名与 Pages 发布无法执行；按用户授权本轮停在 feature 分支。

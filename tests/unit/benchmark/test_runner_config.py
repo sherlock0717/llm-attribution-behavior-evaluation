@@ -15,7 +15,6 @@ import yaml
 from freewill_attribution import cli, runner
 from freewill_attribution.benchmark import registry
 from freewill_attribution.benchmark.hashing import hash_object
-from freewill_attribution.providers.base import ProviderResponse
 from freewill_attribution.tasks.freewill_attribution import spec
 
 

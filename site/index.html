@@ -3,8 +3,13 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>大语言模型自由意志归因研究原型</title>
-  <meta name="description" content="观察大语言模型在扮演观察者时，如何随决策过程结构改变对 AI 与人类决策者的行动者感与自由意志归因。历史 DeepSeek API 数据，本地可复现工程底座。" />
+  <title>LLM 归因行为评测｜A Reproducible Study and Evaluation Prototype</title>
+  <meta name="description" content="围绕模型能动性、自由意志与责任归因构建的可复现研究与测试型评测基准，包含历史研究、任务契约、评测运行器、证据审计和真实模型接入准备。" />
+  <link rel="canonical" href="https://sherlock0717.github.io/llm-attribution-behavior-evaluation/" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="LLM 归因行为评测｜A Reproducible Study and Evaluation Prototype" />
+  <meta property="og:description" content="围绕模型能动性、自由意志与责任归因构建的可复现研究与测试型评测基准，包含历史研究、任务契约、评测运行器、证据审计和真实模型接入准备。" />
+  <meta property="og:url" content="https://sherlock0717.github.io/llm-attribution-behavior-evaluation/" />
   <link rel="stylesheet" href="assets/css/site.css" />
 </head>
 <body>
@@ -12,21 +17,22 @@
 
   <header class="site-header">
     <div class="wrap header-inner">
-      <a class="brand" href="#hero">LLM Free-Will Attribution</a>
+      <a class="brand" href="#overview">LLM 归因行为评测</a>
       <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav-list" aria-label="展开导航">
         <span class="nav-toggle-bar"></span>
       </button>
       <nav class="site-nav" aria-label="主导航">
         <ul id="site-nav-list">
           <li><a href="#research-question">研究问题</a></li>
-          <li><a href="#experimental-design">实验设计</a></li>
-          <li><a href="#pipeline">流程</a></li>
-          <li><a href="#historical-results">历史结果</a></li>
-          <li><a href="#engineering-core">工程核心</a></li>
-          <li><a href="#evidence-limitations">证据与局限</a></li>
-          <li><a href="#reproducibility">可复现性</a></li>
-          <li><a href="#version-history">版本</a></li>
-          <li><a href="#roadmap">路线图</a></li>
+          <li><a href="#design-measurement">实验设计与测量</a></li>
+          <li><a href="#historical-data">历史数据</a></li>
+          <li><a href="#analysis">完整分析链</a></li>
+          <li><a href="#results-summary">结果总结</a></li>
+          <li><a href="#evaluation-core">评测核心</a></li>
+          <li><a href="#mock-validation">Mock 工程验证</a></li>
+          <li><a href="#real-provider">真实接入准备</a></li>
+          <li><a href="#evidence-boundary">证据边界</a></li>
+          <li><a href="#reproducibility">可复现运行</a></li>
         </ul>
       </nav>
     </div>
@@ -38,65 +44,54 @@
   </div>
 
   <main id="main">
-    <!-- 1. Hero -->
-    <section id="hero" class="hero">
+    <!-- 1. 项目概览 -->
+    <section id="overview" class="hero">
       <div class="wrap hero-grid">
         <div class="hero-lead">
-          <p class="eyebrow">研究原型 · v<span data-slot="version">…</span></p>
-          <h1>决策过程怎么讲，会改变模型对“谁在自己做主”的判断吗？</h1>
+          <p class="eyebrow">测试型评测基准 · 研究原型</p>
+          <h1>LLM 归因行为评测</h1>
+          <p class="subtitle">A Reproducible Study and Evaluation Prototype</p>
           <p class="hero-intro">
-            我让 DeepSeek 扮演旁观者，去给别人的决策打分：这个决策者有多像在自主行动、是否算“有自由意志”。
-            我只改一件事——把同一个决定的<strong>过程</strong>讲得更完整（从只报结论，到给出理由、反思和修正），
-            看模型的判断会不会跟着变。
+            围绕模型如何对行动者的能动性、自由意志与责任作出归因，构建从历史研究、任务契约到可复现运行与证据审计的测试型评测基准。
           </p>
           <div class="hero-actions">
-            <a class="btn btn-primary" href="https://github.com/sherlock0717/llm-agent-free-will-attribution">Repository</a>
-            <a class="btn" href="#experimental-design">Method</a>
-            <a class="btn" href="#historical-results">Results</a>
+            <a class="btn btn-primary" href="https://github.com/sherlock0717/llm-attribution-behavior-evaluation">GitHub 仓库</a>
+            <a class="btn" href="#analysis">看结果</a>
+            <a class="btn" href="#evaluation-core">看评测工程</a>
           </div>
           <p class="hero-boundary">
-            这里打分的是模型，不是人。全部结论只描述单一模型在这套材料下的输出，不能证明 AI 拥有自由意志。
+            页面评价的是模型输出中的归因行为，不判断模型本身是否拥有自由意志，也不把模型输出当作人类总体心理结论。
           </p>
         </div>
-        <aside class="hero-panel" aria-label="项目概览">
-          <h2 class="panel-title">项目概览</h2>
-          <dl class="hero-metrics" data-slot="hero-metrics"></dl>
-          <div class="track-lines">
-            <p class="track track-research">
-              <span class="track-name">Research track</span>
-              <span class="track-note">历史 DeepSeek API 基线；分析与图表已产出</span>
-            </p>
-            <p class="track track-engineering">
-              <span class="track-name">Engineering track</span>
-              <span class="track-note">本地工程底座完成；远程发布验证待完成</span>
-            </p>
-          </div>
+        <aside class="hero-panel" aria-label="核心事实">
+          <h2 class="panel-title">核心事实</h2>
+          <dl class="hero-metrics" data-slot="hero-corefacts"></dl>
+          <p class="panel-note">上述数字均从公开数据文件动态读取，非页面硬编码。</p>
         </aside>
       </div>
     </section>
 
-    <!-- 2. Research Question -->
+    <!-- 2. 研究问题 -->
     <section id="research-question" class="section">
       <div class="wrap">
         <h2>研究问题</h2>
-
+        <p class="reading lead">
+          本项目研究的是：不同的<strong>决策过程描述</strong>与<strong>行动者身份标签</strong>，如何影响模型对行动者的
+          能动性、自由意志与责任作出的归因。
+        </p>
         <div class="research-question-layout">
           <div class="rq-text">
             <div class="rq-block">
-              <h3>研究缘起</h3>
-              <p class="reading">
-                AI 已经不只是回答问题，它开始参与判断——筛简历、给建议、在系统里替人做选择。
-                人看到这些输出时，会不自觉地评估“它是不是在自己拿主意”。我想知道：当模型自己去当这个旁观者、
-                给别人的决策打“自主性”和“自由意志”的分时，它到底在被什么带着走。
-              </p>
-            </div>
-            <div class="rq-block">
-              <h3>这里到底比较了什么</h3>
+              <h3>研究范围</h3>
               <ul class="reading tight">
-                <li>同一个决定，贴上 <strong>AI 决策者</strong> 或 <strong>人类决策者</strong> 两种身份标签；</li>
-                <li>决策<strong>过程</strong>用六种方式呈现，从只给结论到给出理由、反思与修正；</li>
-                <li>模型作为旁观者，给出行动者感、自由意志与相关判断的评分。</li>
+                <li>评价的是模型输出中的归因行为；</li>
+                <li>不判断模型本身是否具有自由意志；</li>
+                <li>不把模型输出当作人类总体心理结论。</li>
               </ul>
+              <p class="reading">
+                同一个决定分别贴上「AI 决策者」或「人类决策者」标签，并用六种方式呈现其决策过程——从只报结论，
+                到给出理由、反思与修正——观察模型作为旁观者给出的能动性、自由意志与责任评分是否随之变化。
+              </p>
             </div>
           </div>
           <figure class="research-concept-figure">
@@ -111,385 +106,303 @@
               >
             </div>
             <figcaption>
-              概念图展示本研究的比较结构：同一类决策过程分别与 AI 和人类身份标签组合，再观察模型如何作出能动性、自由意志和责任归因。该图只用于解释研究结构，不承载统计结果。
+              概念链：行动过程描述 + 行动者身份 → 模型形成归因判断 → 能动性、自由意志与责任评分。该图只用于解释研究结构，不承载统计结果。
             </figcaption>
             <ul class="research-concept-labels" aria-label="概念图三段结构">
-              <li><span class="rc-dot subject"></span>决策主体（AI / 人类）</li>
+              <li><span class="rc-dot subject"></span>行动者身份（AI / 人类）</li>
               <li><span class="rc-dot process"></span>过程描述（六种结构）</li>
               <li><span class="rc-dot output"></span>归因输出（模型评分）</li>
             </ul>
           </figure>
         </div>
 
-        <div class="rq-not">
-          <h3>不研究什么</h3>
-          <ul class="reading tight">
-            <li>不去证明模型“真的”拥有自由意志；</li>
-            <li>不主张 AI 和人在心理机制上是一回事；</li>
-            <li>不把模型的模拟评分当成真实人类被试的数据。</li>
-          </ul>
-        </div>
-
-        <h3>三个具体问题</h3>
-        <div class="q-cards">
-          <article class="q-card">
-            <span class="q-num">Q1</span>
-            <p>把决策过程讲得更完整，模型给的“行动者感”会更高吗？</p>
-          </article>
-          <article class="q-card">
-            <span class="q-num">Q2</span>
-            <p>自由意志的评分，是直接跟着过程走，还是要先经过“行动者感”这一步？</p>
-          </article>
-          <article class="q-card">
-            <span class="q-num">Q3</span>
-            <p>这种变化会不会只是因为文本更长、或模型觉得对方更聪明？</p>
-          </article>
-        </div>
-
-        <h3>过程结构梯度（Process Structure Gradient）</h3>
+        <h3>过程结构梯度</h3>
         <p class="reading">
-          六种过程从<strong>低结构</strong>到<strong>高结构</strong>排列。注意 <code>direct_choice_long</code> 是文本长度诊断条件，
-          它只加长度、不加真正的理由结构，因此单独标为 length-control diagnostic，不属于结构等级递增的一环。
+          六种过程从<strong>低结构</strong>到<strong>高结构</strong>排列。<code>direct_choice_long</code>（长文本直接选择）
+          只加长度、不加真正的理由结构，因此单独标为长度对照条件，不属于结构等级递增的一环。
         </p>
         <div class="gradient" data-slot="process-gradient" aria-label="决策过程结构梯度"></div>
         <noscript>
-          <p>过程结构由低到高：direct_choice（基线）、direct_choice_long（长度诊断条件）、alternatives、reasons_concise、reasons、reflection_feedback（最高结构）。</p>
+          <p>过程结构由低到高：直接选择（基线）、长文本直接选择（长度对照）、列出可选方案、简洁理由权衡、完整理由权衡、反思与反馈修正（最高结构）。</p>
         </noscript>
       </div>
     </section>
 
-    <!-- 3. Experimental Design -->
-    <section id="experimental-design" class="section alt">
+    <!-- 3. 实验设计与测量 -->
+    <section id="design-measurement" class="section alt">
       <div class="wrap">
-        <h2>实验设计</h2>
+        <h2>实验设计与测量</h2>
         <p class="reading">
-          设计很直接：六种决策过程 × 两种身份标签，每一格重复相同次数。诊断条件
-          <code>direct_choice_long</code> 和 <code>reasons_concise</code> 是特意放进去的——前者只加长度不加结构，
-          后者只给结构不给长度，用来把“文本更长”和“过程更完整”这两件事分开。
+          设计链条是：<strong>情境 → 过程条件 → 身份标签 → 题项响应 → 构念分数 → 条件与身份比较</strong>。
+          六种决策过程 × 两种身份标签，每格重复相同次数；诊断条件
+          <code>direct_choice_long</code> 与 <code>reasons_concise</code> 分别用于分离「文本更长」与「过程更完整」两件事。
         </p>
 
         <dl class="design-stats" data-slot="design-stats" aria-label="设计规模"></dl>
 
-        <h3>6 × 2 设计矩阵</h3>
+        <h3>6 × 2 实验设计矩阵</h3>
         <div class="matrix-scroll">
           <table class="design-matrix" data-slot="design-matrix">
             <caption class="sr-only">六种决策过程条件与两种身份标签的交叉设计，每格样本量相同</caption>
           </table>
         </div>
-        <noscript>
-          <p>六种过程条件：直接选择、长文本直接选择、列出可选方案、简洁理由权衡、完整理由权衡、反思与反馈修正；两种身份标签：AI 决策者、人类决策者。</p>
-        </noscript>
 
-        <div class="split-cards">
-          <article class="split-card historical">
-            <h3>Historical</h3>
-            <p>真实 DeepSeek API 的历史输出，用于研究结果。公开的是聚合后的评分与图表，原始逐条响应不入公开仓库。</p>
-          </article>
-          <article class="split-card mock">
-            <h3>Mock</h3>
-            <p>确定性的合成输出，只用于验证工程流程与持续集成。它不进入任何研究结论。</p>
-          </article>
-        </div>
+        <h3>八个情境与六个领域</h3>
+        <p class="note">每个实验单元的材料覆盖以下情境；情境跨越多个决策领域。</p>
+        <ul class="scenario-list" data-slot="scenario-list" aria-label="情境列表"></ul>
 
-        <div class="meta-cards">
-          <article class="meta-card">
-            <h4>数据来源</h4>
-            <p>历史 DeepSeek API 基线；来源已确认，见 <code>docs/audit/v1_provenance_statement.md</code>。</p>
-          </article>
-          <article class="meta-card">
-            <h4>测量维度</h4>
-            <p>行动者感（agency）、自由意志归因、感知智能，以及作为操纵检验的过程完整性。</p>
-          </article>
-          <article class="meta-card">
-            <h4>实验单元</h4>
-            <p>每条记录是模型对一段决策材料的一次观察者评分；同一格内重复采样以估计条件均值。</p>
-          </article>
+        <h3>构念与题项</h3>
+        <p class="reading">
+          共 <strong data-slot="construct-count">…</strong> 个构念、<strong data-slot="item-count">…</strong> 个题项。每个构念的分数为其题项均值（事实操纵检验计 0–2，其余题项计 1–7）。
+          「责任归因总分」由结果责任、道德褒贬、过程可归责三个子维度聚合，属探索性结果。
+          完整题项见文末文档入口；此处给出构念、题项数、评分范围与聚合方式。
+        </p>
+        <div class="construct-table-scroll">
+          <table class="construct-table" data-slot="construct-table">
+            <caption class="sr-only">各构念的题项数、评分范围、内部一致性与角色</caption>
+          </table>
         </div>
       </div>
     </section>
 
-    <!-- 4. Pipeline -->
-    <section id="pipeline" class="section">
+    <!-- 4. 历史数据与证据基础 -->
+    <section id="historical-data" class="section">
       <div class="wrap">
-        <h2>流程</h2>
+        <h2>历史数据与证据基础</h2>
         <p class="reading">
-          我把链路分成三段看：<strong>历史研究路径</strong>是当年真实跑过、产出这批数据的步骤；
-          <strong>当前工程层</strong>是 v0.2 才补上的可复现组件；<strong>规划</strong>是还没做的部分。
-          <code>configs/</code> 和 <code>src/freewill_attribution/</code> 属于当前工程组件，不是历史运行步骤。
+          公开的历史结果共 <strong data-slot="record-count">…</strong> 条，按 6 过程 × 2 身份分为 12 个实验单元。
+          历史结果由作者说明来自 <code>DeepSeek API</code> 的模型输出（模型模拟，非人类被试）。
+          当前仓库可以直接核查聚合数据、代码、统计产物与设计结构；历史精确模型快照、Prompt 快照与逐请求元数据不完整。
         </p>
 
-        <h3>A. Historical research path</h3>
-        <ol class="flow" data-flow>
-          <li class="flow-node" data-kind="historical"><span class="flow-badge">Historical</span><span class="flow-label">条件与刺激</span><span class="flow-ref">src/stimuli.py / src/scales.py</span></li>
-          <li class="flow-node" data-kind="historical"><span class="flow-badge">Historical</span><span class="flow-label">Prompt 构造</span><span class="flow-ref">历史运行脚本；exact prompt snapshot/hash unavailable</span></li>
-          <li class="flow-node" data-kind="historical"><span class="flow-badge">Historical</span><span class="flow-label">DeepSeek API 响应</span><span class="flow-ref">历史运行</span></li>
-          <li class="flow-node" data-kind="historical"><span class="flow-badge">Historical</span><span class="flow-label">解析与量表记录</span><span class="flow-ref">outputs/scale_scores.csv</span></li>
-          <li class="flow-node" data-kind="historical"><span class="flow-badge">Historical</span><span class="flow-label">分析与报告</span><span class="flow-ref">outputs/*.md、outputs/plots/</span></li>
-        </ol>
-        <p class="note">当前 <code>configs/prompt.v1.yaml</code> 是<strong>当前配置组件</strong>，不能替代缺失的历史精确 prompt snapshot/hash。</p>
+        <h3>12 个实验单元的历史记录组成</h3>
+        <p class="note">每个色块为一个过程 × 身份单元，各单元样本量相同；合计见下方。数据来源：<code>outputs/scale_scores.csv</code>。</p>
+        <div class="history-composition" data-slot="history-composition" aria-label="12 个实验单元组成"></div>
 
-        <h3>B. Current engineering layer</h3>
-        <ol class="flow" data-flow>
-          <li class="flow-node" data-kind="completed"><span class="flow-badge">Completed locally</span><span class="flow-label">Package / safe paths / wrapper</span><span class="flow-ref">src/freewill_attribution/、scripts/run_all.*</span></li>
-          <li class="flow-node" data-kind="partial"><span class="flow-badge">Partial</span><span class="flow-label">Schema / config（未接入正式 runner）</span><span class="flow-ref">configs/</span></li>
-          <li class="flow-node" data-kind="current"><span class="flow-badge">Current</span><span class="flow-label">站点数据导出 / 静态展示页</span><span class="flow-ref">site/、scripts/build_site_data.py</span></li>
-        </ol>
-
-        <h3>C. Planned</h3>
-        <ol class="flow" data-flow>
-          <li class="flow-node" data-kind="planned"><span class="flow-badge">Planned</span><span class="flow-label">Formal runner / RunManifest / provider abstraction</span><span class="flow-ref">（规划中，非当前能力）</span></li>
-        </ol>
+        <div class="evidence-basis">
+          <p class="reading">
+            证据边界（此处只说明一次，详见文末「证据与来源边界」矩阵）：<strong>数据来源真实</strong>已由作者说明确认；
+            但历史运行级元数据缺失，<strong>无法逐字节重放</strong>当时的模型响应。数据来源真实与完全可复现是两件事。
+          </p>
+        </div>
       </div>
     </section>
 
-    <!-- 5. Historical Results -->
-    <section id="historical-results" class="section alt">
+    <!-- 5. 完整分析链 -->
+    <section id="analysis" class="section alt">
       <div class="wrap">
-        <h2>历史结果</h2>
+        <h2>从测量到结果的完整分析链</h2>
         <p class="reading">
-          下面的每个数字都由 <code>scripts/build_site_data.py</code> 从 <code>outputs/</code> 的分析文件里读出来，
-          没有重新分析、没有改动原结论。读的时候记住两点：这批数据来自一个模型；行动者感（agency）和自由意志归因是
-          <strong>两个不同的结果</strong>，不要混着看。统计细节都收进了每张卡片下方的“展开统计”里。
+          下面按<strong>数据质量与可靠性 → 六条件描述性结果 → 身份标签差异 → 预设对比 → 控制回归 → 关联性路径诊断 → 稳定性复核</strong>
+          的顺序连续展开。每个数字都由 <code>scripts/build_showcase_data.py</code> 从 <code>outputs/</code> 读出，
+          没有重新分析、没有改动原结论。全部结果只描述单一模型在这套材料下的输出行为。
         </p>
 
-        <div class="results" data-slot="results"></div>
-
-        <h3>已有结果图表</h3>
+        <!-- A. 数据质量与测量可靠性 -->
+        <h3>A. 数据质量与测量可靠性</h3>
         <p class="note">
-          三张图均来自历史 DeepSeek API 输出的既有分析结果。点击图表可以放大查看；图下分别标注读图说明、来源与证据边界。
+          全部历史记录的 JSON/API 失败为 0、缺失为 0；下图为各构念在合成数据上的内部一致性（Cronbach α）。
+          数据来源：<code>outputs/reliability_summary.csv</code>。
         </p>
+        <div class="reliability-bars" data-slot="reliability-bars" aria-label="各构念内部一致性"></div>
+        <p class="reading annotation">
+          读图：横条为各构念的 α 值（0–1）；α 是<strong>内部一致性</strong>，不是效度。样本基础为全部历史合成响应。
+          该指标只说明题项是否测得较一致，<strong>不能</strong>据此声称量表已具备人类被试的信效度。
+        </p>
+
+        <!-- B. 六个条件的描述性结果 -->
+        <h3>B. 六个条件的描述性结果</h3>
+        <p class="note">
+          下图为五个核心构念在六个过程条件下的均值剖面，统一使用 1–7 坐标。
+          数据来源：<code>outputs/n30_stability_replication_report.md</code>。
+        </p>
+        <div class="condition-profile" data-slot="condition-profile" aria-label="六条件核心构念均值剖面"></div>
+        <p class="reading annotation">
+          读图：横轴为六个过程条件（低结构在左、高结构在右），纵轴为构念均值（1–7），不同颜色为不同构念。
+          最清楚的模式是<strong>能动性与主观过程完整性随结构上升</strong>；这支持「过程讲得更完整，模型给的能动性更高」。
+          不能由此推出模型拥有自由意志，也不能外推到人类或其他模型。
+        </p>
+
+        <h3>历史结果图（既有分析产物）</h3>
+        <p class="note">以下三张图来自历史 DeepSeek API 输出的既有分析结果，点击可放大；图下标注读图说明、来源与证据边界。</p>
         <div class="figures" data-slot="figures">
-          <noscript>
-            <p>启用 JavaScript 后可查看三张历史结果图表及其来源说明。</p>
-          </noscript>
+          <noscript><p>启用 JavaScript 后可查看三张历史结果图表及其来源说明。</p></noscript>
         </div>
 
-        <h3>条件比较</h3>
-        <p class="note">横条长度按条件均值/检验值缩放，仅用于快速比较大小，具体数值见各卡片。</p>
-        <div class="bars" data-slot="result-bars"></div>
-
-        <h3>探索性路径图（Exploratory Path Diagram）</h3>
-        <p class="reading">
-          两条并行的间接路径。仅当区间不跨 0 时，才说该探索性估计方向一致；这不是因果中介证明。
+        <!-- C. 身份标签差异 -->
+        <h3>C. 身份标签差异（AI 决策者 vs 人类决策者）</h3>
+        <p class="note">
+          估计量为两因素方差分析（过程 × 身份）的<strong>身份主效应</strong>，效应量为 partial η²；
+          源文件为 F 检验，未提供均值差的置信区间。数据来源：<code>outputs/anova_summary.csv</code>、<code>outputs/scale_scores.csv</code>。
         </p>
-        <div class="pathdiag" data-slot="path-diagram" aria-label="探索性中介路径图"></div>
-        <noscript>
-          <p>主路径：过程结构 → 行动者感 → 自由意志归因；次路径：过程结构 → 感知智能 → 自由意志归因。均为探索性估计，非机制证明。</p>
-        </noscript>
+        <div class="identity-effect" data-slot="identity-effect" aria-label="身份标签效应"></div>
+        <p class="reading annotation">
+          读图：每行一个构念，横条按 partial η² 缩放（效应大小），并标注更高的一方与两身份均值。
+          最清楚的模式是<strong>身份差异在自由意志、责任与体验维度上很强，在感知智能与操纵检验上很弱</strong>——
+          说明身份效应并非在所有构念上一致。这只描述模型评分行为，不代表人类判断。
+        </p>
+
+        <!-- D. 预设条件对比 -->
+        <h3>D. 预先登记的条件对比</h3>
+        <p class="note">
+          下列对比为源文件中<strong>实际登记</strong>的过程条件对比；源文件提供差值、<code>t</code> 与 <code>p</code>，
+          <strong>未提供置信区间</strong>，页面不计算源文件中不存在的区间或显著性。数据来源：<code>outputs/planned_contrasts.csv</code>。
+        </p>
+        <div class="planned-contrasts" data-slot="planned-contrasts" aria-label="预设条件对比"></div>
+        <p class="reading annotation">
+          读图：每条为一个对比，点位为差值（a−b），标注 <code>t</code> 与 <code>p</code> 与方向。
+          关键模式是<strong>简洁理由权衡显著高于长文本直接选择</strong>、<strong>反思反馈显著高于长文本直接选择</strong>，
+          而仅列出可选方案与基线无显著差异——理由/反思结构比单纯拉长文本更能提高能动性评分。
+        </p>
+
+        <!-- E. 控制变量回归 -->
+        <h3>E. 控制变量回归</h3>
+        <p class="note">
+          展示过程条件的整体效应在加入控制变量前后的变化；<code>control_both</code> 同时控制感知智能与文本长度。
+          数据来源：<code>outputs/controlled_regression_summary.csv</code>。
+        </p>
+        <div class="controlled-regression" data-slot="controlled-regression" aria-label="控制变量回归"></div>
+        <p class="reading annotation">
+          读图：每个构念显示「仅过程」与「同时控制感知智能与文本长度」两种设定下的过程效应（F、p、R²）。
+          连续来看：描述性差异 → 加入控制变量后，<strong>能动性的过程效应仍显著保留</strong>，
+          而<strong>自由意志、自主性、过程可归责的直接过程效应在控制后不再显著</strong>。
+          因此自由意志类结果应谨慎理解为直接效应。
+        </p>
+
+        <!-- F. 关联性路径诊断 -->
+        <h3>F. 关联性间接路径诊断</h3>
+        <p class="note">
+          以路径诊断方式展示：过程结构 → 能动性 → 自由意志归因，及并行的感知智能路径。
+          <strong>这是关联性间接路径诊断，不是因果中介证明、不是心理机制已验证。</strong>
+          数据来源：<code>outputs/parallel_mediation_summary.json</code>。
+        </p>
+        <div class="mediation-path" data-slot="mediation-path" aria-label="关联性间接路径诊断"></div>
+        <p class="reading annotation">
+          读图：主路径经能动性的间接效应区间<strong>不跨 0</strong>（方向一致），次路径经感知智能的间接效应区间<strong>跨 0</strong>。
+          仅当区间不跨 0 才说该探索性估计方向一致；不能据此断言因果中介。
+        </p>
+
+        <!-- G. 稳定性与复核 -->
+        <h3>G. 稳定性与复核</h3>
+        <ol class="stability-list" data-slot="stability-list" aria-label="稳定性与复核结论"></ol>
       </div>
     </section>
 
-    <!-- 5b. Engineering Core And Validation (FAST-001) -->
-    <section id="engineering-core" class="section">
+    <!-- 6. 结果总结 -->
+    <section id="results-summary" class="section">
       <div class="wrap">
-        <h2>工程核心与验证</h2>
-        <p class="reading">
-          除了历史研究结果，这个仓库还有一条可复现的工程主线。下面把公开演进讲清楚：
-          从<strong>历史研究基线</strong>，到<strong>可复现工程核心</strong>，再到<strong>确定性 mock 验证</strong>，
-          最后才是<strong>真实模型试点（尚未运行）</strong>。这里展示的所有 mock 指标都只用于验证工程链路，
-          <strong>不是真实模型结果</strong>，也不代表已完成任何公开基准。
+        <h2>结果总结</h2>
+        <ol class="results-takeaways" data-slot="results-takeaways" aria-label="结果总结"></ol>
+        <p class="reading annotation">
+          全部结论对应的是<strong>模型输出行为</strong>：不使用「证明了」「揭示了真实心理机制」「模型具备自由意志」「与人类完全一致」等表述。
         </p>
-
-        <h3>公开演进</h3>
-        <ol class="evolution" data-slot="engineering-evolution" aria-label="公开演进阶段"></ol>
-        <noscript>
-          <p>公开演进：历史研究基线 → 可复现工程核心 → 确定性 mock 验证 → 真实模型试点（未运行）。</p>
-        </noscript>
-
-        <h3>Mock 执行质量</h3>
-        <p class="note">
-          下列比率来自确定性 mock 验收运行（每格 2 条、共 24 条），用于验证解析、schema 校验与运行产物链路。
-          确定性 mock：非真实模型输出，不进入研究结论。
-        </p>
-        <div class="mock-quality" data-slot="mock-quality" aria-label="mock 执行质量指标"></div>
-
-        <h3>Provenance 完整性</h3>
-        <p class="note">
-          每个维度标注是否可由仓库内容独立验证；标为 unknown 的维度不会被补写成确定事实。
-        </p>
-        <div class="prov-matrix" data-slot="provenance-matrix" aria-label="provenance 完整性矩阵"></div>
-
-        <h3>运行产物链</h3>
-        <p class="note">
-          每次 mock 运行按固定顺序产出以下带哈希的产物，写入 <code>artifacts/runs/&lt;run_id&gt;/</code>；历史 <code>outputs/</code> 永久只读、互不覆盖。
-        </p>
-        <ol class="artifact-chain" data-slot="artifact-chain" aria-label="运行产物链"></ol>
       </div>
     </section>
 
-    <!-- 6. Evidence And Limitations -->
-    <section id="evidence-limitations" class="section">
+    <!-- 7. 可复现评测核心 -->
+    <section id="evaluation-core" class="section alt">
       <div class="wrap">
-        <h2>证据与局限</h2>
-        <p class="reading">我把“能说的”和“不能说的”分成三档，方便快速判断这份结果的边界。</p>
+        <h2>可复现评测核心</h2>
+        <p class="reading">
+          从研究问题到评测执行的工程链：任务规格 → 刺激快照 → Prompt → 模型接口 → 原始响应 → 解析 → 校验 → 修复 → 计分 → 聚合报告 → 运行清单。
+          代码对象如 <code>TaskSpec</code>（任务规格）、<code>ResponseRecord</code>（原始响应记录）、<code>ScoreRecord</code>（计分记录）、
+          <code>AggregateReport</code>（聚合报告）、<code>RunManifest</code>（运行清单）承载各环节，中文含义见下。
+        </p>
 
-        <div class="evidence-cols">
-          <article class="evidence-col supported">
-            <h3>Directly supported</h3>
-            <ul>
-              <li>操纵检验反映出低结构与高结构条件的整体差异（不主张六类严格单调或两两显著）。</li>
-              <li>行动者感随过程结构总体上升，是最稳定的主结果。</li>
-              <li>控制感知智能与文本长度后，过程对行动者感仍显著。</li>
-              <li>理由/反思结构比单纯拉长文本更能提高行动者感。</li>
-            </ul>
-          </article>
-          <article class="evidence-col partial">
-            <h3>Partially supported</h3>
-            <ul>
-              <li>自由意志的直接效应不稳定，更像经由行动者感间接发生。</li>
-              <li>探索性估计中，agency 间接效应区间未跨 0。</li>
-              <li>感知智能间接效应区间跨 0。</li>
-              <li>责任相关维度方向不如行动者感稳定，仅作探索性呈现。</li>
-            </ul>
-          </article>
-          <article class="evidence-col notclaimed">
-            <h3>Not claimed</h3>
-            <ul>
-              <li>不声称模型真的拥有自由意志或与人类同构。</li>
-              <li>不把结果外推到其他模型或真实人类心理。</li>
-              <li>不声称这是机制证明（中介为探索性诊断）。</li>
-              <li>不声称结果已通过人类被试的信效度检验。</li>
-            </ul>
-          </article>
-        </div>
+        <h3>评测流水线</h3>
+        <ol class="pipeline" data-slot="pipeline-stages" aria-label="评测流水线"></ol>
 
-        <div class="triad">
-          <h3>三件事不要混为一谈</h3>
-          <div class="triad-grid">
-            <article class="triad-card ok">
-              <h4>Data authenticity</h4>
-              <p>数据来源真实：这批记录确实来自 DeepSeek API 的历史调用。</p>
-            </article>
-            <article class="triad-card partial">
-              <h4>Run auditability</h4>
-              <p>运行可审计性不足：缺完整运行清单、服务端模型版本、时间戳、token、费用、prompt/依赖哈希。</p>
-            </article>
-            <article class="triad-card gap">
-              <h4>Full reproducibility</h4>
-              <p>尚不能完全复现：元数据缺失使得无法逐字节重放当时的响应。</p>
-            </article>
-          </div>
-        </div>
+        <h3>产物生命周期</h3>
+        <p class="note">每次运行按固定顺序产出以下带哈希的产物，写入 <code>artifacts/runs/&lt;run_id&gt;/</code>；历史 <code>outputs/</code> 永久只读、互不覆盖。</p>
+        <ol class="artifact-chain" data-slot="artifact-lifecycle" aria-label="产物生命周期"></ol>
 
-        <div class="gap-lists">
-          <details>
-            <summary>这批历史记录建立了什么</summary>
-            <ul class="reading tight">
-              <li>一套可被模型区分的 6×2 决策过程材料；</li>
-              <li>行动者感随过程结构变化的稳定模式；</li>
-              <li>一条可供后续正式研究检验的中介路径假设。</li>
-            </ul>
-          </details>
-          <details>
-            <summary>不完整的 provenance 限制了什么</summary>
-            <ul class="reading tight">
-              <li>无法重放历史运行、无法核对服务端模型版本；</li>
-              <li>无法给出 token/费用等运行级成本；</li>
-              <li>只能保证数据来源真实，不能保证逐字节可复现。</li>
-            </ul>
-          </details>
-          <details>
-            <summary>未来实验需要补上什么</summary>
-            <ul class="reading tight">
-              <li>盲化构念名、修订 prompt 暴露策略；</li>
-              <li>正式 runner 记录完整运行清单与哈希；</li>
-              <li>多模型执行与人类被试的信效度检验。</li>
-            </ul>
-          </details>
-        </div>
+        <h3>哈希与可追溯性</h3>
+        <p class="note">以下输入与产物各自记录 SHA-256，运行清单据此把一次运行关联起来（此处仅列字段，完整哈希在产物中）。</p>
+        <div class="hash-fields" data-slot="hash-fields" aria-label="哈希字段"></div>
       </div>
     </section>
 
-    <!-- 7. Reproducibility -->
+    <!-- 8. Mock 工程验证 -->
+    <section id="mock-validation" class="section">
+      <div class="wrap">
+        <h2>Mock 工程验证</h2>
+        <p class="reading">
+          下列比率来自确定性 <code>mock</code> 验收运行（每格 2 条；smoke 为每格 1 条），
+          用于验证运行器、解析、计分、恢复与产物链能否按契约工作。
+          <strong>确定性 mock：非真实模型输出，不代表 DeepSeek 或其他真实模型的研究表现，也不代表已完成任何公开基准。</strong>
+        </p>
+        <div class="mock-quality" data-slot="mock-quality" aria-label="mock 运行质量"></div>
+      </div>
+    </section>
+
+    <!-- 9. 真实模型接入准备 -->
+    <section id="real-provider" class="section alt">
+      <div class="wrap">
+        <h2>真实模型接入准备</h2>
+        <p class="reading lead" data-slot="readiness-statement"></p>
+
+        <h3>准备流程</h3>
+        <ol class="readiness-flow" data-slot="readiness-flow" aria-label="真实接入准备流程"></ol>
+
+        <h3>当前状态</h3>
+        <p class="note">下列状态直接来自公开数据文件；未运行的真实指标一律显示为 <code>null</code> / <code>not run</code>，页面不出现任何真实 token、费用、延迟或性能数字。</p>
+        <div class="readiness-status" data-slot="readiness-status" aria-label="真实接入当前状态"></div>
+
+        <h3>运行前检查</h3>
+        <p class="note">真实运行前必须逐项满足；未满足前 CLI 会在发送任何请求前拒绝，并且不会读取 API Key。</p>
+        <ol class="readiness-checklist" data-slot="readiness-checklist" aria-label="运行前检查"></ol>
+
+        <h3>未来真实 Pilot 计划（12 / 60）</h3>
+        <p class="note">下列数字来自计划配置，按 6 过程 × 2 身份的单元格分布，<strong>不是真实运行结果</strong>。</p>
+        <div class="readiness-plan" data-slot="readiness-plan" aria-label="真实运行计划"></div>
+        <p class="reading annotation" data-slot="readiness-future"></p>
+      </div>
+    </section>
+
+    <!-- 10. 证据与来源边界 -->
+    <section id="evidence-boundary" class="section">
+      <div class="wrap">
+        <h2>证据与来源边界</h2>
+        <p class="reading">
+          下面用四态标注每个维度可被核查到什么程度：<strong>仓库可核查</strong>、<strong>作者记录</strong>、
+          <strong>现有材料重建</strong>、<strong>当前未知</strong>。四态互不等价；作者记录与重建都不会被显示为「已核查」，
+          标为未知的维度也不会被补写成确定事实。
+        </p>
+        <div class="provenance-counts" data-slot="provenance-counts" aria-label="四态计数"></div>
+        <div class="prov-matrix" data-slot="provenance-matrix" aria-label="证据来源四态矩阵"></div>
+      </div>
+    </section>
+
+    <!-- 11. 可复现运行与仓库 -->
     <section id="reproducibility" class="section alt">
       <div class="wrap">
-        <h2>可复现性</h2>
+        <h2>可复现运行与仓库</h2>
         <p class="reading">
-          我把“数据来源可信”和“运行可复现”分开处理。下面这条组件链，前面几环本地已经能跑，
-          最后一环（正式 runner）还没做——所以现在能复现的是<strong>工程流程</strong>，还不是<strong>历史模型运行</strong>本身。
+          当前能复现的是<strong>工程流程</strong>：从锁定依赖到 mock 运行、离线 dry-run、测试、数据构建与本地预览；
+          历史模型运行本身因元数据缺失尚不能逐字节复现。命令保持原样。
         </p>
 
-        <ol class="repro-chain" data-repro>
-          <li class="repro-node" data-state="completed"><span class="repro-label">历史基线</span><span class="repro-path">docs/audit/baseline_hashes.txt</span></li>
-          <li class="repro-node" data-state="completed"><span class="repro-label">冻结的 outputs</span><span class="repro-path">outputs/</span></li>
-          <li class="repro-node" data-state="completed"><span class="repro-label">依赖锁定</span><span class="repro-path">uv.lock</span></li>
-          <li class="repro-node" data-state="completed"><span class="repro-label">Package CLI（mock-only）</span><span class="repro-path">src/freewill_attribution/</span></li>
-          <li class="repro-node" data-state="completed"><span class="repro-label">安全输出路径</span><span class="repro-path">显式 --out</span></li>
-          <li class="repro-node" data-state="partial"><span class="repro-label">Schema / config</span><span class="repro-path">configs/</span></li>
-          <li class="repro-node" data-state="configured"><span class="repro-label">CI 配置</span><span class="repro-path">.github/workflows/</span></li>
-          <li class="repro-node" data-state="completed"><span class="repro-label">跨平台 wrapper</span><span class="repro-path">scripts/run_all.*</span></li>
-          <li class="repro-node" data-state="planned"><span class="repro-label">正式 runner + manifest</span><span class="repro-path">（规划中）</span></li>
-        </ol>
+        <h3>常用命令</h3>
+        <div class="repro-commands" data-slot="repro-commands" aria-label="常用命令"></div>
 
-        <div class="repro-two">
-          <article class="repro-can">
-            <h3>现在能复现什么</h3>
-            <ul class="reading tight">
-              <li>在 Windows 本地使用锁定依赖跑通 mock 流程；Bash wrapper 完成 Git Bash compatibility validation；</li>
-              <li>从 <code>outputs/</code> 重新派生展示页数据并校验一致；</li>
-              <li>校验历史基线的内容哈希未变。</li>
-            </ul>
-          </article>
-          <article class="repro-cannot">
-            <h3>现在还不能完全复现什么</h3>
-            <ul class="reading tight">
-              <li>真实 Linux 与 GitHub-hosted Windows/Linux 验证仍待发布阶段完成（Git Bash 不等于 Linux 验证）；</li>
-              <li>逐字节重放历史 DeepSeek API 的真实响应；</li>
-              <li>核对服务端模型版本、token 与费用。</li>
-            </ul>
-          </article>
-        </div>
+        <h3>关键目录</h3>
+        <ul class="key-directories" data-slot="key-directories" aria-label="关键目录"></ul>
 
-        <p class="callout">
-          持续集成：<span class="badge badge-pending_verification">configured, remote verification pending</span>
-          （已配置 Windows + Linux 矩阵，远程验证待完成）。
-        </p>
+        <h3>文档入口</h3>
+        <ul class="doc-entries" data-slot="doc-entries" aria-label="文档入口"></ul>
       </div>
     </section>
 
-    <!-- 8. Version History -->
-    <section id="version-history" class="section">
+    <!-- 12. 后续扩展 -->
+    <section id="future-work" class="section">
       <div class="wrap">
-        <h2>版本历史</h2>
-        <ol class="timeline" data-slot="version-timeline"></ol>
-      </div>
-    </section>
-
-    <!-- 9. Roadmap -->
-    <section id="roadmap" class="section alt">
-      <div class="wrap">
-        <h2>路线图</h2>
-        <p class="reading">
-          研究主线 Phase 1–7 与展示线 Track S 并行推进。Phase 1 的本地实现已完成，但发布验证还没做，
-          所以它同时带两个状态。当前阶段高亮，未来阶段刻意弱化。
-        </p>
-        <h3>研究主线（Phase 1–7）</h3>
-        <div class="roadmap" data-slot="roadmap-phases"></div>
-        <h3>展示线（Track S）</h3>
-        <div class="roadmap" data-slot="roadmap-track"></div>
-      </div>
-    </section>
-
-    <!-- 10. Repository Links -->
-    <section id="repository-links" class="section">
-      <div class="wrap">
-        <h2>仓库链接</h2>
-        <p class="reading">按你想做的事挑入口，每条后面写清用途。</p>
-        <ul class="repo-links">
-          <li><a href="#hero">先看项目概览</a><span>一屏抓住研究什么、做到哪、不是什么</span></li>
-          <li><a href="#experimental-design">查看研究方法</a><span>6×2 设计、诊断条件与测量维度</span></li>
-          <li><a href="#historical-results">查看历史结果</a><span>条件均值、控制回归、探索性中介与图表</span></li>
-          <li><a href="#evidence-limitations">查看证据限制</a><span>能说什么、不能说什么、复现边界</span></li>
-          <li><a href="#reproducibility">查看复现说明</a><span>组件链与文件级证据</span></li>
-          <li><a href="#roadmap">查看路线图</a><span>研究主线与展示线的当前进度</span></li>
-          <li><a href="https://github.com/sherlock0717/llm-agent-free-will-attribution">查看源码</a><span>GitHub 仓库根链接</span></li>
-        </ul>
-        <h3>仓库内文件（位于 GitHub 仓库中）</h3>
-        <p class="note">以下为仓库内文件路径；本地静态预览下不做相对链接，永久链接待 REL-001 确定发布分支与 commit 后生成。</p>
-        <ul class="repo-paths">
-          <li><code>docs/research_design_blueprint.md</code><span>研究方法，位于 GitHub 仓库中</span></li>
-          <li><code>outputs/final_simulated_pilot_report.md</code><span>结果报告，位于 GitHub 仓库中</span></li>
-          <li><code>docs/audit/v1_provenance_statement.md</code><span>provenance 声明，位于 GitHub 仓库中</span></li>
+        <h2>后续扩展</h2>
+        <ul class="reading tight future-list">
+          <li>运行日确认 <code>DeepSeek</code> 模型、价格与凭据；</li>
+          <li>执行 12 条真实 smoke；</li>
+          <li>执行 60 条真实 pilot；</li>
+          <li>生成真实运行的脱敏公开报告；</li>
+          <li>后续可加入其他模型与相关任务。</li>
         </ul>
       </div>
     </section>
@@ -498,8 +411,9 @@
   <footer class="site-footer">
     <div class="wrap">
       <p>研究数据源提交：<code data-slot="source-commit">…</code> · 数据日期：<span data-slot="data-as-of">…</span> · 构建时间：<span data-slot="generated-at">…</span></p>
-      <p class="fineprint">"研究数据源提交"指站点研究数据与设计输入最近一次变化的 commit，不是页面构建或部署 commit。</p>
-      <p class="fineprint">历史 DeepSeek API 模型输出；AI 模拟数据；非人类被试；单一模型。</p>
+      <p class="fineprint">「研究数据源提交」指站点研究数据与设计输入最近一次变化的 commit，不是页面构建或部署 commit。</p>
+      <p class="fineprint">历史 DeepSeek API 模型输出；AI 模拟数据；非人类被试；单一模型。测试型评测基准原型。</p>
+      <p class="fineprint"><a href="https://github.com/sherlock0717/llm-attribution-behavior-evaluation">github.com/sherlock0717/llm-attribution-behavior-evaluation</a></p>
     </div>
   </footer>
 
