@@ -9,6 +9,7 @@ hardcoded statistics, four-state provenance).
 from __future__ import annotations
 
 import hashlib
+import importlib.util
 import json
 import re
 import struct
@@ -42,7 +43,7 @@ JSON_FILES = [
 SECTION_IDS = [
     "overview", "research-question", "design-measurement", "historical-data",
     "analysis", "results-summary", "evaluation-core", "mock-validation",
-    "real-provider", "evidence-boundary", "reproducibility", "future-work",
+    "real-provider", "reproducibility", "future-work",
 ]
 
 SELECTED_FIGURES = [
@@ -209,16 +210,18 @@ def test_every_javascript_slot_exists_in_html():
 
 
 def test_core_chart_slots_present():
-    for name in ["hero-corefacts", "design-matrix", "condition-profile",
-                 "identity-effect", "planned-contrasts", "controlled-regression",
-                 "mediation-path", "figures", "provenance-matrix", "mock-quality",
-                 "pipeline-stages", "readiness-status"]:
+    for name in ["hero-corefacts", "process-cards", "design-matrix",
+                 "scenario-cards", "condition-profile", "identity-effect",
+                 "planned-contrasts", "controlled-regression", "mediation-path",
+                 "figures", "mock-quality", "eval-steps", "artifact-table",
+                 "readiness-flow", "benchmark-flow"]:
         assert f'data-slot="{name}"' in HTML, name
 
 
 def test_render_pipeline_and_diagnostics_present():
     for call in ["renderConditionProfile(", "renderFigures(", "renderMediation(",
-                 "renderProvenance(", "renderReadiness(", "renderMockQuality("]:
+                 "renderReadiness(", "renderMockQuality(", "renderProcessConditions(",
+                 "renderScenarios(", "renderEvalSteps(", "renderBenchmarkRoadmap("]:
         assert call in JS_SRC, call
     assert 'renderComplete = "true"' in JS_SRC
     assert 'renderComplete = "false"' in JS_SRC
@@ -230,9 +233,9 @@ def test_render_pipeline_and_diagnostics_present():
 
 def test_provider_readiness_single_section():
     assert HTML.count('id="real-provider"') == 1
-    assert HTML.count('data-slot="readiness-status"') == 1
     # the offline-validated statement is rendered from JSON, once, into one slot
     assert HTML.count('data-slot="readiness-statement"') == 1
+    assert HTML.count('data-slot="readiness-flow"') == 1
 
 
 def test_no_fabricated_real_metrics_in_html():
@@ -332,3 +335,99 @@ def test_research_concept_in_research_question_with_caption():
     rq = HTML.split('id="research-question"', 1)[1].split("</section>", 1)[0]
     assert "attribution-research-concept.png" in rq
     assert "不承载统计结果" in rq
+
+
+# --- SHOWCASE-FIX-001: copy / layout cleanup -------------------------------
+
+def _load_stimuli():
+    spec = importlib.util.spec_from_file_location(
+        "stimuli", REPO_ROOT / "src" / "stimuli.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def test_no_read_image_prefix():
+    # (2) the "读图：" prefix must not appear in the page or its script
+    assert "读图：" not in HTML
+    assert "读图：" not in JS_SRC
+
+
+def test_no_forbidden_word_list():
+    # (2) no self-checking forbidden-word list, and no forbidden claims
+    for bad in ["「证明了」", "揭示了真实心理机制", "模型具备自由意志",
+                "与人类完全一致", "不使用「证明了」"]:
+        assert bad not in HTML, bad
+
+
+def test_no_evidence_boundary_section():
+    # (3, 4) the evidence-boundary section and its nav entry are removed
+    assert 'id="evidence-boundary"' not in HTML
+    assert "证据与来源边界" not in HTML
+    nav = HTML.split('id="site-nav-list"', 1)[1].split("</nav>", 1)[0]
+    assert "证据边界" not in nav
+    assert "renderProvenance" not in JS_SRC
+    assert "provenance-matrix" not in HTML
+
+
+def test_no_public_pilot_counts_or_status_table():
+    # (5, 6) no public 12/60 plan, no not_run/null status table
+    for bad in ["12 / 60", "12 条真实 smoke", "60 条真实 pilot",
+                "12 条 smoke", "60 条 pilot", "not_run", "readiness-status",
+                "readiness-checklist", "readiness-plan"]:
+        assert bad not in HTML, bad
+
+
+def test_no_old_footer_text():
+    # (7) footer simplified to title + GitHub link only
+    for bad in ["研究数据源提交", "历史 DeepSeek API 模型输出", "测试型评测基准原型",
+                'data-slot="source-commit"', 'data-slot="data-as-of"',
+                'data-slot="generated-at"']:
+        assert bad not in HTML, bad
+
+
+def test_no_diagnostic_or_grad_markup():
+    # (9) no diagnostic class / grad-tag / length-control special marking.
+    # (Note: the legitimate "diagnostics" layout feature is unrelated and kept.)
+    for token in ["grad-tag", "grad-node", "LENGTH_CONTROL_KEY"]:
+        assert token not in JS_SRC, token
+    for token in ["grad-tag", "grad-node", ".diagnostic"]:
+        assert token not in CSS_SRC, token
+
+
+def test_process_condition_cards_uniform():
+    # (8) six process conditions render as uniform cards
+    assert 'data-slot="process-cards"' in HTML
+    assert "renderProcessConditions(" in JS_SRC
+    assert ".pc-card" in CSS_SRC
+
+
+def test_matrix_corner_has_visible_text_color():
+    # (12) the design matrix corner cell must set an explicit visible colour
+    corner = re.search(r"\.design-matrix \.corner \{[^}]*\}", CSS_SRC)
+    assert corner, "missing .design-matrix .corner rule"
+    assert "color: var(--text)" in corner.group(0)
+
+
+def test_general_benchmark_flow_present():
+    # (13) the general-evaluation roadmap flow exists
+    assert 'data-slot="benchmark-flow"' in HTML
+    assert "renderBenchmarkRoadmap(" in JS_SRC
+    assert "从单一任务到通用评测" in HTML
+
+
+def test_scenarios_have_case_content_matching_stimuli():
+    # (10, 11) eight scenario cards carry context/options/choice, faithful to stimuli
+    story = json.loads((DATA / "showcase_story.json").read_text(encoding="utf-8"))
+    cards = {c["id"]: c for c in story["scenarios"]}
+    assert len(cards) == 8
+    stim = _load_stimuli()
+    for s in stim.SCENARIOS:
+        c = cards[s.scenario_id]
+        for field in ("context", "option_a", "option_b", "fixed_choice"):
+            assert c.get(field), (s.scenario_id, field)
+        assert c["context"] == s.context
+        assert c["option_a"] == s.option_a
+        assert c["option_b"] == s.option_b
+        assert c["fixed_choice"] == s.fixed_choice
+        assert c["domain"] == s.domain

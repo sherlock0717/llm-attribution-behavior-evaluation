@@ -61,6 +61,33 @@ def test_story_core_facts_are_derived():
     assert s["subtitle_en"] == "A Reproducible Study and Evaluation Prototype"
 
 
+def test_story_scenarios_carry_case_content():
+    s = bsc.build_showcase_story()
+    cards = {c["id"]: c for c in s["scenarios"]}
+    assert len(cards) == 8
+    # scenario case content is read faithfully from src/stimuli.py
+    for stim in bsc.stimuli.SCENARIOS:
+        c = cards[stim.scenario_id]
+        assert c["context"] == stim.context
+        assert c["option_a"] == stim.option_a
+        assert c["option_b"] == stim.option_b
+        assert c["fixed_choice"] == stim.fixed_choice
+        assert c["domain"] == stim.domain
+        assert c["label"]
+
+
+def test_reproducibility_summary_shape():
+    r = bsc.build_reproducibility_summary()
+    assert len(r["eval_steps"]) == 5
+    assert r["eval_commands"] and all(isinstance(c, str) for c in r["eval_commands"])
+    assert len(r["artifact_table"]) == 6
+    assert len(r["real_provider"]["flow"]) == 5
+    assert len(r["benchmark_roadmap"]["flow"]) == 6
+    # precise smoke/pilot counts must not leak into the public JSON
+    blob = str(r["real_provider"]) + str(r["benchmark_roadmap"])
+    assert "12" not in blob and "60" not in blob
+
+
 def test_analysis_mediation_crosses_zero_flags():
     a = bsc.build_analysis_results()
     paths = {p["name"]: p for p in a["mediation"]["paths"]}
