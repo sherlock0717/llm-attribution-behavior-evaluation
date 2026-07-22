@@ -57,6 +57,11 @@ SUBTITLE = "A Reproducible Study and Evaluation Prototype"
 NEW_SLUG = "llm-attribution-behavior-evaluation"
 OLD_SLUG = "llm-agent-free-will-attribution"
 
+# The public README title. The README and the current showcase page may use
+# different titles for now; page-title unification is handled separately, so
+# MAIN_TITLE / SUBTITLE above are intentionally left unchanged.
+README_TITLE = "LLM 行动者归因评测"
+
 
 # --- files / structure -----------------------------------------------------
 
@@ -435,7 +440,7 @@ def test_scenarios_have_case_content_matching_stimuli():
         assert c["domain"] == s.domain
 
 
-# --- SHOWCASE-FIX-002: research & measurement sources ----------------------
+# --- public research sources and README contract ---------------------------
 
 README = REPO_ROOT / "README.md"
 README_SRC = README.read_text(encoding="utf-8")
@@ -465,43 +470,57 @@ def test_page_has_no_evidence_boundary_section_still():
     assert "证据与来源边界" not in HTML
 
 
-def test_readme_has_research_sources_section():
-    # (3) README carries the source section between 实验设计 and 历史数据
-    assert "## 研究与测量来源" in README_SRC
-    assert README_SRC.index("## 实验设计") < README_SRC.index("## 研究与测量来源")
-    assert README_SRC.index("## 研究与测量来源") < README_SRC.index("## 历史数据与主要结果")
+def test_readme_uses_current_title_and_research_question():
+    # README opens with its current title and states the research question and
+    # the attribution dimensions it studies (no verbatim full-sentence match).
+    assert README_SRC.startswith(f"# {README_TITLE}\n")
+    assert "决策过程的写法和行动者身份" in README_SRC
+    assert "语言模型对能动性、选择自主性与责任的判断" in README_SRC
 
 
-def test_readme_has_only_approved_edits():
-    # (2) approved copy changes are present; disallowed/old wording is gone
-    assert "会如何改变模型对行动者能动性、自由意志与责任的归因评分" in README_SRC
-    assert "## 模拟运行验证" in README_SRC
-    assert "## 从单一任务到通用评测" in README_SRC
-    assert "暂不作因果机制解释" in README_SRC
-    for bad in ["数据边界：", "## Mock 工程验证", "## 多模型测评计划",
-                "随时可复现", "而非因果中介证明", "每格 2 条", "每格 1 条",
-                "smoke 为每格"]:
-        assert bad not in README_SRC, bad
+def test_readme_defines_model_response_as_analysis_unit():
+    # The analysis unit is a model response, not a human participant, and the
+    # results are framed as a single-model sensitivity test, not a mature claim.
+    assert "分析单位是**模型对一份材料给出的评分响应**" in README_SRC
+    assert "这些结果来自单一模型和当前材料" in README_SRC
+    assert "模型归因敏感性测试" in README_SRC
 
 
-def test_readme_preserves_manual_main_content():
-    # (1) unapproved parts of the manual main README are preserved verbatim
-    for keep in [
+def test_readme_links_current_public_documents_and_commands():
+    # Source, method and reproduction entry points stay linked; the former
+    # standalone "研究与测量来源" section is no longer required.
+    for path in [
+        "docs/STUDY_CARD.md",
+        "docs/research_design_blueprint.md",
+        "docs/research_and_measurement_sources.md",
+        "docs/scale_source_mapping.md",
+    ]:
+        assert path in README_SRC, path
+
+    assert "uv sync --frozen" in README_SRC
+    assert "uv run pytest -q" in README_SRC
+    assert "python -m freewill_attribution.cli run" in README_SRC
+
+
+def test_readme_avoids_outdated_or_unsupported_public_claims():
+    # Only clearly unsupported public claims and dropped section headings are
+    # forbidden; ordinary "current results" wording and the word 评测 are fine.
+    for bad in [
         "A Reproducible Study and Evaluation Prototype",
         "可复现的测试型评测基准原型",
-        "它评价的是**模型输出中的归因行为**",
-        "自由意志的评分是直接受过程影响，还是先经过能动性这一中间步骤",
-        "材料（参考心理学领域相关前沿研究设计）覆盖 8 个情境",
-        "链路：情境 → 过程条件 → 身份标签 → 题项响应 → 构念分数 → 条件与身份比较",
+        "测试型评测基准",
+        "## 历史数据与主要结果",
+        "## 模拟运行验证",
+        "## 从单一任务到通用评测",
+        "真人专家审核",
+        "专家内容效度验证",
+        "专家评审通过",
+        "多模型真实运行已经完成",
     ]:
-        assert keep in README_SRC, keep
+        assert bad not in README_SRC, bad
 
-
-def test_readme_and_page_share_title_and_terms():
-    # (22) README and page share the frozen title and terminology
-    assert MAIN_TITLE in README_SRC and MAIN_TITLE in HTML
-    assert SUBTITLE in README_SRC and SUBTITLE in HTML
-    assert "研究与测量来源" in README_SRC and "研究与测量来源" in HTML
+    assert "只作为关联性诊断" in README_SRC
+    assert "而不是关于人类心理或 AI 主体性的结论" in README_SRC
 
 
 def test_source_cards_count_and_order_stable():
