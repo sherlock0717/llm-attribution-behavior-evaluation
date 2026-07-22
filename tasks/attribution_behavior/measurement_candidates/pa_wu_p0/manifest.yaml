@@ -49,9 +49,12 @@ record_fields:
   - provider
   - model
   - is_mock
-  - prompt_hash
+  - administration_hash
   - item_ids
-  - ratings
+  - raw_item_ratings
+  - derived_scores
+  - validation_warnings
+  - scoring_warnings
   - created_at
 
 invariants:

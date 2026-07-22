@@ -55,4 +55,4 @@ forbidden_scores:
   - id: PA_WU_TOTAL
     reason: "PA and Wu must not be combined into one total"
 
-missing_policy: reject   # missing member items -> scoring_warning, no complete score
+missing_policy: skip_affected_score_with_warning   # missing member items -> scoring_warning, affected score skipped

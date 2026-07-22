@@ -37,6 +37,33 @@ SCORING_VERSION = "pa_wu_p0.v1"
 # Sub-scores that must never be produced (guards against accidental totals).
 FORBIDDEN_SCORE_IDS = frozenset({"WU19_TOTAL", "MACHINE_AGENCY_TOTAL", "PA_WU_TOTAL"})
 
+# Canonical field set written on every normal (non-fault) mock record. The
+# manifest ``record_fields`` MUST equal this exactly (checked at load time).
+RECORD_FIELDS: tuple[str, ...] = (
+    "task_id",
+    "measurement_candidate_id",
+    "administration_form_id",
+    "item_order_id",
+    "scoring_version",
+    "language",
+    "source_instrument_ids",
+    "scenario_id",
+    "condition_id",
+    "identity",
+    "choice_direction",
+    "repeat_index",
+    "provider",
+    "model",
+    "is_mock",
+    "administration_hash",
+    "item_ids",
+    "raw_item_ratings",
+    "derived_scores",
+    "validation_warnings",
+    "scoring_warnings",
+    "created_at",
+)
+
 
 class P0ContractError(RuntimeError):
     """Raised when the P0 candidate contract is missing or inconsistent."""
@@ -179,6 +206,14 @@ def _validate_contract(contract: P0Contract) -> None:
     forms_yaml_ids = {str(f["form_id"]) for f in contract.forms["forms"]}
     if manifest_form_ids != forms_yaml_ids:
         raise P0ContractError("manifest forms do not match forms.yaml form_ids")
+
+    # manifest record_fields must equal the canonical record schema exactly.
+    manifest_fields = [str(x) for x in contract.manifest.get("record_fields", [])]
+    if manifest_fields != list(RECORD_FIELDS):
+        raise P0ContractError(
+            "manifest record_fields do not match the canonical record schema "
+            f"RECORD_FIELDS: {manifest_fields} != {list(RECORD_FIELDS)}"
+        )
 
     # form item_count matches built length; instruments match order sequences.
     known_instruments = {"pa_2024", "wu_shen_2026"}

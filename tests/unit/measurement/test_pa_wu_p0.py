@@ -282,13 +282,79 @@ def test_accounting_p1_order() -> None:
     assert base["api_requests"] + extra["api_requests"] == 96
 
 
-# --- assert_administrable (placeholder text blocks administration) ----------
+# --- assert_administrable (all verbatim text present -> passes) -------------
 
 
-def test_placeholder_blocks_administration(contract: p0.P0Contract) -> None:
-    # Wu items are pending_source_verbatim in this environment -> not administrable.
+def test_assert_administrable_passes(contract: p0.P0Contract) -> None:
+    # PA13 and Wu19 now carry verbatim text (no pending_* placeholders) -> ok.
+    p0.assert_administrable(contract)
+
+
+def test_placeholder_blocks_administration(tmp_path) -> None:
+    # If any item text is a pending_* placeholder, administration is blocked.
+    dst = _materialize(tmp_path)
+    wu = _load_yaml(dst / "items_wu_shen_2026.yaml")
+    wu["items"][0]["text"] = "pending_source_verbatim"
+    _dump_yaml(dst / "items_wu_shen_2026.yaml", wu)
+    mutated = p0.load_contract(dst)
     with pytest.raises(p0.P0ContractError):
-        p0.assert_administrable(contract)
+        p0.assert_administrable(mutated)
+
+
+# --- step-9 additions: policy / manifest / Wu verbatim / hash / MSI anchors --
+
+
+def test_scoring_missing_policy_matches_code(contract: p0.P0Contract) -> None:
+    # scoring.yaml declares the same policy the engine implements.
+    assert contract.scoring["missing_policy"] == "skip_affected_score_with_warning"
+    # Behavioral check: a missing member skips only the affected score + warns.
+    ranges = p0._rating_ranges(contract)
+    ids = p0.build_form_item_ids(contract, "pa13_wu19_combined", "pa_first")
+    ratings = {i: ranges[i][0] + 1 for i in ids}
+    ratings.pop(contract.wu_construct_members("influential_capacity_judgment")[0])
+    result = p0.derive_scores(contract, ratings)
+    assert "IC5" not in result.derived_scores          # affected score skipped
+    assert "PA13" in result.derived_scores             # unaffected score still computed
+    assert any("IC5" in w for w in result.scoring_warnings)
+
+
+def test_manifest_record_fields_match_mock_record(contract: p0.P0Contract) -> None:
+    rec = p0.mock_run(contract, _MATERIALS[:1], "pa13_wu19_combined", "pa_first")[0]
+    manifest_fields = list(contract.manifest["record_fields"])
+    assert manifest_fields == list(p0.RECORD_FIELDS)
+    assert set(rec.keys()) == set(manifest_fields)
+
+
+def test_wu19_has_no_pending_placeholders(contract: p0.P0Contract) -> None:
+    for it in contract.wu_items["items"]:
+        assert not p0.item_text_is_placeholder(str(it.get("text", "")))
+        assert it.get("text", "").strip()  # non-empty verbatim text
+
+
+def test_editing_wu_item_text_changes_admin_hash(tmp_path, contract: p0.P0Contract) -> None:
+    m = _MATERIALS[0]
+    base = p0.administration_hash(contract, "wu19_only", "wu_only", m, 0)
+    dst = _materialize(tmp_path)
+    wu = _load_yaml(dst / "items_wu_shen_2026.yaml")
+    wu["items"][0]["text"] = wu["items"][0]["text"] + " (edited)"
+    _dump_yaml(dst / "items_wu_shen_2026.yaml", wu)
+    mutated = p0.load_contract(dst)
+    changed = p0.administration_hash(mutated, "wu19_only", "wu_only", m, 0)
+    assert base != changed
+
+
+def test_msi_anchors_present_and_verbatim(contract: p0.P0Contract) -> None:
+    msi_ids = set(contract.wu_construct_members("mental_state_inference"))
+    assert len(msi_ids) == 6
+    seen = 0
+    for it in contract.wu_items["items"]:
+        if str(it["item_id"]) in msi_ids:
+            seen += 1
+            for key in ("left_anchor_text", "right_anchor_text"):
+                anchor = str(it.get(key, ""))
+                assert anchor.strip()                          # non-empty
+                assert not p0.item_text_is_placeholder(anchor)  # not a placeholder
+    assert seen == 6
 
 
 # ---------------------------------------------------------------------------

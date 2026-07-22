@@ -18,6 +18,15 @@
 - PA 与 Wu **仍是候选方案**，未选定为最终测量。
 - 真实 P1 需要**单独授权**；暂定翻译、阳性对照与真实运行**均不属于本 PR**。
 
+## 占位符与施测边界（明确）
+
+- **占位符仅可用于 mock-only 结构测试**：`load_contract` 允许 `pending_*` 占位符文本，
+  以便在缺少逐字原文时仍能运行工程校验（表单构建、评分派生、错误校验）。
+- **真实或面向评分者（rater-facing）的施测，必须先通过 `assert_administrable`**：
+  只要任一题项文本仍为 `pending_*` 占位符，`assert_administrable` 就会拒绝该表单施测。
+- **当前 `mock_run` 不等于正式 administration**：mock 记录 `is_mock=True`，
+  仅为工程验证信号，不得作为任何研究数据或评分者施测结果。正式施测另需单独授权与流程。
+
 ## 资产
 
 | 文件 | 内容 |
@@ -38,13 +47,13 @@
    而非 7 点。按作者公开信息如实记录。
 3. **PA8/PA5 成员**取自作者公开页面的版本归属表（逐条 x 标记，2026-07-22 核验），
    **未自行推断或缩减**。PA8=8 项、PA5=5 项，均为 PA13 的官方子集。
-4. **Wu 逐字题项**：官方 HTML Table 1 含全部最终 19 项。MSI 六项概念指标
-   （consciousness/thinking/free will/desires/self-awareness/intentionality）在正文确认，
-   已录入。IN/GO/IC 各项及 MSI 语义差异两端锚点的**逐字英文原文，在本工作环境无法从
-   官方页面直接获取**（OUP 全文对本环境返回 403），因此这些字段暂标为
-   `pending_source_verbatim`，**不臆造、不翻译、不改写**；待取得 Table 1 逐字英文原文后
-   录入。工程校验（表单构建、评分派生、错误校验）不依赖题项文本内容即可运行。
-   **仅初始项目池、完整实验刺激、补充分析**另属 Supplementary 待核验。
+4. **Wu 逐字题项**：官方 OUP minimal-HTML Table 1 端点（`article-minimal/8692819`）
+   含全部最终 19 项。IN1a–IN4a、GO1a–GO4a、IC1/IC3/IC4/IC7/IC8 的逐字英文题项，
+   以及 MSI1–MSI6 六项语义差异量表的**左右锚点逐字英文原文**（consciousness/thinking/
+   free will/desires/self-awareness/intentionality），均已**逐字录入**，不翻译、不改写、
+   不臆造。已删除全部 `pending_source_verbatim` 占位符。
+   **仅初始项目池（含被剔除的 "b" 备选措辞）、完整实验刺激脚本、补充分析**另属
+   Supplementary 待核验，且**不影响 19 项最终计分题项**。
 5. **三阶段是组织框架，不是三个量表总分**：无 Wu19 总分、无四构念合成总分、
    无 PA+Wu 总分；`scoring.yaml` 与引擎均拒绝这些。
 6. **注意力检查不计入 PA 总分**（源中存在，但不作为 PA 评分项，故未录入）。
