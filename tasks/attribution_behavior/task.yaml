@@ -1,9 +1,13 @@
-# Neutral, version-free task contract for the attribution-behavior task.
+# Neutral, version-free MATERIAL task contract for the attribution-behavior task.
 #
-# This is the single engineering source of truth consumed by the benchmark
-# runner (via the task-contract loader). It references sibling data files by
-# relative path only; it contains no Python, no import paths, no machine paths,
-# no API keys and no model/run configuration.
+# This is the single source of truth for the concrete materials: scenarios,
+# condition text, items, identity labels and the Prompt wording (loaded via the
+# task-contract loader). The separate RUN TaskSpec
+# (configs/tasks/attribution_behavior.yaml) owns run capability and the
+# condition/identity/metric schema; the two must agree via the consistency
+# check. This file references sibling data files by relative path only and
+# contains no Python, no import paths, no machine paths, no API keys and no
+# model/run configuration.
 
 task_id: attribution-behavior
 display_name: LLM 行动者归因评测

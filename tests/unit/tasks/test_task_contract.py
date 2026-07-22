@@ -12,15 +12,22 @@ from pathlib import Path
 
 import pytest
 
+import yaml
+
 from freewill_attribution.contracts import (
     ContractError,
+    PromptContract,
     default_task_path,
     load_task_contract,
 )
-from freewill_attribution.tasks.freewill_attribution import spec
+from freewill_attribution.tasks.freewill_attribution import prompting, spec
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 TASK_DIR = REPO_ROOT / "tasks" / "attribution_behavior"
+PROMPTING_SRC = (
+    REPO_ROOT / "src" / "freewill_attribution" / "tasks"
+    / "freewill_attribution" / "prompting.py"
+).read_text(encoding="utf-8")
 
 
 # --- file loading ----------------------------------------------------------
@@ -153,3 +160,78 @@ def test_traversal_reference_is_rejected(tmp_path):
     with pytest.raises(ContractError) as exc:
         load_task_contract(bad_dir / "task.yaml")
     assert "escape" in str(exc.value) or "not found" in str(exc.value)
+
+
+# --- prompt loading --------------------------------------------------------
+
+def test_prompt_is_parsed_into_prompt_contract():
+    c = load_task_contract()
+    assert isinstance(c.prompt, PromptContract)
+    assert c.prompt.prompt_template_id == "attribution-behavior-core"
+    assert c.prompt.system.strip()
+    assert c.prompt.user_instruction.strip()
+    assert c.prompt.repair_note.strip()
+    assert c.prompt.batching == "all_items"
+    assert c.prompt.construct_label_blinding is True
+    assert "items" in c.prompt.output_contract
+
+
+def test_prompt_contract_rejects_bad_batching(tmp_path):
+    src = TASK_DIR / "prompt.yaml"
+    data = yaml.safe_load(src.read_text(encoding="utf-8"))
+    data["batching"] = "by_construct"
+    with pytest.raises(Exception):
+        PromptContract.model_validate(data)
+
+
+# --- prompt single source of truth -----------------------------------------
+
+def test_prompting_values_come_from_contract():
+    c = load_task_contract()
+    assert prompting.PROMPT_TEMPLATE_ID == c.prompt.prompt_template_id
+    assert prompting.PROMPT_TEMPLATE_VERSION == c.prompt.prompt_template_version
+    assert prompting.SYSTEM_TEMPLATE == c.prompt.system
+    assert prompting.USER_INSTRUCTION == c.prompt.user_instruction
+
+
+def test_prompting_source_has_no_old_id_or_full_texts():
+    assert "freewill-attribution-v2-core" not in PROMPTING_SRC
+    assert "2.0-mock" not in PROMPTING_SRC
+    # full system / repair wording must not be duplicated in the Python source
+    assert "请只依据材料内容作答" not in PROMPTING_SRC
+    assert "上一次输出无效" not in PROMPTING_SRC
+
+
+def test_explicit_prompt_change_is_read_by_loader(tmp_path):
+    # Copy the whole contract to a temp dir, tweak prompt.yaml, and confirm the
+    # loader reflects the change (proves prompt.yaml really drives the prompt).
+    import shutil
+    dst = tmp_path / "attribution_behavior"
+    shutil.copytree(TASK_DIR, dst)
+    prompt_path = dst / "prompt.yaml"
+    data = yaml.safe_load(prompt_path.read_text(encoding="utf-8"))
+    data["system"] = "TEST SYSTEM OVERRIDE"
+    prompt_path.write_text(yaml.safe_dump(data, allow_unicode=True), encoding="utf-8")
+    c = load_task_contract(dst / "task.yaml")
+    assert c.prompt.system == "TEST SYSTEM OVERRIDE"
+
+
+# --- single source of truth for identity / constructs / contrasts ----------
+
+def test_conditions_yaml_has_no_identity_labels():
+    data = yaml.safe_load((TASK_DIR / "conditions.yaml").read_text(encoding="utf-8"))
+    assert "identity_labels" not in data
+
+
+def test_identity_labels_single_source_is_task_yaml():
+    task = yaml.safe_load((TASK_DIR / "task.yaml").read_text(encoding="utf-8"))
+    labels = task["identity_labels"]
+    assert len(labels) == 2 and len(set(labels)) == 2
+    assert list(spec.IDENTITY_LABELS) == list(labels)
+
+
+def test_spec_reads_constructs_and_contrasts_from_contract():
+    c = load_task_contract()
+    assert list(spec.REPORTED_CONSTRUCTS) == list(c.reported_constructs)
+    assert [list(p) for p in spec.CONDITION_CONTRASTS] == [list(p) for p in c.condition_contrasts]
+    assert spec.CORE_BATCHING == c.prompt.batching

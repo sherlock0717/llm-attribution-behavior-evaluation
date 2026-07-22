@@ -12,10 +12,9 @@
 # (diagnostic conditions share the level of their closest substantive
 # condition). The rendered material frame itself is owned by the renderer and is
 # identical across conditions; only the process text below differs.
-
-identity_labels:
-  - AI 决策者
-  - 人类决策者
+#
+# Identity labels are NOT defined here: their single source of truth is
+# task.yaml (identity_labels).
 
 conditions:
   - condition_id: direct_choice

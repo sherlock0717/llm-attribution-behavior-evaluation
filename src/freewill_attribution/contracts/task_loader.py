@@ -1,16 +1,22 @@
-"""Load and validate the neutral attribution-behavior task contract.
+"""Load and validate the neutral attribution-behavior material task contract.
 
-The contract lives at ``tasks/attribution_behavior/`` (repository root) and is
-the single engineering source of truth for scenarios, conditions, items and the
-prompt/scoring shape. This module:
+The MATERIAL task contract lives at ``tasks/attribution_behavior/`` (repository
+root). It is the single source of truth for the concrete materials: scenarios,
+condition text, items, identity labels and the Prompt wording. (The separate
+run TaskSpec ``configs/tasks/attribution_behavior.yaml`` owns run capability and
+the condition/identity/metric schema; the two must agree via the consistency
+check, but this loader only handles the material contract.)
+
+This module:
 
 - locates ``task.yaml`` via the repository root, the package layout, or an
   explicitly supplied path (never the current working directory or the user
   home directory);
-- loads the referenced sibling data files (relative references only; ``..`` or
-  absolute overrides are rejected);
+- loads the referenced sibling files (scenarios / conditions / items / prompt;
+  relative references only; ``..`` or absolute overrides are rejected);
 - validates the contract with Pydantic (id uniqueness, non-empty text, valid
-  score ranges, required scenario fields, per-condition templates);
+  score ranges, required scenario fields, per-condition templates, the Prompt
+  contract, and exactly two unique identity labels);
 - renders the decision-process material deterministically from the condition
   templates (data-driven; no Python template code in the contract);
 - contains NO provider logic, performs NO network I/O and reads NO API keys.
@@ -98,6 +104,50 @@ class ItemModel(BaseModel):
         return v
 
 
+class PromptContract(BaseModel):
+    """The runtime prompt contract that drives Prompt rendering."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    prompt_template_id: str
+    prompt_template_version: str
+    batching: str
+    construct_label_blinding: bool
+    system: str
+    user_instruction: str
+    output_contract: dict[str, Any]
+    repair_note: str
+
+    @field_validator("prompt_template_id", "prompt_template_version",
+                     "batching", "system", "user_instruction", "repair_note")
+    @classmethod
+    def _non_empty(cls, v: str) -> str:
+        if not str(v).strip():
+            raise ValueError("prompt field must be non-empty")
+        return v
+
+    @field_validator("batching")
+    @classmethod
+    def _batching_all_items(cls, v: str) -> str:
+        if v != "all_items":
+            raise ValueError("batching must be 'all_items' this round")
+        return v
+
+    @field_validator("construct_label_blinding")
+    @classmethod
+    def _blinding_on(cls, v: bool) -> bool:
+        if v is not True:
+            raise ValueError("construct_label_blinding must be true this round")
+        return v
+
+    @field_validator("output_contract")
+    @classmethod
+    def _has_items(cls, v: dict[str, Any]) -> dict[str, Any]:
+        if "items" not in v:
+            raise ValueError("output_contract must contain 'items'")
+        return v
+
+
 class TaskContract(BaseModel):
     """The validated, structured task contract used by the runner."""
 
@@ -113,6 +163,7 @@ class TaskContract(BaseModel):
     scenarios: list[ScenarioModel]
     conditions: list[ConditionModel]
     items: list[ItemModel]
+    prompt: PromptContract
     source_dir: Path
 
     # -- convenience accessors used by the task pack adapter ----------------
@@ -228,14 +279,16 @@ def _load_scenarios(path: Path) -> list[ScenarioModel]:
     return scenarios
 
 
-def _load_conditions(path: Path) -> tuple[list[str], list[ConditionModel]]:
+def _load_conditions(path: Path) -> list[ConditionModel]:
     data = _load_yaml_mapping(path)
-    identity_labels = list(data.get("identity_labels") or [])
     raw = data.get("conditions")
     if not isinstance(raw, list) or not raw:
         raise ContractError(f"conditions.yaml must define a non-empty 'conditions' list: {path}")
-    conditions = [ConditionModel.model_validate(c) for c in raw]
-    return identity_labels, conditions
+    return [ConditionModel.model_validate(c) for c in raw]
+
+
+def _load_prompt(path: Path) -> PromptContract:
+    return PromptContract.model_validate(_load_yaml_mapping(path))
 
 
 def _load_items(path: Path) -> list[ItemModel]:
@@ -281,19 +334,20 @@ def load_task_contract(task_path: str | Path | None = None) -> TaskContract:
     scenarios = _load_scenarios(
         _resolve_sibling(base_dir, task.get("scenario_source", ""), "scenario_source")
     )
-    identity_from_conditions, conditions = _load_conditions(
+    conditions = _load_conditions(
         _resolve_sibling(base_dir, task.get("condition_source", ""), "condition_source")
     )
     items = _load_items(
         _resolve_sibling(base_dir, task.get("item_source", ""), "item_source")
     )
-    # prompt_source must exist and be parseable, even though the transitional
-    # prompting module keeps its own frozen wording this round.
-    _load_yaml_mapping(
+    # prompt_source is parsed into the structured PromptContract that actually
+    # drives runtime prompt rendering (no second copy in prompting.py).
+    prompt = _load_prompt(
         _resolve_sibling(base_dir, task.get("prompt_source", ""), "prompt_source")
     )
 
-    identity_labels = list(task.get("identity_labels") or identity_from_conditions)
+    # identity_labels has a single source of truth: task.yaml.
+    identity_labels = list(task.get("identity_labels") or [])
 
     contract = TaskContract(
         task_id=task_id,
@@ -306,6 +360,7 @@ def load_task_contract(task_path: str | Path | None = None) -> TaskContract:
         scenarios=scenarios,
         conditions=conditions,
         items=items,
+        prompt=prompt,
         source_dir=base_dir,
     )
     _check_consistency(contract)
@@ -332,6 +387,15 @@ def _check_consistency(contract: TaskContract) -> None:
         d = _dupes(ids)
         if d:
             problems.append(f"duplicate {what}: {d}")
+
+    # identity labels: exactly two, non-empty, unique (single source: task.yaml)
+    labels = contract.identity_labels
+    if len(labels) != 2:
+        problems.append(f"identity_labels must contain exactly two labels, got {labels}")
+    if any(not str(x).strip() for x in labels):
+        problems.append("identity_labels must all be non-empty")
+    if len(set(labels)) != len(labels):
+        problems.append(f"duplicate identity label: {labels}")
 
     for it in contract.items:
         if it.min_score > it.max_score:

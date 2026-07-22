@@ -18,11 +18,16 @@ TASK_ID = "attribution-behavior"
 # Unified single source of truth for the task version string. This must equal
 # configs/tasks/attribution_behavior.yaml:task_version.
 TASK_VERSION = "1.0-mock"
-CORE_BATCHING = "all_items"
 FROZEN_MAX_REPAIR_ATTEMPTS = 1
 
-# The single neutral task contract drives the mock benchmark task pack.
+# The single neutral material task contract drives the mock benchmark task pack.
 _CONTRACT = load_task_contract()
+
+# The Prompt contract (single source for prompt wording / ids / batching).
+PROMPT = _CONTRACT.prompt
+
+# Core batching comes from the Prompt contract, not a hard-coded literal.
+CORE_BATCHING = PROMPT.batching
 
 # Scenario objects (contract ScenarioModel instances) expose .scenario_id,
 # .domain, .choice_valence, .context, .option_a, .option_b, .fixed_choice.
@@ -60,20 +65,12 @@ SCALE_ITEMS: dict[str, list[str]] = {}
 for _spec in ITEM_SPECS:
     SCALE_ITEMS.setdefault(_spec["scale"], []).append(_spec["item_id"])
 
-# Constructs reported as task metrics in the aggregate report.
-REPORTED_CONSTRUCTS = [
-    "agency",
-    "free_will_attribution",
-    "subjective_process_completeness",
-    "factual_manipulation_check",
-]
+# Constructs reported as task metrics in the aggregate report (from contract).
+REPORTED_CONSTRUCTS = list(_CONTRACT.reported_constructs)
 
-# Predefined condition-sensitivity contrasts (from METRIC_SPEC / v2 protocol).
-CONDITION_CONTRASTS = [
-    ("reasons_concise", "direct_choice_long"),
-    ("reasons", "direct_choice"),
-    ("reflection_feedback", "direct_choice"),
-]
+# Predefined condition-sensitivity contrasts on agency (high vs low structure),
+# read from the task contract rather than hard-coded here.
+CONDITION_CONTRASTS = [tuple(pair) for pair in _CONTRACT.condition_contrasts]
 
 def build_decision_text(scenario_id: str, condition: str, identity: str) -> str:
     return _CONTRACT.build_decision_text(scenario_id, condition, identity)
@@ -116,6 +113,7 @@ __all__ = [
     "TASK_VERSION",
     "CORE_BATCHING",
     "FROZEN_MAX_REPAIR_ATTEMPTS",
+    "PROMPT",
     "taskspec_consistency_problems",
     "PROCESS_CONDITIONS",
     "IDENTITY_LABELS",

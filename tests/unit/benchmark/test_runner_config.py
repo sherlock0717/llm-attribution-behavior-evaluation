@@ -42,6 +42,36 @@ def test_cli_passes_task_and_model_config(tmp_path):
     assert resolved["task_id"] == "attribution-behavior"
 
 
+def test_cli_task_config_flag_is_accepted(tmp_path):
+    rc = cli.main(
+        ["benchmark-run", "--mock", "--artifact-root", str(tmp_path),
+         "--task-config", str(registry.TASK_DEFAULT_YAML),
+         "--n-per-cell", "1", "--seed", "20260425", "--fresh"]
+    )
+    assert rc == 0
+
+
+def test_cli_task_alias_is_rejected(tmp_path):
+    # The misleading --task alias was removed; argparse must reject it.
+    parser = cli.build_parser()
+    with pytest.raises(SystemExit):
+        parser.parse_args(
+            ["benchmark-run", "--mock", "--artifact-root", str(tmp_path),
+             "--task", str(registry.TASK_DEFAULT_YAML)]
+        )
+
+
+def test_cli_help_distinguishes_run_taskspec_from_material_contract(capsys):
+    parser = cli.build_parser()
+    with pytest.raises(SystemExit):
+        parser.parse_args(["benchmark-run", "--help"])
+    out = capsys.readouterr().out
+    assert "--task-config" in out
+    # help text must not advertise the removed alias
+    assert "--task " not in out
+    assert "material task contract" in out
+
+
 def test_runner_uses_taskspec_yaml(tmp_path):
     result = runner.run_benchmark(seed=20260425, n_per_cell=1, artifact_root=tmp_path, fresh=True)
     # task_spec_hash must be the hash of the ACTUAL validated TaskSpec dump,

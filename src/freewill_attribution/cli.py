@@ -65,6 +65,9 @@ def build_parser() -> argparse.ArgumentParser:
     bench = subparsers.add_parser(
         "benchmark-run",
         help="Run the mock benchmark vertical slice (writes artifacts/runs/<run_id>/).",
+        # Disable prefix abbreviation so the removed --task alias is not silently
+        # accepted as an abbreviation of --task-config.
+        allow_abbrev=False,
     )
     bench.add_argument(
         "--artifact-root",
@@ -76,13 +79,15 @@ def build_parser() -> argparse.ArgumentParser:
     bench.add_argument("--seed", type=int, default=20260425)
     bench.add_argument("--max-repair-attempts", type=int, default=1)
     bench.add_argument(
-        "--task",
         "--task-config",
         dest="task_config",
         default=str(registry.TASK_DEFAULT_YAML),
-        help="TaskSpec contract YAML that drives the run "
-        "(default: configs/tasks/attribution_behavior.yaml). The scenario / "
-        "condition / item text comes from tasks/attribution_behavior/.",
+        help="Run TaskSpec YAML that drives the run "
+        "(default: configs/tasks/attribution_behavior.yaml). This is the RUN "
+        "TaskSpec (run capability + condition/identity/metric schema). The "
+        "scenarios, condition text, items and Prompt come from the fixed "
+        "material task contract at tasks/attribution_behavior/; switching to a "
+        "different material contract via the CLI is not supported this round.",
     )
     bench.add_argument(
         "--model-config",

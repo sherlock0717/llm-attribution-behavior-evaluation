@@ -8,6 +8,7 @@ network I/O and reads no API keys.
 
 from .task_loader import (
     ContractError,
+    PromptContract,
     TaskContract,
     default_task_path,
     load_task_contract,
@@ -15,6 +16,7 @@ from .task_loader import (
 
 __all__ = [
     "ContractError",
+    "PromptContract",
     "TaskContract",
     "default_task_path",
     "load_task_contract",
