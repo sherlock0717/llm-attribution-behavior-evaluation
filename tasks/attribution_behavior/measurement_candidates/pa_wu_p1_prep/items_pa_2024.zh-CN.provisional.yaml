@@ -1,0 +1,233 @@
+# PA 2024 (Perception of Agency) — INTERNAL PROVISIONAL Chinese translation.
+#
+# internal provisional translation ONLY. NOT a validated Chinese scale, NOT an
+# expert-reviewed translation, NOT a human-validated measure.
+# Produced by internal_agent_dual_pass (see translation_protocol.yaml).
+#
+# Source English (source_text_en) is copied from the P0 verbatim file
+# ../pa_wu_p0/items_pa_2024.yaml and MUST match it exactly. This file does NOT
+# modify the P0 English items. reconciled_zh_cn is a LITERAL translation only;
+# any project-facing rewording lives in adaptation_candidates.yaml.
+#
+# PA membership (PA13/PA8/PA5), the 5-point scale and the two anchor types are
+# preserved from P0. The attention-check item is NOT a scored item and is not
+# translated here (it can never enter the PA total).
+
+instrument_id: pa_2024
+language: zh-CN
+status: internal_provisional_translation
+review_status: internal_agent_review_only
+protocol: pa_wu_p1_prep.internal_agent_dual_pass.v1
+
+# Scale preserved from P0 (5-point). scale_type recorded per item.
+response_scale:
+  likert_5:
+    min: 1
+    max: 5
+    note_en: "1=Strongly Disagree ... 5=Strongly Agree"
+    note_zh_cn: "1=非常不同意 …… 5=非常同意"
+  scenario_5:
+    min: 1
+    max: 5
+    note_en: "scenario items anchored 1=terrible ... 5=great"
+    note_zh_cn: "情境题锚点 1=非常糟糕 …… 5=非常好"
+
+# material_evidence_risk is an INTERNAL PROVISIONAL material-evidence coding only,
+# NOT a content-validity conclusion. Values:
+#   direct                  - current D/U materials directly show this cue
+#   partial                 - materials partially / indirectly touch this cue
+#   identity_prior          - largely carried by the AI/human identity prior, not the act
+#   unsupported_extrapolation - no material support; would be an extrapolation
+
+items:
+  - instrument_id: pa_2024
+    source_item_id: pa_acts_with_purpose
+    scale_type: likert_5
+    source_text_en: "acts with purpose"
+    translation_pass_a: "有目的地行动"
+    translation_pass_b: "带着目的去行动"
+    reconciled_zh_cn: "有目的地行动"
+    back_translation_en: "acts with a purpose"
+    reconciliation_notes: "A/B 一致，取 A 更简洁；保留'目的'不引申为'目标计划'（避免污染 goal-orientation）。"
+    construct_change_flag: none
+    material_evidence_risk: partial
+    adaptation_status: none
+    review_status: internal_agent_review_only
+
+  - instrument_id: pa_2024
+    source_item_id: pa_has_goals
+    scale_type: likert_5
+    source_text_en: "has goals"
+    translation_pass_a: "有目标"
+    translation_pass_b: "拥有目标"
+    reconciled_zh_cn: "有目标"
+    back_translation_en: "has goals"
+    reconciliation_notes: "A/B 近同；'有目标'为能力/属性型陈述，不改成'在本次事件中设定了目标'。"
+    construct_change_flag: none
+    material_evidence_risk: partial
+    adaptation_status: none
+    review_status: internal_agent_review_only
+
+  - instrument_id: pa_2024
+    source_item_id: pa_can_create_new_goals
+    scale_type: likert_5
+    source_text_en: "can create new goals"
+    translation_pass_a: "能够创造新的目标"
+    translation_pass_b: "可以设立新目标"
+    reconciled_zh_cn: "能够创造新的目标"
+    back_translation_en: "can create new goals"
+    reconciliation_notes: >-
+      A/B 分歧点：create=创造/设立。取'创造'更贴近 create 的生成含义；保留'能够'(can)的能力型语气，
+      不改成单次行为。此题属 PA5 成员，翻译分歧相对较大。
+    construct_change_flag: none
+    material_evidence_risk: partial
+    adaptation_status: none
+    review_status: internal_agent_review_only
+
+  - instrument_id: pa_2024
+    source_item_id: pa_can_communicate
+    scale_type: likert_5
+    source_text_en: "can communicate with people"
+    translation_pass_a: "能够与人交流"
+    translation_pass_b: "可以和人们沟通"
+    reconciled_zh_cn: "能够与人交流"
+    back_translation_en: "can communicate with people"
+    reconciliation_notes: "communicate=交流/沟通，取'交流'；保留'能够'。"
+    construct_change_flag: none
+    material_evidence_risk: partial
+    adaptation_status: none
+    review_status: internal_agent_review_only
+
+  - instrument_id: pa_2024
+    source_item_id: pa_treats_others_as_minded
+    scale_type: likert_5
+    source_text_en: "treats others as if they had a mind"
+    translation_pass_a: "对待他人时把他们当作有心智的存在"
+    translation_pass_b: "把别人当作拥有心智的对象来对待"
+    reconciled_zh_cn: "对待他人时把他们当作有心智的存在"
+    back_translation_en: "treats others as beings that have a mind"
+    reconciliation_notes: >-
+      翻译分歧较大：as if they had a mind 的虚拟'仿佛拥有心智'。协调后保留'当作有心智的存在'，
+      注意不要丢失'把他人视为有心智'这一 mind-attribution 含义（与 MSI 心理状态推断相关但不同层）。
+    construct_change_flag: none
+    material_evidence_risk: unsupported_extrapolation
+    adaptation_status: none
+    review_status: internal_agent_review_only
+
+  - instrument_id: pa_2024
+    source_item_id: pa_wanted_to_perform
+    scale_type: likert_5
+    source_text_en: "wanted to perform these actions"
+    translation_pass_a: "想要执行这些行动"
+    translation_pass_b: "希望做出这些行为"
+    reconciled_zh_cn: "想要执行这些行动"
+    back_translation_en: "wanted to perform these actions"
+    reconciliation_notes: "wanted=想要(愿望/意愿)，保留意愿含义，不引申为 intention/意向性。"
+    construct_change_flag: none
+    material_evidence_risk: identity_prior
+    adaptation_status: none
+    review_status: internal_agent_review_only
+
+  - instrument_id: pa_2024
+    source_item_id: pa_can_show_emotions
+    scale_type: likert_5
+    source_text_en: "can show emotions to other people"
+    translation_pass_a: "能够向他人表露情绪"
+    translation_pass_b: "可以对别人展现情感"
+    reconciled_zh_cn: "能够向他人表露情绪"
+    back_translation_en: "can show emotions to other people"
+    reconciliation_notes: "emotions=情绪/情感，取'情绪'；保留'能够'能力型。"
+    construct_change_flag: none
+    material_evidence_risk: unsupported_extrapolation
+    adaptation_status: none
+    review_status: internal_agent_review_only
+
+  - instrument_id: pa_2024
+    source_item_id: pa_can_change_behavior
+    scale_type: likert_5
+    source_text_en: "can change their behavior based on how people treat them"
+    translation_pass_a: "能够根据他人对待自己的方式来改变行为"
+    translation_pass_b: "可以依据人们如何对待它而改变自身行为"
+    reconciled_zh_cn: "能够根据他人对待自己的方式来改变行为"
+    back_translation_en: "can change their behavior according to how others treat them"
+    reconciliation_notes: >-
+      PA5/PA8 成员。分歧：their/them 的中文指代（自己/它）。原文层保持中性'自己'，
+      主语随对象变化的问题留给 adaptation_candidates（AI/human 平行）。不改成单次事件。
+    construct_change_flag: none
+    material_evidence_risk: partial
+    adaptation_status: none
+    review_status: internal_agent_review_only
+
+  - instrument_id: pa_2024
+    source_item_id: pa_can_adapt
+    scale_type: likert_5
+    source_text_en: "can adapt to different situations"
+    translation_pass_a: "能够适应不同的情境"
+    translation_pass_b: "可以适应各种情况"
+    reconciled_zh_cn: "能够适应不同的情境"
+    back_translation_en: "can adapt to different situations"
+    reconciliation_notes: "situations=情境/情况，取'情境'；能力型保留。"
+    construct_change_flag: none
+    material_evidence_risk: partial
+    adaptation_status: none
+    review_status: internal_agent_review_only
+
+  - instrument_id: pa_2024
+    source_item_id: pa_would_do_well_other_env
+    scale_type: likert_5
+    source_text_en: "would do well in other environments"
+    translation_pass_a: "在其他环境中也会表现良好"
+    translation_pass_b: "换到别的环境里也能做得不错"
+    reconciled_zh_cn: "在其他环境中也会表现良好"
+    back_translation_en: "would do well in other environments"
+    reconciliation_notes: "would(将会/也会)的假设语气保留；能力/泛化型陈述，不锚定当前材料。"
+    construct_change_flag: none
+    material_evidence_risk: unsupported_extrapolation
+    adaptation_status: none
+    review_status: internal_agent_review_only
+
+  - instrument_id: pa_2024
+    source_item_id: pa_can_perform_many_tasks
+    scale_type: likert_5
+    source_text_en: "can perform many different types of tasks"
+    translation_pass_a: "能够执行许多不同类型的任务"
+    translation_pass_b: "可以完成多种不同类型的任务"
+    reconciled_zh_cn: "能够执行许多不同类型的任务"
+    back_translation_en: "can perform many different types of tasks"
+    reconciliation_notes: "perform=执行/完成，取'执行'；保留'能够'与'多种类型'。"
+    construct_change_flag: none
+    material_evidence_risk: partial
+    adaptation_status: none
+    review_status: internal_agent_review_only
+
+  - instrument_id: pa_2024
+    source_item_id: pa_actor_scenario
+    scale_type: scenario_5
+    source_text_en: "Imagine the robot/character/person was asked to be an actor in a local theater production. How well do you think they would do?"
+    translation_pass_a: "想象这个机器人/角色/人被邀请在当地一场戏剧演出中担任演员。你认为他/它会表现得如何？"
+    translation_pass_b: "设想该机器人/角色/人受邀在本地的戏剧演出里出演演员，你觉得他/它的表现会怎样？"
+    reconciled_zh_cn: "想象这个机器人/角色/人被邀请在当地一场戏剧演出中担任演员。你认为他/它会表现得如何？"
+    back_translation_en: "Imagine this robot/character/person was invited to act in a local theater production. How well do you think they would do?"
+    reconciliation_notes: >-
+      PA 想象题，PA5/PA8 成员，必须完整保留（不得删除想象题）。保留 robot/character/person
+      三元并列与'想象'框架；即便与当前 D/U 材料不匹配也先完整翻译保留。
+    construct_change_flag: none
+    material_evidence_risk: unsupported_extrapolation
+    adaptation_status: none
+    review_status: internal_agent_review_only
+
+  - instrument_id: pa_2024
+    source_item_id: pa_dinner_scenario
+    scale_type: scenario_5
+    source_text_en: "Imagine the robot/character/person was asked to host a dinner party for your friends next weekend. How well do you think they will do?"
+    translation_pass_a: "想象这个机器人/角色/人被要求在下周末为你的朋友们主持一场晚宴。你认为他/它会做得如何？"
+    translation_pass_b: "设想该机器人/角色/人被请在下个周末为你的朋友举办一次晚宴，你觉得他/它会做得怎样？"
+    reconciled_zh_cn: "想象这个机器人/角色/人被要求在下周末为你的朋友们主持一场晚宴。你认为他/它会做得如何？"
+    back_translation_en: "Imagine this robot/character/person was asked to host a dinner party for your friends next weekend. How well do you think they will do?"
+    reconciliation_notes: >-
+      PA 想象题，完整保留。注意原文 actor 题用 would do，dinner 题用 will do，中文均以'会'处理，
+      时态差异在中文不显著，已在 notes 记录以保持可追踪。
+    construct_change_flag: none
+    material_evidence_risk: unsupported_extrapolation
+    adaptation_status: none
+    review_status: internal_agent_review_only

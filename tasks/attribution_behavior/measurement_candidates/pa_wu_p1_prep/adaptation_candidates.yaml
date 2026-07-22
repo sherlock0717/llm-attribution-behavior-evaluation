@@ -1,0 +1,128 @@
+# Project-facing wording ADAPTATION CANDIDATES (separate layer).
+#
+# Any project-facing rewording of the literal provisional translation lives ONLY
+# here, NEVER written back into reconciled_zh_cn. Every candidate is unvalidated.
+#
+# status is ALWAYS candidate_unvalidated. These are NOT the provisional
+# translation and NOT a validated adaptation.
+
+adaptation_id: pa_wu_p1_prep.adaptation_candidates.v1
+review_status: internal_agent_review_only
+
+# variant meanings:
+#   literal_machine_version   - the literal provisional wording (subject = "机器")
+#   ai_actor_candidate        - subject reworded toward an AI actor (unvalidated)
+#   human_actor_candidate     - subject reworded toward a human actor (unvalidated)
+#   neutral_actor_candidate   - subject reworded toward a neutral actor (unvalidated)
+
+candidates:
+  # --- Wu example: independence subject variants for AI/human parallel ---
+  - source_item_id: IN2a
+    instrument_id: wu_shen_2026
+    variants:
+      - variant: literal_machine_version
+        candidate_text: "该机器在没有外部控制的情况下做出自己的决定。"
+        changed_tokens_or_phrases: []
+        reason: "原文层忠实译文（参照，不改写）。"
+        construct_risk: none
+        identity_equivalence_risk: none
+        material_anchor_risk: partial
+        status: candidate_unvalidated
+      - variant: ai_actor_candidate
+        candidate_text: "该 AI 系统在没有外部控制的情况下做出自己的决定。"
+        changed_tokens_or_phrases: ["机器 -> AI 系统"]
+        reason: "面向 AI 身份平行施测的主语替换候选。"
+        construct_risk: low
+        identity_equivalence_risk: "AI 主语可能自带更强能动先验，与 human 版不等价。"
+        material_anchor_risk: partial
+        status: candidate_unvalidated
+      - variant: human_actor_candidate
+        candidate_text: "该决策者在没有外部控制的情况下做出自己的决定。"
+        changed_tokens_or_phrases: ["机器 -> 决策者"]
+        reason: "面向 human 身份平行施测的主语替换候选。"
+        construct_risk: "medium：machine independence 构念是否适配人类主语存疑。"
+        identity_equivalence_risk: "human 版对'外部控制'的默认基线与 machine 版不同。"
+        material_anchor_risk: partial
+        status: candidate_unvalidated
+      - variant: neutral_actor_candidate
+        candidate_text: "该行动方在没有外部控制的情况下做出自己的决定。"
+        changed_tokens_or_phrases: ["机器 -> 行动方"]
+        reason: "中性主语候选，尽量减少身份先验。"
+        construct_risk: low
+        identity_equivalence_risk: "中性化可能削弱原 machine 构念的针对性。"
+        material_anchor_risk: partial
+        status: candidate_unvalidated
+
+  # --- Wu example: goal-orientation subject variants ---
+  - source_item_id: GO3b
+    instrument_id: wu_shen_2026
+    variants:
+      - variant: literal_machine_version
+        candidate_text: "该机器的行动背后有目标。"
+        changed_tokens_or_phrases: []
+        reason: "原文层忠实译文（参照）。"
+        construct_risk: none
+        identity_equivalence_risk: none
+        material_anchor_risk: partial
+        status: candidate_unvalidated
+      - variant: ai_actor_candidate
+        candidate_text: "该 AI 系统的行动背后有目标。"
+        changed_tokens_or_phrases: ["机器 -> AI 系统"]
+        reason: "AI 平行主语候选。"
+        construct_risk: low
+        identity_equivalence_risk: "AI 目标导向先验可能高于 human。"
+        material_anchor_risk: partial
+        status: candidate_unvalidated
+      - variant: human_actor_candidate
+        candidate_text: "该决策者的行动背后有目标。"
+        changed_tokens_or_phrases: ["机器 -> 决策者"]
+        reason: "human 平行主语候选。"
+        construct_risk: low
+        identity_equivalence_risk: "human 有目标属常识默认，可能天花板效应。"
+        material_anchor_risk: partial
+        status: candidate_unvalidated
+      - variant: neutral_actor_candidate
+        candidate_text: "该行动方的行动背后有目标。"
+        changed_tokens_or_phrases: ["机器 -> 行动方"]
+        reason: "中性主语候选。"
+        construct_risk: low
+        identity_equivalence_risk: "中性化削弱身份对比。"
+        material_anchor_risk: partial
+        status: candidate_unvalidated
+
+  # --- PA example: capacity item subject variants (capacity form preserved) ---
+  - source_item_id: pa_can_adapt
+    instrument_id: pa_2024
+    variants:
+      - variant: literal_machine_version
+        candidate_text: "能够适应不同的情境"
+        changed_tokens_or_phrases: []
+        reason: "原文层忠实译文（PA 无 machine 主语，题干为能力短语，参照）。"
+        construct_risk: none
+        identity_equivalence_risk: none
+        material_anchor_risk: partial
+        status: candidate_unvalidated
+      - variant: ai_actor_candidate
+        candidate_text: "该 AI 系统能够适应不同的情境"
+        changed_tokens_or_phrases: ["+主语: 该 AI 系统"]
+        reason: "为 AI 平行施测补主语的候选；能力型表述保留，未改成单次事件。"
+        construct_risk: "low：仍是 can/能够的能力型，未变为'本次是否适应'。"
+        identity_equivalence_risk: "AI 泛化能力先验可能高。"
+        material_anchor_risk: partial
+        status: candidate_unvalidated
+      - variant: human_actor_candidate
+        candidate_text: "该决策者能够适应不同的情境"
+        changed_tokens_or_phrases: ["+主语: 该决策者"]
+        reason: "human 平行补主语候选。"
+        construct_risk: low
+        identity_equivalence_risk: "human 适应能力常识默认。"
+        material_anchor_risk: partial
+        status: candidate_unvalidated
+      - variant: neutral_actor_candidate
+        candidate_text: "该行动方能够适应不同的情境"
+        changed_tokens_or_phrases: ["+主语: 该行动方"]
+        reason: "中性主语候选。"
+        construct_risk: low
+        identity_equivalence_risk: "中性化。"
+        material_anchor_risk: partial
+        status: candidate_unvalidated

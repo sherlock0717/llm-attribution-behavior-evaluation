@@ -1,0 +1,100 @@
+# Unified, TRACEABLE terminology glossary for the PA-Wu P1 prep translation.
+#
+# NOTE on "agency": it is deliberately NOT collapsed to a single Chinese token
+# everywhere. The Chinese rendering depends on scale name vs construct vs
+# in-sentence context, but every choice is recorded here so the whole project
+# stays traceable.
+
+glossary_id: pa_wu_p1_prep.terminology.v1
+review_status: internal_agent_review_only
+
+terms:
+  - source_term: agency
+    preferred_zh_cn: "能动性"
+    alternatives_considered: ["自主性", "主体性", "行动力"]
+    decision_reason: >-
+      作为构念名/量表名（Perception of Agency, machine agency）时用"能动性"以保持全项目
+      一致；在具体句子中若原文用 agentic entity 等派生形式，另见对应词条，不机械统一。
+    risk_note: "与 independence/自主性 易混；构念名固定为能动性，句内派生词单独记录。"
+
+  - source_term: perceived agency
+    preferred_zh_cn: "感知到的能动性"
+    alternatives_considered: ["感知能动性", "对能动性的知觉"]
+    decision_reason: "PA 量表核心构念，保留'感知/知觉'以标明是评分者主观归因，非客观事实。"
+    risk_note: "不要省略'感知'，否则读作对象客观具有能动性。"
+
+  - source_term: machine agency attribution
+    preferred_zh_cn: "机器能动性归因"
+    alternatives_considered: ["对机器能动性的归因"]
+    decision_reason: "Wu & Shen 框架名，固定译法，保持与文献可对照。"
+    risk_note: "attribution=归因（评分者的判断过程），不得读成机器本身的属性。"
+
+  - source_term: independence
+    preferred_zh_cn: "独立性"
+    alternatives_considered: ["自主性"]
+    decision_reason: >-
+      Wu 构念 perceived machine independence 用"独立性"，与 agency/能动性 区分；
+      刻意不用"自主性"以免与 agency 家族混淆。
+    risk_note: "independence≠agency；两者构念不同，术语必须分开。"
+
+  - source_term: goal orientation
+    preferred_zh_cn: "目标导向性"
+    alternatives_considered: ["目标定向", "目的性"]
+    decision_reason: "Wu 构念 perceived machine goal-orientation，保留'导向性'表连续特质。"
+    risk_note: "不要窄化为单次'有没有目标'，是导向性特质。"
+
+  - source_term: mental-state inference
+    preferred_zh_cn: "心理状态推断"
+    alternatives_considered: ["心智状态推断", "心理状态推理"]
+    decision_reason: "MSI 构念名；'推断'对应 inference（评分者的推断过程）。"
+    risk_note: "推断=评分者行为，不是机器客观拥有心理状态。"
+
+  - source_term: influential capacity
+    preferred_zh_cn: "影响力能力"
+    alternatives_considered: ["影响能力", "施加影响的能力"]
+    decision_reason: "Wu 构念 influential capacity judgment，保留'能力'表 capacity。"
+    risk_note: "capacity=能力/潜能，非单次影响结果。"
+
+  - source_term: intentionality
+    preferred_zh_cn: "意向性"
+    alternatives_considered: ["意图性", "目的性"]
+    decision_reason: "MSI6 指标，哲学/心理学惯用'意向性'；与 goal orientation 的'目标'区分。"
+    risk_note: "不要与 goal-orientation 或 free will 混同，是独立 MSI 指标。"
+
+  - source_term: free will
+    preferred_zh_cn: "自由意志"
+    alternatives_considered: ["意志自由"]
+    decision_reason: "MSI3 指标，固定'自由意志'；本项目刻意将其降为 MSI 单指标，不上升为总体 agency。"
+    risk_note: "禁止把 free will 扩展成总体能动性/agency。"
+
+  - source_term: self-awareness
+    preferred_zh_cn: "自我意识"
+    alternatives_considered: ["自我觉察", "自我认知"]
+    decision_reason: "MSI5 指标，'自我意识'最贴近 self-awareness。"
+    risk_note: "与 consciousness/意识 区分：self-awareness 是对自身的意识。"
+
+  - source_term: purposefully
+    preferred_zh_cn: "有目的地"
+    alternatives_considered: ["带着目的", "有意地"]
+    decision_reason: "GO1a 中 acted purposefully rather than merely behaving，用'有目的地'。"
+    risk_note: "purposefully(有目的) vs merely behaving(仅表现行为) 的对比必须保留。"
+
+  - source_term: agentic entity
+    preferred_zh_cn: "能动主体"
+    alternatives_considered: ["能动实体", "行动主体", "施动实体"]
+    decision_reason: >-
+      IC 系列 an agentic entity with the power to ... 用"能动主体"；与构念名'能动性'同源
+      但此处是名词化的'主体'，单独记录以保持可追踪。
+    risk_note: "entity=主体/实体；不要弱化为'东西'或强化为'人'。"
+
+  - source_term: meaningful actions
+    preferred_zh_cn: "有意义的行动"
+    alternatives_considered: ["有意义的行为"]
+    decision_reason: "IC7 the power to take meaningful actions，用'行动'对应 actions。"
+    risk_note: "actions=行动（可数、具体），保留'有意义'限定。"
+
+  - source_term: external control
+    preferred_zh_cn: "外部控制"
+    alternatives_considered: ["外界控制", "外来控制"]
+    decision_reason: "IN2a without external control，用'外部控制'。"
+    risk_note: "与 independence 构念相关，但术语单列，不并入独立性。"

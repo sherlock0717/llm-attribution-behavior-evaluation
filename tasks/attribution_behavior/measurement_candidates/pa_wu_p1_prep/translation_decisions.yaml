@@ -1,0 +1,47 @@
+# Item-level translation-divergence and reconciliation decisions (summary).
+#
+# This records where Pass A and Pass B diverged most and how reconciliation
+# resolved it. It complements the per-item reconciliation_notes in the two
+# provisional translation files. internal provisional only.
+
+decisions_id: pa_wu_p1_prep.translation_decisions.v1
+review_status: internal_agent_review_only
+
+pa_largest_divergences:
+  - source_item_id: pa_treats_others_as_minded
+    source_text_en: "treats others as if they had a mind"
+    divergence: "虚拟语气 as if they had a mind 的中文处理；'当作有心智的存在' vs '当作拥有心智的对象'。"
+    resolution: "取'当作有心智的存在'，保留 mind-attribution 含义，避免误读为客观拥有心智。"
+    residual_risk: "与 MSI 心理状态推断在语义上邻近，但属 PA 不同层，翻译已保留区分。"
+  - source_item_id: pa_can_create_new_goals
+    source_text_en: "can create new goals"
+    divergence: "create=创造 vs 设立；能力型 can 的保留。"
+    resolution: "取'能够创造新的目标'，保留 can 的能力语气，不改成单次事件。"
+    residual_risk: "'目标'与 Wu goal-orientation 措辞相近，但属 PA，不合并。"
+  - source_item_id: pa_actor_scenario
+    source_text_en: "Imagine ... be an actor ... How well ... would do?"
+    divergence: "想象题的框架与 robot/character/person 三元并列。"
+    resolution: "完整保留想象框架与三元并列（PA 想象题不得删除）。"
+    residual_risk: "与当前 D/U 材料不匹配（material_evidence_risk=unsupported_extrapolation），但先保留。"
+
+wu_largest_divergences:
+  - source_item_id: GO1a
+    source_text_en: "The machine acted purposefully rather than merely behaving."
+    divergence: "purposefully vs merely behaving 的对比；behaving 与 acted 的区分。"
+    resolution: "'有目的地行动，而不只是单纯地表现出行为'——必须保留对比，否则丢目标导向线索。"
+    residual_risk: "'表现出行为'略显书面，但保留了 behaving≠acting 的核心。"
+  - source_item_id: IN3b
+    source_text_en: "The machine's actions resulted from itself rather than other entities."
+    divergence: "resulted from itself rather than other entities 的因果归属对比。"
+    resolution: "'源于其自身，而非其他实体'，保留独立性因果线索。"
+    residual_risk: "'实体'与 IC 的'能动主体/entity'措辞相邻，术语表已区分。"
+  - source_item_id: IC8
+    source_text_en: "The machine is an agentic entity with the power to make a difference."
+    divergence: "make a difference 的中文（产生影响 vs 带来不同）。"
+    resolution: "取'产生影响'更自然，直译'带来不同'记入 notes。"
+    residual_risk: "IC 系列高度平行，需保持统一译式，已统一。"
+
+cross_tool_terminology_notes:
+  - note: "PA 的 has goals / create new goals 与 Wu 的 goal-orientation 措辞相邻，但属不同工具、不同层，翻译刻意不统一措辞以免暗示合并。"
+  - note: "agency/能动性（构念名）与 agentic entity/能动主体（IC 句内名词）同源但分开记录，见 terminology_glossary.yaml。"
+  - note: "free will 仅作 MSI3 单指标，未扩展为总体 agency。"
