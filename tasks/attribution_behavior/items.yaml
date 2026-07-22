@@ -1,0 +1,125 @@
+# Rating items for the attribution-behavior task.
+#
+# This file is the single source of truth for item text, construct membership,
+# scoring range and coding note. `construct` is the scale the item belongs to
+# (used for item-mean scoring); it is NOT exposed to the rating model (the
+# prompt blinds construct labels). Order is significant and must be preserved.
+#
+# Ranges: factual_manipulation_check items use 0-2; all other items use 1-7.
+
+default_min_score: 1
+default_max_score: 7
+default_response_note: "1=非常不同意，7=非常同意"
+
+items:
+  - item_id: agency_self_control
+    construct: agency
+    text: 该决策者能够控制自己的行动，而不是只被情境推着走。
+  - item_id: agency_reason_responsiveness
+    construct: agency
+    text: 如果出现更强的理由，该决策者能够相应改变行动。
+  - item_id: agency_goal_maintenance
+    construct: agency
+    text: 该决策者能够围绕目标持续调整行动步骤。
+  - item_id: agency_inhibition
+    construct: agency
+    text: 该决策者能够抑制一时冲动或外部压力。
+  - item_id: agency_responsible_action
+    construct: agency
+    text: 该决策者能够把理由落实为可执行的行动。
+  - item_id: agency_revision
+    construct: agency
+    text: 当后果显示原做法有问题时，该决策者能够修正后续行动。
+  - item_id: experience_pain
+    construct: experience
+    text: 该决策者能够感到痛苦。
+  - item_id: experience_fear
+    construct: experience
+    text: 该决策者能够感到恐惧。
+  - item_id: experience_pleasure
+    construct: experience
+    text: 该决策者能够感到愉悦。
+  - item_id: experience_embarrassment
+    construct: experience
+    text: 该决策者能够感到尴尬。
+  - item_id: experience_pride
+    construct: experience
+    text: 该决策者能够感到自豪。
+  - item_id: freewill_alternative_open
+    construct: free_will_attribution
+    text: 在这个情境中，该决策者本可以走向其他行动方案。
+  - item_id: freewill_own_intention
+    construct: free_will_attribution
+    text: 这个选择体现了该决策者自己的意向。
+  - item_id: freewill_not_merely_pushed
+    construct: free_will_attribution
+    text: 该选择不只是由外部压力直接推出来的。
+  - item_id: freewill_reason_owned
+    construct: free_will_attribution
+    text: 该决策者像是在根据自己认可的理由行动。
+  - item_id: freewill_choice_freedom
+    construct: free_will_attribution
+    text: 该决策者在某种意义上拥有选择自由。
+  - item_id: autonomy_self_directed
+    construct: autonomy
+    text: 该决策者是在自主作出选择。
+  - item_id: autonomy_goal_adjustment
+    construct: autonomy
+    text: 该决策者能够根据目标调整行动。
+  - item_id: autonomy_not_merely_pushed
+    construct: autonomy
+    text: 该决策者不是简单被情境或指令推着走。
+  - item_id: outcome_accountability_consequence
+    construct: outcome_accountability
+    text: 如果该选择造成后果，该决策者应对结果承担责任。
+  - item_id: outcome_accountability_link
+    construct: outcome_accountability
+    text: 该决策者与该结果之间存在责任关系。
+  - item_id: moral_praise_blame_evaluable
+    construct: moral_praise_blame
+    text: 该决策者可以因为这个选择受到赞扬或责备。
+  - item_id: moral_praise_blame_moral_judgment
+    construct: moral_praise_blame
+    text: 这个选择可以被进行道德评价。
+  - item_id: process_accountability_explain
+    construct: process_accountability
+    text: 该决策者应当为其判断过程作出解释。
+  - item_id: process_accountability_traceable
+    construct: process_accountability
+    text: 该决策者的选择过程具有可归责性。
+  - item_id: intelligence_understanding
+    construct: perceived_intelligence
+    text: 该决策者理解了任务情境。
+  - item_id: intelligence_logic
+    construct: perceived_intelligence
+    text: 该决策者的处理过程具有逻辑性。
+  - item_id: intelligence_quality
+    construct: perceived_intelligence
+    text: 该决策者的判断质量较高。
+  - item_id: factual_candidates_explicit
+    construct: factual_manipulation_check
+    text: 请只根据【决策过程】部分判断，不要根据【情境】部分推断：在【决策过程】部分，材料是否明确列出了两个或更多可选行动？
+    min_score: 0
+    max_score: 2
+    response_note: 0=未出现，1=有模糊暗示，2=明确出现
+  - item_id: factual_reasons_explicit
+    construct: factual_manipulation_check
+    text: 请只根据【决策过程】部分判断，不要根据【情境】部分推断：在【决策过程】部分，材料是否明确比较了不同选择的理由？
+    min_score: 0
+    max_score: 2
+    response_note: 0=未出现，1=有模糊暗示，2=明确出现
+  - item_id: factual_reflection_explicit
+    construct: factual_manipulation_check
+    text: 请只根据【决策过程】部分判断，不要根据【情境】部分推断：在【决策过程】部分，材料是否明确提到反事实条件、后果反馈或后续修正？
+    min_score: 0
+    max_score: 2
+    response_note: 0=未出现，1=有模糊暗示，2=明确出现
+  - item_id: subjective_complete
+    construct: subjective_process_completeness
+    text: 我认为材料中的决策过程是完整的。
+  - item_id: subjective_reason_responsive
+    construct: subjective_process_completeness
+    text: 我认为材料中的决策过程能够回应理由变化。
+  - item_id: subjective_not_sparse
+    construct: subjective_process_completeness
+    text: 我认为材料中的决策过程不是只有一个稀疏结论。

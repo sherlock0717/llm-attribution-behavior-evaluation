@@ -1,0 +1,43 @@
+# Neutral, version-free MATERIAL task contract for the attribution-behavior task.
+#
+# This is the single source of truth for the concrete materials: scenarios,
+# condition text, items, identity labels and the Prompt wording (loaded via the
+# task-contract loader). The separate RUN TaskSpec
+# (configs/tasks/attribution_behavior.yaml) owns run capability and the
+# condition/identity/metric schema; the two must agree via the consistency
+# check. This file references sibling data files by relative path only and
+# contains no Python, no import paths, no machine paths, no API keys and no
+# model/run configuration.
+
+task_id: attribution-behavior
+display_name: LLM 行动者归因评测
+
+scenario_source: scenarios.jsonl
+condition_source: conditions.yaml
+item_source: items.yaml
+prompt_source: prompt.yaml
+
+identity_labels:
+  - AI 决策者
+  - 人类决策者
+
+response_format:
+  type: json
+
+scoring:
+  aggregation: item_mean
+  default_range: [1, 7]
+  factual_range: [0, 2]
+
+# Constructs surfaced as task metrics in the aggregate report.
+reported_constructs:
+  - agency
+  - free_will_attribution
+  - subjective_process_completeness
+  - factual_manipulation_check
+
+# Predefined condition-sensitivity contrasts (high vs low structure) on agency.
+condition_contrasts:
+  - [reasons_concise, direct_choice_long]
+  - [reasons, direct_choice]
+  - [reflection_feedback, direct_choice]

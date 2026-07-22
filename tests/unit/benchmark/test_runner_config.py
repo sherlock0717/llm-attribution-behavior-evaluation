@@ -18,8 +18,8 @@ from freewill_attribution.benchmark.hashing import hash_object
 from freewill_attribution.tasks.freewill_attribution import spec
 
 
-def _v2_dict():
-    return yaml.safe_load(registry.TASK_V2_YAML.read_text(encoding="utf-8"))
+def _default_task_dict():
+    return yaml.safe_load(registry.TASK_DEFAULT_YAML.read_text(encoding="utf-8"))
 
 
 def _write_yaml(path, data):
@@ -33,30 +33,61 @@ def test_cli_passes_task_and_model_config(tmp_path):
          "--n-per-cell", "1", "--seed", "20260425", "--fresh"]
     )
     assert rc == 0
-    run_dir = tmp_path / "runs" / "fa-v2-n1-seed20260425"
+    run_dir = tmp_path / "runs" / "attribution-behavior-n1-seed20260425"
     resolved = json.loads((run_dir / "resolved_config.json").read_text(encoding="utf-8"))
-    assert resolved["task_config_ref"].endswith("freewill_attribution.v2.yaml")
+    assert resolved["task_config_ref"].endswith("attribution_behavior.yaml")
     assert resolved["model_config_ref"].endswith("model.mock.yaml")
     assert resolved["provider"] == "mock"
     assert resolved["model_id"] == "rule-based-v2"
+    assert resolved["task_id"] == "attribution-behavior"
+
+
+def test_cli_task_config_flag_is_accepted(tmp_path):
+    rc = cli.main(
+        ["benchmark-run", "--mock", "--artifact-root", str(tmp_path),
+         "--task-config", str(registry.TASK_DEFAULT_YAML),
+         "--n-per-cell", "1", "--seed", "20260425", "--fresh"]
+    )
+    assert rc == 0
+
+
+def test_cli_task_alias_is_rejected(tmp_path):
+    # The misleading --task alias was removed; argparse must reject it.
+    parser = cli.build_parser()
+    with pytest.raises(SystemExit):
+        parser.parse_args(
+            ["benchmark-run", "--mock", "--artifact-root", str(tmp_path),
+             "--task", str(registry.TASK_DEFAULT_YAML)]
+        )
+
+
+def test_cli_help_distinguishes_run_taskspec_from_material_contract(capsys):
+    parser = cli.build_parser()
+    with pytest.raises(SystemExit):
+        parser.parse_args(["benchmark-run", "--help"])
+    out = capsys.readouterr().out
+    assert "--task-config" in out
+    # help text must not advertise the removed alias
+    assert "--task " not in out
+    assert "material task contract" in out
 
 
 def test_runner_uses_taskspec_yaml(tmp_path):
     result = runner.run_benchmark(seed=20260425, n_per_cell=1, artifact_root=tmp_path, fresh=True)
     # task_spec_hash must be the hash of the ACTUAL validated TaskSpec dump,
     # not a throwaway _task_spec_payload() object.
-    expected = hash_object(registry.load_v2_task_spec().model_dump(mode="json"))
+    expected = hash_object(registry.load_default_task_spec().model_dump(mode="json"))
     assert result.manifest.task_spec_hash == expected
     on_disk = json.loads((result.run_dir / "task_spec.json").read_text(encoding="utf-8"))
-    assert on_disk["task_id"] == "freewill-attribution-v2"
-    assert on_disk["task_version"] == "2.0-mock"
+    assert on_disk["task_id"] == "attribution-behavior"
+    assert on_disk["task_version"] == "1.0-mock"
     # model_spec.json / model_spec_hash come from the actual model config.
     model_expected = hash_object(registry.load_model_spec().model_dump(mode="json"))
     assert result.manifest.model_spec_hash == model_expected
 
 
 def test_runner_rejects_non_executable_task(tmp_path):
-    data = _v2_dict()
+    data = _default_task_dict()
     data["executable"] = False
     cfg = _write_yaml(tmp_path / "task_nonexec.yaml", data)
     with pytest.raises(runner.RunConfigError):
@@ -85,7 +116,7 @@ def test_taskspec_hash_changes_when_config_changes(tmp_path):
     base = runner.run_benchmark(
         seed=20260425, n_per_cell=1, artifact_root=tmp_path / "base", fresh=True
     )
-    data = _v2_dict()
+    data = _default_task_dict()
     # Change a NON-validated field so the spec still passes consistency checks
     # but its canonical serialization (and hash) differs.
     data["evidence_boundary"] = data["evidence_boundary"] + " [variant marker]"
@@ -98,6 +129,6 @@ def test_taskspec_hash_changes_when_config_changes(tmp_path):
 
 
 def test_python_task_pack_matches_taskspec():
-    # The declarative v2 TaskSpec must agree with the Python task pack.
-    problems = spec.taskspec_consistency_problems(registry.load_v2_task_spec())
+    # The neutral default TaskSpec must agree with the Python task pack.
+    problems = spec.taskspec_consistency_problems(registry.load_default_task_spec())
     assert problems == [], problems

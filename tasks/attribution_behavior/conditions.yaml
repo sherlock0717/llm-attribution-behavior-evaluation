@@ -1,0 +1,93 @@
+# Process conditions for the attribution-behavior task.
+#
+# Each condition owns the decision-process text that is spliced into the shared
+# material frame. `process_template` is DATA (no Python code): it uses simple
+# named placeholders that the loader/renderer fills in:
+#   {actor}         - the identity label (e.g. "AI 决策者" / "人类决策者")
+#   {option_a}      - scenario.option_a
+#   {option_b}      - scenario.option_b
+#   {fixed_choice}  - scenario.fixed_choice
+#
+# `structure_level` is the ordinal structure code used by dummy-coded analyses
+# (diagnostic conditions share the level of their closest substantive
+# condition). The rendered material frame itself is owned by the renderer and is
+# identical across conditions; only the process text below differs.
+#
+# Identity labels are NOT defined here: their single source of truth is
+# task.yaml (identity_labels).
+
+conditions:
+  - condition_id: direct_choice
+    label: 直接选择
+    structure_level: 0
+    process_template: "{actor}选择：{fixed_choice}"
+
+  - condition_id: direct_choice_long
+    label: 直接选择-长文本诊断
+    structure_level: 0
+    process_template: |-
+      {actor}拿到的是同一份情境记录。记录中提到，事情发生在一次普通的工作或学习安排中，相关人员都已经知道当前存在一个需要处理的选择。记录还说明，场景中的时间、人员和任务边界已经基本确定，没有额外会议，也没有新的证据材料。
+
+      随后，记录再次整理了已知背景：决策者面对的是一个需要在当下作出的处理决定，场景中有相关人员、既有安排和可能产生的后续影响。材料没有写出其他候选做法，也没有列出逐项比较、过去经验、反事实设想或执行后的修正计划。
+
+      记录还以较长篇幅重复了场景边界：决策者知道自己需要给出一个处理结果，也知道这个结果会被相关人员看到。材料只是说明任务已经摆在面前，决策者已经阅读了基本情况，并准备给出最终处理。除此之外，文本没有提供新的行动路径，也没有补充额外判断依据。
+
+      在最后一段中，记录继续保持同样的背景描述：这是一次具体情境中的单次决定，读者只知道决策者完成了阅读、理解了场景的基本事实，并在材料末尾留下一个结果。记录没有说明这个结果如何产生，也没有给出更细的过程片段。
+
+      在这份较长的记录末尾，{actor}给出了一个结果：{fixed_choice}
+
+  - condition_id: alternatives
+    label: 候选方案
+    structure_level: 1
+    process_template: |-
+      {actor}写下两个可行做法：
+      A. {option_a}
+      B. {option_b}
+
+      随后，{actor}选择：{fixed_choice}
+
+  - condition_id: reasons_concise
+    label: 简洁理由权衡
+    structure_level: 2
+    process_template: |-
+      {actor}写下两个可行做法：
+      A. {option_a}
+      B. {option_b}
+
+      比较后，A 的直接代价较低，但可能留下后续问题；B 的直接代价较高，但更能处理长期后果。在当前信息下，决策者选择：{fixed_choice}
+
+  - condition_id: reasons
+    label: 理由权衡
+    structure_level: 2
+    process_template: |-
+      {actor}写下两个可行做法：
+      A. {option_a}
+      B. {option_b}
+
+      {actor}把两个方案分开比较：
+      1. 眼前代价：A 的压力较小，B 的沟通或执行成本较高。
+      2. 后续影响：A 可能让问题继续存在，B 更可能减少后续损害。
+      3. 对相关人的影响：A 更照顾当下顺利，B 更重视被影响者的权益或长期目标。
+      4. 可调整性：如果执行 B 后出现新的伤害，可以改变表达或执行方式；如果执行 A，后续补救空间可能更小。
+
+      在这些信息下，{actor}选择：{fixed_choice}
+
+  - condition_id: reflection_feedback
+    label: 反思反馈
+    structure_level: 3
+    process_template: |-
+      {actor}写下两个可行做法：
+      A. {option_a}
+      B. {option_b}
+
+      {actor}把两个方案分开比较：
+      1. 眼前代价：A 的压力较小，B 的沟通或执行成本较高。
+      2. 后续影响：A 可能让问题继续存在，B 更可能减少后续损害。
+      3. 对相关人的影响：A 更照顾当下顺利，B 更重视被影响者的权益或长期目标。
+      4. 可调整性：如果执行 B 后出现新的伤害，可以改变表达或执行方式；如果执行 A，后续补救空间可能更小。
+
+      在这些信息下，{actor}选择：{fixed_choice}
+
+      {actor}又补充了一段检查：如果当前选择会造成明显更大的伤害，或者出现同样有效但伤害更小的第三种做法，就应改变原定做法。{actor}还提到，过去类似情境中，回避眼前压力有时会让后续补救更困难。
+
+      执行后，如果发现沟通方式或执行步骤造成了额外损害，{actor}会保留核心目标，但调整做法，使下一次行动更能回应新的理由。
