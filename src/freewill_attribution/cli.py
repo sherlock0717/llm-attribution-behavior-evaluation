@@ -76,10 +76,13 @@ def build_parser() -> argparse.ArgumentParser:
     bench.add_argument("--seed", type=int, default=20260425)
     bench.add_argument("--max-repair-attempts", type=int, default=1)
     bench.add_argument(
+        "--task",
         "--task-config",
-        default=str(registry.TASK_V2_YAML),
+        dest="task_config",
+        default=str(registry.TASK_DEFAULT_YAML),
         help="TaskSpec contract YAML that drives the run "
-        "(default: configs/tasks/freewill_attribution.v2.yaml).",
+        "(default: configs/tasks/attribution_behavior.yaml). The scenario / "
+        "condition / item text comes from tasks/attribution_behavior/.",
     )
     bench.add_argument(
         "--model-config",

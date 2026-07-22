@@ -18,6 +18,10 @@ CONFIGS_DIR = PROJECT_ROOT / "configs"
 BENCHMARK_YAML = CONFIGS_DIR / "benchmarks" / "llm_attribution_behavior.v1.yaml"
 TASK_V1_YAML = CONFIGS_DIR / "tasks" / "freewill_attribution.v1.yaml"
 TASK_V2_YAML = CONFIGS_DIR / "tasks" / "freewill_attribution.v2.yaml"
+# Neutral, version-free TaskSpec driver (the new benchmark-run default). The
+# older version-named contracts above are retained in the construction repo but
+# are no longer the default entry point.
+TASK_DEFAULT_YAML = CONFIGS_DIR / "tasks" / "attribution_behavior.yaml"
 METRICS_YAML = CONFIGS_DIR / "metrics" / "attribution_metrics.v1.yaml"
 MODEL_MOCK_YAML = CONFIGS_DIR / "model.mock.yaml"
 MODEL_DEEPSEEK_EXAMPLE_YAML = CONFIGS_DIR / "model.deepseek.example.yaml"
@@ -51,6 +55,11 @@ def load_task_spec(path: str | Path) -> TaskSpec:
 
 def load_v2_task_spec() -> TaskSpec:
     return load_task_spec(TASK_V2_YAML)
+
+
+def load_default_task_spec() -> TaskSpec:
+    """Load the neutral default TaskSpec driver (benchmark-run default)."""
+    return load_task_spec(TASK_DEFAULT_YAML)
 
 
 def load_model_spec(path: str | Path = MODEL_MOCK_YAML) -> ModelSpec:
@@ -100,12 +109,14 @@ __all__ = [
     "BENCHMARK_YAML",
     "TASK_V1_YAML",
     "TASK_V2_YAML",
+    "TASK_DEFAULT_YAML",
     "METRICS_YAML",
     "MODEL_MOCK_YAML",
     "RegistryError",
     "load_benchmark_spec",
     "load_task_spec",
     "load_v2_task_spec",
+    "load_default_task_spec",
     "load_model_spec",
     "load_metric_registry",
     "metric_ids",

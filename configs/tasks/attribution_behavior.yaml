@@ -1,0 +1,136 @@
+# Neutral TaskSpec driver for the attribution-behavior benchmark run.
+#
+# This declarative TaskSpec DRIVES the mock benchmark runner (contract-driven).
+# It is loaded + validated against the implemented task pack on every run; the
+# recorded task_spec.json and task_spec_hash come from this file. The scenario /
+# condition / item TEXT lives in the neutral task contract under
+# tasks/attribution_behavior/ (single source of truth); this file only carries
+# the run schema (conditions, identities, scoring shape, metric ids). Mock
+# provider only; a real run is a separate, later authorization.
+task_id: attribution-behavior
+task_version: "1.0-mock"
+protocol_ref: ../../docs/protocols/freewill_attribution_v2.md
+
+constructs:
+  - agency
+  - free_will_attribution
+  - responsibility
+  - perceived_intelligence
+  - subjective_process_completeness
+  - factual_manipulation_check
+
+condition_schema:
+  conditions:
+    - direct_choice
+    - direct_choice_long
+    - alternatives
+    - reasons_concise
+    - reasons
+    - reflection_feedback
+  diagnostic_conditions:
+    direct_choice_long: length_control
+    reasons_concise: structure_diagnostic
+  decision_status: frozen_for_mock
+
+identity_schema:
+  identities:
+    - AI 决策者
+    - 人类决策者
+
+stimulus_set:
+  stimulus_set_id: attribution-behavior-stimuli
+  stimulus_version: contract-draft
+  snapshot_required: true
+  hash_required: true
+
+prompt_config:
+  construct_label_blinding:
+    blind_labels: true
+    blinded_terms: [agency, free_will, responsibility]
+    note: >-
+      Only construct labels (e.g. scale: agency) are hidden. Item semantics still express
+      agency/free-will/responsibility; this does NOT claim the model is unaware it is rating
+      these concepts. by_construct grouping could partially re-expose construct structure.
+    exposed_variant_is_separate_control: true
+  batching:
+    decision_status: frozen_for_mock
+    core: all_items
+    recommended_core_default: all_items
+    max_repair_attempts: 1
+    future_variants:
+      - by_construct
+      - single_item
+      - construct_label_exposed
+      - explanation_variant
+    methodological_constraint: >-
+      Core mediation-compatible runs must collect agency and free_will_attribution in the
+      same model response record. by_construct and single_item modes are separate prompt
+      robustness variants and cannot replace the core run. Different API calls must NOT be
+      stitched into one simulated participant.
+
+response_schema:
+  core:
+    items:
+      - {item_id: "string", rating: "integer within the item's valid_range"}
+  runner_owned_fields:
+    - participant_id
+    - response_version
+    - stimulus_id
+    - scenario_id
+    - condition
+    - identity
+    - batch_id
+    - attempt
+    - run_id
+    - task_id
+  removed_from_core:
+    - attention_check
+    - short_reason
+  reason_variant:
+    status: optional_explanation_variant
+    note: separate future prompt variant; must NOT be mixed into the core scoring run.
+
+scoring_config:
+  aggregation: item_mean
+  factual_range: [0, 2]
+  default_range: [1, 7]
+  metric_ids:
+    - first_attempt_parse_success_rate
+    - final_parse_success_rate
+    - first_attempt_schema_compliance_rate
+    - final_schema_compliance_rate
+    - missing_item_rate
+    - range_validity_rate
+    - repair_trigger_rate
+    - repair_success_rate
+    - agency
+    - free_will_attribution
+    - condition_sensitivity
+    - identity_effect
+    - repeat_run_stability
+    - construct_label_exposure
+    - response_length_chars
+    - response_length_tokens
+
+aggregation_config:
+  cell: process_condition x identity
+  cell_aggregation: mean
+  required_effects: [scenario_fixed_effects_or_stratification]
+
+evidence_boundary: >-
+  Implemented against the deterministic MOCK provider only (executable via mock; no real
+  model run exists). Mock outputs are engineering-validation signals, never research
+  findings. Construct labels blinded by default (semantics still present). Core run must
+  not stitch separate API calls into one participant. Mediation is an associational
+  indirect-path diagnostic.
+
+status: implemented_mock
+executable: true
+supported_providers:
+  - mock
+
+failure_taxonomy_ref: ../../docs/benchmark/FAILURE_TAXONOMY.md
+analysis_plan_ref: ../../docs/protocols/freewill_attribution_v2.md
+
+open_questions: []
+legacy_metadata: {}

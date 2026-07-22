@@ -1,50 +1,52 @@
-"""Task-pack constants for the freewill-attribution task (FAST-001).
+"""Task-pack constants for the attribution-behavior task.
 
-This module re-uses the frozen v1 materials (``src/stimuli.py`` / ``src/scales.py``)
-as the authoritative item and scenario source rather than duplicating protected
-research material. The legacy modules live at the ``src/`` layout root; we add
-that directory to ``sys.path`` on demand (this does not touch the top-level
-package import path and creates no files).
+The authoritative scenario / condition / item source is the neutral, version-
+free task contract under ``tasks/attribution_behavior/`` (loaded via
+``contracts.task_loader``). This module is a thin adapter that exposes the
+contract to the runner in the shapes it already expects; it keeps NO second
+full copy of the scenario or item text (the contract is the single source of
+truth). Decision-process rendering is delegated to the contract as well.
 """
 
 from __future__ import annotations
 
-import sys
 from typing import Any
 
-from ...paths import SOURCE_DIR
+from ...contracts import load_task_contract
 
-if str(SOURCE_DIR) not in sys.path:
-    sys.path.insert(0, str(SOURCE_DIR))
-
-import scales as _scales  # noqa: E402  (path bootstrap above)
-import stimuli as _stimuli  # noqa: E402
-
-TASK_ID = "freewill-attribution-v2"
-# FAST-001.1: unified single source of truth for the v2 version string. This
-# must equal configs/tasks/freewill_attribution.v2.yaml:task_version and the
-# protocol_version in docs/protocols/freewill_attribution_v2.md.
-TASK_VERSION = "2.0-mock"
+TASK_ID = "attribution-behavior"
+# Unified single source of truth for the task version string. This must equal
+# configs/tasks/attribution_behavior.yaml:task_version.
+TASK_VERSION = "1.0-mock"
 CORE_BATCHING = "all_items"
 FROZEN_MAX_REPAIR_ATTEMPTS = 1
 
-PROCESS_CONDITIONS: list[str] = list(_stimuli.PROCESS_CONDITIONS)
-IDENTITY_LABELS: list[str] = list(_stimuli.IDENTITY_LABELS)
-PROCESS_ORDINAL: dict[str, int] = dict(_stimuli.PROCESS_ORDINAL)
-PROCESS_LABELS: dict[str, str] = dict(_stimuli.PROCESS_LABELS)
+# The single neutral task contract drives the mock benchmark task pack.
+_CONTRACT = load_task_contract()
+
+# Scenario objects (contract ScenarioModel instances) expose .scenario_id,
+# .domain, .choice_valence, .context, .option_a, .option_b, .fixed_choice.
+SCENARIOS = list(_CONTRACT.scenarios)
+
+PROCESS_CONDITIONS: list[str] = list(_CONTRACT.condition_ids)
+IDENTITY_LABELS: list[str] = list(_CONTRACT.identity_labels)
+PROCESS_ORDINAL: dict[str, int] = {c.condition_id: c.structure_level for c in _CONTRACT.conditions}
+PROCESS_LABELS: dict[str, str] = {c.condition_id: c.label for c in _CONTRACT.conditions}
 
 # Item specifications (id, scale, valid range). Text is available too but the
-# prompt uses item text without exposing the construct (scale) label.
+# prompt uses item text without exposing the construct (scale) label. The
+# ``scale`` key is kept for backward compatibility with the scoring/prompting
+# adapters (it equals the contract's ``construct``).
 ITEM_SPECS: list[dict[str, Any]] = [
     {
         "item_id": item.item_id,
-        "scale": item.scale,
+        "scale": item.construct,
         "text": item.text,
-        "response_min": item.response_min,
-        "response_max": item.response_max,
+        "response_min": item.min_score,
+        "response_max": item.max_score,
         "response_note": item.response_note,
     }
-    for item in _scales.ITEMS
+    for item in _CONTRACT.items
 ]
 
 ITEM_IDS: list[str] = [spec["item_id"] for spec in ITEM_SPECS]
@@ -73,12 +75,8 @@ CONDITION_CONTRASTS = [
     ("reflection_feedback", "direct_choice"),
 ]
 
-SCENARIOS = list(_stimuli.SCENARIOS)
-
-
 def build_decision_text(scenario_id: str, condition: str, identity: str) -> str:
-    scenario = next(s for s in SCENARIOS if s.scenario_id == scenario_id)
-    return _stimuli.build_decision_text(scenario, condition, identity)
+    return _CONTRACT.build_decision_text(scenario_id, condition, identity)
 
 
 def taskspec_consistency_problems(task_spec: Any) -> list[str]:

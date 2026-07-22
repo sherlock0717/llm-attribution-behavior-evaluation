@@ -237,11 +237,13 @@ def run_benchmark(
 ) -> BenchmarkRunResult:
     """Execute the mock benchmark vertical slice and write all artifacts.
 
-    The run is DRIVEN BY the declarative contracts on disk: the TaskSpec YAML
-    (default ``configs/tasks/freewill_attribution.v2.yaml``) and the model
+    The run is DRIVEN BY the declarative contracts on disk: the neutral TaskSpec
+    YAML (default ``configs/tasks/attribution_behavior.yaml``) and the model
     config YAML (default ``configs/model.mock.yaml``) are loaded, validated
     against the implemented task pack, and used as the source of the recorded
-    ``task_spec.json`` / ``model_spec.json`` and their hashes.
+    ``task_spec.json`` / ``model_spec.json`` and their hashes. The scenario /
+    condition / item text itself comes from the neutral task contract under
+    ``tasks/attribution_behavior/`` (single source of truth).
 
     ``fault_map`` maps ``record_id -> fault`` (test-only) to force a malformed /
     incomplete first attempt (or a provider exception) and exercise the repair /
@@ -250,7 +252,7 @@ def run_benchmark(
     if n_per_cell < 1:
         raise ValueError("n_per_cell must be >= 1")
 
-    task_config = Path(task_config) if task_config else registry.TASK_V2_YAML
+    task_config = Path(task_config) if task_config else registry.TASK_DEFAULT_YAML
     model_config = Path(model_config) if model_config else registry.MODEL_MOCK_YAML
 
     provider = provider or MockProvider()
@@ -750,7 +752,7 @@ def plan_dry_run(
     from .providers import deepseek as _deepseek  # local import: no networking
     from . import budget as _budget
 
-    task_config = Path(task_config) if task_config else registry.TASK_V2_YAML
+    task_config = Path(task_config) if task_config else registry.TASK_DEFAULT_YAML
     model_config = Path(model_config)
 
     raw_model = yaml.safe_load(model_config.read_text(encoding="utf-8")) or {}
