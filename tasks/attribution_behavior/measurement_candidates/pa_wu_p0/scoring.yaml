@@ -1,0 +1,58 @@
+# Derived-score rules for the PA-Wu P0 mock candidate measurement.
+#
+# Rules follow each tool's public scoring:
+# - PA versions use the mean of their published member items (simple-mean
+#   scoring per the author's public page; the Rasch/calibration-video variant is
+#   out of scope for P0).
+# - Wu sub-scales are each computed separately (construct mean).
+# Explicitly FORBIDDEN derived scores (must not exist / must be rejected):
+# - no Wu19 total; no combined four-construct machine-agency total;
+# - no PA+Wu combined total.
+# Missing items must NOT be silently averaged into a complete score.
+
+scoring_version: pa_wu_p0.v1
+
+derived_scores:
+  # --- PA (mean of published member items; attention check never included) ---
+  - score_id: PA13
+    method: mean
+    source_instrument: pa_2024
+    version: pa13
+  - score_id: PA8
+    method: mean
+    source_instrument: pa_2024
+    version: pa8
+    subscore_note: "subscore within the combined form context; NOT independent PA8 administration"
+  - score_id: PA5
+    method: mean
+    source_instrument: pa_2024
+    version: pa5
+    subscore_note: "subscore within the combined form context; NOT independent PA5 administration"
+
+  # --- Wu sub-scales (each computed separately; construct mean) ---
+  - score_id: IN4
+    method: mean
+    source_instrument: wu_shen_2026
+    construct: perceived_machine_independence
+  - score_id: GO4
+    method: mean
+    source_instrument: wu_shen_2026
+    construct: perceived_machine_goal_orientation
+  - score_id: MSI6
+    method: mean
+    source_instrument: wu_shen_2026
+    construct: mental_state_inference
+  - score_id: IC5
+    method: mean
+    source_instrument: wu_shen_2026
+    construct: influential_capacity_judgment
+
+forbidden_scores:
+  - id: WU19_TOTAL
+    reason: "no source-supported Wu19 total"
+  - id: MACHINE_AGENCY_TOTAL
+    reason: "four Wu constructs must not be combined into one total"
+  - id: PA_WU_TOTAL
+    reason: "PA and Wu must not be combined into one total"
+
+missing_policy: skip_affected_score_with_warning   # missing member items -> scoring_warning, affected score skipped

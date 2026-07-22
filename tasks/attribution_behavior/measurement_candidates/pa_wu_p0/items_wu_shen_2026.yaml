@@ -1,0 +1,101 @@
+# Wu & Shen 2026 machine agency attribution — EXPERIMENTAL candidate items.
+#
+# P0 mock-only engineering asset. NOT part of the default benchmark run and NOT
+# a validated Chinese instrument. Final ENGLISH item IDs, the four-construct
+# mapping and the verbatim item text come from the official HTML Table 1 (19
+# final items). Do NOT translate or rewrite.
+#
+# Source: Wu, Y., & Shen, F. (2026). Machine agency attribution in human-AI
+#         interaction: developing and validating an analytical framework.
+#         Journal of Computer-Mediated Communication, 31(3), zmag009.
+#         DOI: 10.1093/jcmc/zmag009. License: CC BY 4.0.
+#
+# VERBATIM TEXT STATUS: the final item IDs, construct mapping and verbatim
+# ENGLISH wording were read from the official OUP minimal-HTML Table 1 endpoint
+# (article-minimal/8692819) and recorded verbatim below. No text is translated,
+# paraphrased or fabricated. Only the initial item pool (with dropped alternate
+# "b" wordings), the full stimulus scripts and the supplementary analyses remain
+# Supplementary-pending (see Supplementary Table 1 / Table 5), and are NOT
+# required for the 19 final scored items.
+
+instrument_id: wu_shen_2026
+language: en
+status: experimental_candidate
+source:
+  title: "Machine agency attribution in human-AI interaction: developing and validating an analytical framework"
+  year: 2026
+  authors: "Wu, Y., & Shen, F."
+  venue: Journal of Computer-Mediated Communication, 31(3), zmag009
+  doi: 10.1093/jcmc/zmag009
+  license: CC BY 4.0
+  final_items_source: "official HTML Table 1 (article-minimal/8692819)"
+  verified_on: "2026-07-22"
+  official_html_table1_read: true      # the formal Table 1 was read from OUP minimal HTML
+  official_full_article_read: false    # NOT claiming the full article body was read this round
+  verbatim_item_text_available: true
+  supplementary_archive_read: false   # initial item pool / full stimuli / supplementary analyses still pending
+
+# Supplementary-pending scope (NOT required for the 19 final scored items):
+supplementary_pending_scope:
+  - initial_item_pool          # incl. dropped alternate "b"-wording candidates
+  - full_stimulus_scripts
+  - supplementary_analyses
+
+response_scale:
+  independence_goal_influence:
+    type: likert_7
+    min: 1
+    max: 7
+    direction: low_anchor_to_high_anchor
+    note: "1=not at all ... 7=very much so"
+  mental_state_inference:
+    type: semantic_differential_5
+    min: 1
+    max: 5
+    direction: low_anchor_to_high_anchor
+    note: "6 mental-state indicators, 5-point semantic differential (adapted from Gray et al. 2007; Weisman et al. 2017)"
+
+# Four measured variables (three-phase organizing framework: perceptual /
+# inferential / evaluative). The three phases are an ORGANIZING framework, NOT
+# scale totals: NO Wu19 total, NO combined machine-agency total, NO PA+Wu total.
+constructs:
+  perceived_machine_independence:
+    phase: perceptual
+    response_scale: independence_goal_influence
+    items: [wu_in1a, wu_in2a, wu_in3b, wu_in4a]
+  perceived_machine_goal_orientation:
+    phase: perceptual
+    response_scale: independence_goal_influence
+    items: [wu_go1a, wu_go2a, wu_go3b, wu_go4a]
+  mental_state_inference:
+    phase: inferential
+    response_scale: mental_state_inference
+    items: [wu_ms1, wu_ms2, wu_ms3, wu_ms4, wu_ms5, wu_ms6]
+  influential_capacity_judgment:
+    phase: evaluative
+    response_scale: independence_goal_influence
+    items: [wu_ic1, wu_ic3, wu_ic4, wu_ic7, wu_ic8]
+
+# Verbatim final Table 1 items (19). MSI items are semantic-differential: the
+# left_anchor_text / right_anchor_text are the verbatim anchor poles; `text`
+# holds the indicator prompt phrasing for administration display.
+items:
+  - {item_id: wu_in1a, construct: perceived_machine_independence, source_item_id: IN1a, text: "The machine acted independently without relying on others."}
+  - {item_id: wu_in2a, construct: perceived_machine_independence, source_item_id: IN2a, text: "The machine made its own decisions without external control."}
+  - {item_id: wu_in3b, construct: perceived_machine_independence, source_item_id: IN3b, text: "The machine's actions resulted from itself rather than other entities."}
+  - {item_id: wu_in4a, construct: perceived_machine_independence, source_item_id: IN4a, text: "The machine organized its actions by itself without other influence."}
+  - {item_id: wu_go1a, construct: perceived_machine_goal_orientation, source_item_id: GO1a, text: "The machine acted purposefully rather than merely behaving."}
+  - {item_id: wu_go2a, construct: perceived_machine_goal_orientation, source_item_id: GO2a, text: "The machine's actions were task-oriented."}
+  - {item_id: wu_go3b, construct: perceived_machine_goal_orientation, source_item_id: GO3b, text: "The machine had goals behind its actions."}
+  - {item_id: wu_go4a, construct: perceived_machine_goal_orientation, source_item_id: GO4a, text: "The machine's actions were part of a plan."}
+  - {item_id: wu_ms1, construct: mental_state_inference, source_item_id: MS1, indicator: consciousness, text: "Consciousness (unconscious \u2013 conscious).", left_anchor_text: "The machine is unconscious", right_anchor_text: "The machine is conscious"}
+  - {item_id: wu_ms2, construct: mental_state_inference, source_item_id: MS2, indicator: thinking, text: "Thinking (cannot think \u2013 does think).", left_anchor_text: "The machine cannot think", right_anchor_text: "The machine does think"}
+  - {item_id: wu_ms3, construct: mental_state_inference, source_item_id: MS3, indicator: free_will, text: "Free will (no free will \u2013 does have free will).", left_anchor_text: "The machine has no free will", right_anchor_text: "The machine does have free will"}
+  - {item_id: wu_ms4, construct: mental_state_inference, source_item_id: MS4, indicator: desires, text: "Desires (no desires \u2013 does have desires).", left_anchor_text: "The machine has no desires", right_anchor_text: "The machine does have desires"}
+  - {item_id: wu_ms5, construct: mental_state_inference, source_item_id: MS5, indicator: self_awareness, text: "Self-awareness (not self-aware \u2013 self-aware).", left_anchor_text: "The machine is not self-aware", right_anchor_text: "The machine is self-aware"}
+  - {item_id: wu_ms6, construct: mental_state_inference, source_item_id: MS6, indicator: intentionality, text: "Intentionality (no intentionality \u2013 does have intentionality).", left_anchor_text: "The machine has no intentionality", right_anchor_text: "The machine does have intentionality"}
+  - {item_id: wu_ic1, construct: influential_capacity_judgment, source_item_id: IC1, text: "The machine is an agentic entity with the power to produce effects."}
+  - {item_id: wu_ic3, construct: influential_capacity_judgment, source_item_id: IC3, text: "The machine is an agentic entity with the power to achieve outcomes."}
+  - {item_id: wu_ic4, construct: influential_capacity_judgment, source_item_id: IC4, text: "The machine is an agentic entity with the power to bring about change."}
+  - {item_id: wu_ic7, construct: influential_capacity_judgment, source_item_id: IC7, text: "The machine is an agentic entity with the power to take meaningful actions."}
+  - {item_id: wu_ic8, construct: influential_capacity_judgment, source_item_id: IC8, text: "The machine is an agentic entity with the power to make a difference."}

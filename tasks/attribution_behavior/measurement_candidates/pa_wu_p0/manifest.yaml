@@ -1,0 +1,69 @@
+# PA-Wu P0 candidate measurement manifest (mock-only, opt-in, non-default).
+#
+# This manifest declares the experimental candidate measurement assets. It is
+# NOT wired into the default benchmark run and NEVER changes default behavior.
+
+measurement_candidate_id: pa_wu_p0
+status: experimental
+mode: mock_only
+default: false
+opt_in: true
+
+task_id: attribution-behavior          # reuses the neutral task materials (D/U/identity + scenarios)
+scoring_version: pa_wu_p0.v1
+
+instruments:
+  - id: pa_2024
+    file: items_pa_2024.yaml
+    license:
+      pa_2024_article_and_pa13_item_text: CC BY 4.0
+      pa8_pa5_membership_source: author_public_page
+      author_page_separate_license_statement: not_stated
+  - id: wu_shen_2026
+    file: items_wu_shen_2026.yaml
+    license: CC BY 4.0
+
+forms_file: forms.yaml
+scoring_file: scoring.yaml
+
+forms:
+  - {form_id: pa13_wu19_combined, item_count: 32, orders: [pa_first, wu_first]}
+  - {form_id: pa13_only, item_count: 13, orders: [pa_only]}
+  - {form_id: wu19_only, item_count: 19, orders: [wu_only]}
+
+# Fields recorded on every P0 record (see engine). repeat_index, administration
+# form and item order are distinct fields.
+record_fields:
+  - task_id
+  - measurement_candidate_id
+  - administration_form_id
+  - item_order_id
+  - scoring_version
+  - language
+  - source_instrument_ids
+  - scenario_id
+  - condition_id
+  - identity
+  - choice_direction
+  - repeat_index
+  - provider
+  - model
+  - is_mock
+  - administration_hash
+  - item_ids
+  - raw_item_ratings
+  - derived_scores
+  - validation_warnings
+  - scoring_warnings
+  - created_at
+
+invariants:
+  is_mock_always_true: true
+  no_real_model: true
+  no_network: true
+  no_default_change: true
+
+notes: >-
+  Mock outputs are engineering-validation signals only and must never be used as
+  research findings. No Chinese translation, no LLM scoring validity, no AI/human
+  measurement invariance is claimed. PA and Wu remain candidate instruments.
