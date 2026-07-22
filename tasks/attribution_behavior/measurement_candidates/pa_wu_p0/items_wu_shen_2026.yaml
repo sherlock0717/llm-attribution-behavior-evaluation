@@ -1,0 +1,94 @@
+# Wu & Shen 2026 machine agency attribution — EXPERIMENTAL candidate items.
+#
+# P0 mock-only engineering asset. NOT part of the default benchmark run and NOT
+# a validated Chinese instrument. Final ENGLISH item IDs come from the official
+# HTML Table 1 (19 final items). Do NOT translate or rewrite.
+#
+# Source: Wu, Y., & Shen, F. (2026). Machine agency attribution in human-AI
+#         interaction: developing and validating an analytical framework.
+#         Journal of Computer-Mediated Communication, 31(3), zmag009.
+#         DOI: 10.1093/jcmc/zmag009. License: CC BY 4.0.
+#
+# Supplementary Data (initial item pool, full stimuli scripts, some supplementary
+# analyses) is NOT read here and does NOT affect the Table 1 final-item entry.
+#
+# NOTE ON VERBATIM TEXT: only the final item IDs and the four-construct mapping
+# are confirmed from Table 1 in this environment. The exact verbatim English
+# wording of each IN/GO/IC item is recorded as "pending_supplementary_verbatim"
+# rather than fabricated; MSI six indicators are single-word/label indicators
+# (consciousness/thinking/free will/desires/self-awareness/intentionality)
+# confirmed in the main text.
+
+instrument_id: wu_shen_2026
+language: en
+status: experimental_candidate
+source:
+  title: "Machine agency attribution in human-AI interaction: developing and validating an analytical framework"
+  year: 2026
+  authors: "Wu, Y., & Shen, F."
+  venue: Journal of Computer-Mediated Communication, 31(3), zmag009
+  doi: 10.1093/jcmc/zmag009
+  license: CC BY 4.0
+  final_items_source: "official HTML Table 1"
+  verified_on: "2026-07-22"
+  official_html_full_text_read: true
+  supplementary_archive_read: false
+
+response_scale:
+  independence_goal_influence:
+    type: likert_7
+    min: 1
+    max: 7
+    note: "1=not at all ... 7=very much so"
+  mental_state_inference:
+    type: semantic_differential_5
+    min: 1
+    max: 5
+    note: "6 mental-state indicators, 5-point semantic differential"
+
+# Four measured variables (three-phase organizing framework: perceptual /
+# inferential / evaluative). NOTE: the three phases are an organizing framework,
+# NOT three scale totals; there is NO combined Wu19 total and NO single
+# machine-agency total.
+constructs:
+  perceived_machine_independence:
+    phase: perceptual
+    response_scale: independence_goal_influence
+    items: [wu_in1a, wu_in2a, wu_in3b, wu_in4a]
+  perceived_machine_goal_orientation:
+    phase: perceptual
+    response_scale: independence_goal_influence
+    items: [wu_go1a, wu_go2a, wu_go3b, wu_go4a]
+  mental_state_inference:
+    phase: inferential
+    response_scale: mental_state_inference
+    items: [wu_ms1, wu_ms2, wu_ms3, wu_ms4, wu_ms5, wu_ms6]
+  influential_capacity_judgment:
+    phase: evaluative
+    response_scale: independence_goal_influence
+    items: [wu_ic1, wu_ic3, wu_ic4, wu_ic7, wu_ic8]
+
+items:
+  # perceived_machine_independence
+  - {item_id: wu_in1a, construct: perceived_machine_independence, source_item_id: IN1a, text: pending_supplementary_verbatim}
+  - {item_id: wu_in2a, construct: perceived_machine_independence, source_item_id: IN2a, text: pending_supplementary_verbatim}
+  - {item_id: wu_in3b, construct: perceived_machine_independence, source_item_id: IN3b, text: pending_supplementary_verbatim}
+  - {item_id: wu_in4a, construct: perceived_machine_independence, source_item_id: IN4a, text: pending_supplementary_verbatim}
+  # perceived_machine_goal_orientation
+  - {item_id: wu_go1a, construct: perceived_machine_goal_orientation, source_item_id: GO1a, text: pending_supplementary_verbatim}
+  - {item_id: wu_go2a, construct: perceived_machine_goal_orientation, source_item_id: GO2a, text: pending_supplementary_verbatim}
+  - {item_id: wu_go3b, construct: perceived_machine_goal_orientation, source_item_id: GO3b, text: pending_supplementary_verbatim}
+  - {item_id: wu_go4a, construct: perceived_machine_goal_orientation, source_item_id: GO4a, text: pending_supplementary_verbatim}
+  # mental_state_inference (indicators confirmed in main text)
+  - {item_id: wu_ms1, construct: mental_state_inference, source_item_id: MS1, text: "consciousness"}
+  - {item_id: wu_ms2, construct: mental_state_inference, source_item_id: MS2, text: "thinking"}
+  - {item_id: wu_ms3, construct: mental_state_inference, source_item_id: MS3, text: "free will"}
+  - {item_id: wu_ms4, construct: mental_state_inference, source_item_id: MS4, text: "desires"}
+  - {item_id: wu_ms5, construct: mental_state_inference, source_item_id: MS5, text: "self-awareness"}
+  - {item_id: wu_ms6, construct: mental_state_inference, source_item_id: MS6, text: "intentionality"}
+  # influential_capacity_judgment
+  - {item_id: wu_ic1, construct: influential_capacity_judgment, source_item_id: IC1, text: pending_supplementary_verbatim}
+  - {item_id: wu_ic3, construct: influential_capacity_judgment, source_item_id: IC3, text: pending_supplementary_verbatim}
+  - {item_id: wu_ic4, construct: influential_capacity_judgment, source_item_id: IC4, text: pending_supplementary_verbatim}
+  - {item_id: wu_ic7, construct: influential_capacity_judgment, source_item_id: IC7, text: pending_supplementary_verbatim}
+  - {item_id: wu_ic8, construct: influential_capacity_judgment, source_item_id: IC8, text: pending_supplementary_verbatim}

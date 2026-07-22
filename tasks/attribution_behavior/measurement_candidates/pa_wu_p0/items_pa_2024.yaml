@@ -1,0 +1,118 @@
+# PA 2024 (Perception of Agency) — EXPERIMENTAL candidate measurement items.
+#
+# P0 mock-only engineering asset. This is NOT part of the default benchmark run
+# and NOT a validated Chinese instrument. Items are the author-published verbatim
+# ENGLISH items; do NOT translate or rewrite here.
+#
+# Source: Trafton, J. G., McCurry, J. M., Zish, K., & Frazier, C. R. (2024).
+#         The Perception of Agency. ACM Transactions on Human-Robot Interaction,
+#         13(1), 1-23. DOI: 10.1145/3640011
+# Short-form reference: Trafton et al. (2023, IEEE RO-MAN) scale reduction.
+# Item membership (PA13/PA8/PA5) and scoring taken from the author's public
+# page (gregtrafton.com/agency), verified 2026-07-22.
+#
+# LICENSE NOTE: the author's public page does NOT state a CC BY 4.0 license for
+# the PA scale (author is affiliated with a U.S. government lab; formal reuse
+# should be confirmed with the author). We therefore record license as
+# "unverified_contact_author" rather than asserting CC BY 4.0. This differs from
+# the step-8 template assumption and is recorded truthfully; see README.
+
+instrument_id: pa_2024
+language: en
+status: experimental_candidate
+source:
+  title: The Perception of Agency
+  year: 2024
+  authors: "Trafton, J. G., McCurry, J. M., Zish, K., & Frazier, C. R."
+  venue: ACM Transactions on Human-Robot Interaction, 13(1), 1-23
+  doi: 10.1145/3640011
+  item_membership_source: "gregtrafton.com/agency (author public page)"
+  verified_on: "2026-07-22"
+  license: unverified_contact_author   # NOT confirmed CC BY 4.0; see README
+
+# Response scale as published by the author (5-point). The two scenario items use
+# a 5-point terrible..great anchor; the remaining items use a 5-point
+# Strongly Disagree..Strongly Agree anchor.
+response_scale:
+  type: likert_5
+  min: 1
+  max: 5
+  likert_note: "1=Strongly Disagree ... 5=Strongly Agree"
+  scenario_note: "scenario items (actor/dinner) anchored 1=terrible ... 5=great"
+
+# The 13 formal scored items (verbatim English short phrases / scenario prompts).
+# An attention-check item exists in the source but is NOT a scored PA item and is
+# intentionally excluded here so it can never enter the PA total.
+items:
+  - item_id: pa_acts_with_purpose
+    text: "acts with purpose"
+    scale_item: true
+  - item_id: pa_has_goals
+    text: "has goals"
+    scale_item: true
+  - item_id: pa_can_create_new_goals
+    text: "can create new goals"
+    scale_item: true
+  - item_id: pa_can_communicate
+    text: "can communicate with people"
+    scale_item: true
+  - item_id: pa_treats_others_as_minded
+    text: "treats others as if they had a mind"
+    scale_item: true
+  - item_id: pa_wanted_to_perform
+    text: "wanted to perform these actions"
+    scale_item: true
+  - item_id: pa_can_show_emotions
+    text: "can show emotions to other people"
+    scale_item: true
+  - item_id: pa_can_change_behavior
+    text: "can change their behavior based on how people treat them"
+    scale_item: true
+  - item_id: pa_can_adapt
+    text: "can adapt to different situations"
+    scale_item: true
+  - item_id: pa_would_do_well_other_env
+    text: "would do well in other environments"
+    scale_item: true
+  - item_id: pa_can_perform_many_tasks
+    text: "can perform many different types of tasks"
+    scale_item: true
+  - item_id: pa_actor_scenario
+    text: "Imagine the robot/character/person was asked to be an actor in a local theater production. How well do you think they would do?"
+    scale_item: true
+  - item_id: pa_dinner_scenario
+    text: "Imagine the robot/character/person was asked to host a dinner party for your friends next weekend. How well do you think they will do?"
+    scale_item: true
+
+# Author-published version membership (do NOT modify). PA8 and PA5 are official
+# subsets of PA13; membership is fixed by the source, not inferred.
+versions:
+  pa13:
+    - pa_acts_with_purpose
+    - pa_has_goals
+    - pa_can_create_new_goals
+    - pa_can_communicate
+    - pa_treats_others_as_minded
+    - pa_wanted_to_perform
+    - pa_can_show_emotions
+    - pa_can_change_behavior
+    - pa_can_adapt
+    - pa_would_do_well_other_env
+    - pa_can_perform_many_tasks
+    - pa_actor_scenario
+    - pa_dinner_scenario
+  pa8:
+    - pa_has_goals
+    - pa_can_create_new_goals
+    - pa_can_communicate
+    - pa_wanted_to_perform
+    - pa_can_change_behavior
+    - pa_can_adapt
+    - pa_actor_scenario
+    - pa_dinner_scenario
+  pa5:
+    - pa_can_create_new_goals
+    - pa_can_communicate
+    - pa_can_change_behavior
+    - pa_can_adapt
+    - pa_actor_scenario

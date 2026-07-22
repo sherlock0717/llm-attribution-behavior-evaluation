@@ -1,0 +1,38 @@
+# Administration forms for the PA-Wu P0 mock candidate measurement.
+#
+# repeat, form and order are THREE DIFFERENT fields; item order is NOT a repeat.
+# F1 is a PROJECT-DEFINED combined form; it is NOT an original validated 32-item
+# unified scale.
+
+forms:
+  - form_id: pa13_wu19_combined
+    label: "F1 combined candidate form (project-defined; NOT a validated 32-item scale)"
+    project_defined_combination: true
+    validated_unified_scale: false
+    item_count: 32
+    instruments: [pa_2024, wu_shen_2026]
+    orders:
+      - order_id: pa_first
+        sequence: [pa_2024, wu_shen_2026]
+      - order_id: wu_first
+        sequence: [wu_shen_2026, pa_2024]
+
+  - form_id: pa13_only
+    label: "F2 PA13-only"
+    project_defined_combination: false
+    validated_unified_scale: false
+    item_count: 13
+    instruments: [pa_2024]
+    orders:
+      - order_id: pa_only
+        sequence: [pa_2024]
+
+  - form_id: wu19_only
+    label: "F3 Wu19-only"
+    project_defined_combination: false
+    validated_unified_scale: false
+    item_count: 19
+    instruments: [wu_shen_2026]
+    orders:
+      - order_id: wu_only
+        sequence: [wu_shen_2026]
