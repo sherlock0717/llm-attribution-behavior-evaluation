@@ -47,11 +47,13 @@
    而非 7 点。按作者公开信息如实记录。
 3. **PA8/PA5 成员**取自作者公开页面的版本归属表（逐条 x 标记，2026-07-22 核验），
    **未自行推断或缩减**。PA8=8 项、PA5=5 项，均为 PA13 的官方子集。
-4. **Wu 逐字题项**：官方 OUP minimal-HTML Table 1 端点（`article-minimal/8692819`）
-   含全部最终 19 项。IN1a–IN4a、GO1a–GO4a、IC1/IC3/IC4/IC7/IC8 的逐字英文题项，
-   以及 MSI1–MSI6 六项语义差异量表的**左右锚点逐字英文原文**（consciousness/thinking/
-   free will/desires/self-awareness/intentionality），均已**逐字录入**，不翻译、不改写、
-   不臆造。已删除全部 `pending_source_verbatim` 占位符。
+4. **Wu 逐字题项**：本轮读取的是 **OUP minimal HTML 中的正式 Table 1**
+   端点（`article-minimal/8692819`），含全部最终 19 项；**本轮不声称完整读取全文**
+   （源元数据分开记录：`official_html_table1_read: true`、`official_full_article_read: false`、
+   `verbatim_item_text_available: true`）。IN1a–IN4a、GO1a–GO4a、IC1/IC3/IC4/IC7/IC8 的
+   逐字英文题项，以及 MSI1–MSI6 六项语义差异量表的**左右锚点逐字英文原文**
+   （consciousness/thinking/free will/desires/self-awareness/intentionality），
+   均已**逐字录入**，不翻译、不改写、不臆造。已删除全部 `pending_source_verbatim` 占位符。
    **仅初始项目池（含被剔除的 "b" 备选措辞）、完整实验刺激脚本、补充分析**另属
    Supplementary 待核验，且**不影响 19 项最终计分题项**。
 5. **三阶段是组织框架，不是三个量表总分**：无 Wu19 总分、无四构念合成总分、

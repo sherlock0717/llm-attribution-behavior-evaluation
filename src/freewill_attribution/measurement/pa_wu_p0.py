@@ -185,6 +185,28 @@ def _validate_contract(contract: P0Contract) -> None:
         if not str(it.get("text", "")).strip():
             raise P0ContractError(f"Wu item has empty text: {it.get('item_id')}")
 
+    # MSI semantic-differential anchors must be present, non-empty, non-placeholder
+    # and the two poles must differ (a semantic differential has two distinct ends).
+    msi_ids = set(contract.wu_construct_members("mental_state_inference"))
+    for it in contract.wu_items["items"]:
+        if str(it["item_id"]) not in msi_ids:
+            continue
+        left = str(it.get("left_anchor_text", ""))
+        right = str(it.get("right_anchor_text", ""))
+        for label, anchor in (("left", left), ("right", right)):
+            if not anchor.strip():
+                raise P0ContractError(
+                    f"MSI item {it['item_id']} missing {label}_anchor_text"
+                )
+            if item_text_is_placeholder(anchor):
+                raise P0ContractError(
+                    f"MSI item {it['item_id']} {label}_anchor_text is a placeholder"
+                )
+        if left.strip() == right.strip():
+            raise P0ContractError(
+                f"MSI item {it['item_id']} left/right anchors must differ"
+            )
+
     # Response scales must be complete.
     pa_scale = contract.pa_items.get("response_scale", {})
     if "min" not in pa_scale or "max" not in pa_scale:
@@ -245,20 +267,40 @@ def item_text_is_placeholder(text: str) -> bool:
     return str(text).strip().startswith("pending_")
 
 
-def assert_administrable(contract: P0Contract) -> None:
-    """Raise if any item still carries placeholder text.
+def assert_administrable(
+    contract: P0Contract,
+    form_id: str | None = None,
+    order_id: str | None = None,
+) -> None:
+    """Raise if any item to be administered still carries placeholder text.
 
     Structural validation (load_contract) does not require real text so that P0
-    engineering checks can run, but no form may be ADMINISTERED while any item
-    text is a ``pending_*`` placeholder.
+    engineering checks can run, but no item may be ADMINISTERED while its text
+    is a ``pending_*`` placeholder.
+
+    - No ``form_id``: checks the WHOLE contract (all PA + Wu items).
+    - With ``form_id`` (and optional ``order_id``): checks ONLY the items that
+      actually appear in that administration form. The form-administration entry
+      points should use this form-level check.
     """
-    offenders: list[str] = []
-    for it in [*contract.pa_items["items"], *contract.wu_items["items"]]:
-        if item_text_is_placeholder(str(it.get("text", ""))):
-            offenders.append(str(it["item_id"]))
+    if form_id is None:
+        item_ids: list[str] = [
+            str(it["item_id"]) for it in (*contract.pa_items["items"], *contract.wu_items["items"])
+        ]
+    elif order_id is None:
+        # Any order of the form covers the same item set; use the first order.
+        form = _find_form(contract, form_id)
+        first_order = str(form["orders"][0]["order_id"])
+        item_ids = build_form_item_ids(contract, form_id, first_order)
+    else:
+        item_ids = build_form_item_ids(contract, form_id, order_id)
+
+    texts = _item_text_map(contract)
+    offenders = [i for i in item_ids if item_text_is_placeholder(texts.get(i, ""))]
     if offenders:
+        scope = "contract" if form_id is None else f"form {form_id}"
         raise P0ContractError(
-            "form is not administrable: placeholder item text present for "
+            f"{scope} is not administrable: placeholder item text present for "
             f"{offenders}; supply verbatim source text before administration"
         )
 

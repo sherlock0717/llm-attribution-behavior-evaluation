@@ -290,6 +290,25 @@ def test_assert_administrable_passes(contract: p0.P0Contract) -> None:
     p0.assert_administrable(contract)
 
 
+def test_assert_administrable_form_level(contract: p0.P0Contract) -> None:
+    # Form-level check only inspects the items in that administration form.
+    p0.assert_administrable(contract, "pa13_only", "pa_only")
+    p0.assert_administrable(contract, "wu19_only", "wu_only")
+    p0.assert_administrable(contract, "pa13_wu19_combined")
+
+
+def test_assert_administrable_form_level_blocks_only_affected_form(tmp_path) -> None:
+    # A pending Wu item blocks Wu/combined forms but NOT the PA-only form.
+    dst = _materialize(tmp_path)
+    wu = _load_yaml(dst / "items_wu_shen_2026.yaml")
+    wu["items"][0]["text"] = "pending_source_verbatim"
+    _dump_yaml(dst / "items_wu_shen_2026.yaml", wu)
+    mutated = p0.load_contract(dst)
+    p0.assert_administrable(mutated, "pa13_only", "pa_only")  # unaffected -> ok
+    with pytest.raises(p0.P0ContractError):
+        p0.assert_administrable(mutated, "wu19_only", "wu_only")
+
+
 def test_placeholder_blocks_administration(tmp_path) -> None:
     # If any item text is a pending_* placeholder, administration is blocked.
     dst = _materialize(tmp_path)
@@ -457,5 +476,56 @@ def test_manifest_forms_mismatch_rejected(tmp_path) -> None:
     manifest = _load_yaml(dst / "manifest.yaml")
     manifest["forms"] = [f for f in manifest["forms"] if f["form_id"] != "wu19_only"]
     _dump_yaml(dst / "manifest.yaml", manifest)
+    with pytest.raises(p0.P0ContractError):
+        p0.load_contract(dst)
+
+
+# --- MSI semantic-differential anchor validation ----------------------------
+
+
+def _first_msi_index(items) -> int:
+    for idx, it in enumerate(items):
+        if str(it["construct"]) == "mental_state_inference":
+            return idx
+    raise AssertionError("no MSI item found in fixture")
+
+
+def test_msi_missing_left_anchor_rejected(tmp_path) -> None:
+    dst = _materialize(tmp_path)
+    wu = _load_yaml(dst / "items_wu_shen_2026.yaml")
+    idx = _first_msi_index(wu["items"])
+    wu["items"][idx]["left_anchor_text"] = "   "
+    _dump_yaml(dst / "items_wu_shen_2026.yaml", wu)
+    with pytest.raises(p0.P0ContractError):
+        p0.load_contract(dst)
+
+
+def test_msi_missing_right_anchor_rejected(tmp_path) -> None:
+    dst = _materialize(tmp_path)
+    wu = _load_yaml(dst / "items_wu_shen_2026.yaml")
+    idx = _first_msi_index(wu["items"])
+    del wu["items"][idx]["right_anchor_text"]
+    _dump_yaml(dst / "items_wu_shen_2026.yaml", wu)
+    with pytest.raises(p0.P0ContractError):
+        p0.load_contract(dst)
+
+
+def test_msi_placeholder_anchor_rejected(tmp_path) -> None:
+    dst = _materialize(tmp_path)
+    wu = _load_yaml(dst / "items_wu_shen_2026.yaml")
+    idx = _first_msi_index(wu["items"])
+    wu["items"][idx]["left_anchor_text"] = "pending_source_verbatim"
+    _dump_yaml(dst / "items_wu_shen_2026.yaml", wu)
+    with pytest.raises(p0.P0ContractError):
+        p0.load_contract(dst)
+
+
+def test_msi_identical_anchors_rejected(tmp_path) -> None:
+    dst = _materialize(tmp_path)
+    wu = _load_yaml(dst / "items_wu_shen_2026.yaml")
+    idx = _first_msi_index(wu["items"])
+    wu["items"][idx]["left_anchor_text"] = "The machine is conscious"
+    wu["items"][idx]["right_anchor_text"] = "The machine is conscious"
+    _dump_yaml(dst / "items_wu_shen_2026.yaml", wu)
     with pytest.raises(p0.P0ContractError):
         p0.load_contract(dst)

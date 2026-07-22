@@ -30,7 +30,8 @@ source:
   license: CC BY 4.0
   final_items_source: "official HTML Table 1 (article-minimal/8692819)"
   verified_on: "2026-07-22"
-  official_html_full_text_read: true
+  official_html_table1_read: true      # the formal Table 1 was read from OUP minimal HTML
+  official_full_article_read: false    # NOT claiming the full article body was read this round
   verbatim_item_text_available: true
   supplementary_archive_read: false   # initial item pool / full stimuli / supplementary analyses still pending
 
