@@ -1,6 +1,8 @@
-# 静态展示页（site/）
+# 静态展示页
 
-**LLM 归因行为评测 · A Reproducible Study and Evaluation Prototype** 的静态展示页。原生 HTML/CSS/JavaScript + 静态 JSON，无框架、无 CDN、无外部字体、无第三方 JS、无后端、无远程 API。页面组织为一篇连续的研究与工程报告：项目概览 → 研究问题 → 实验设计与测量 → 研究与测量来源 → 历史数据 → 完整分析链 → 结果总结 → 可复现评测核心 → 模拟运行验证 → 真实模型接入 → 可复现运行 → 从单一任务到通用评测。
+`site/` 展示决策过程表述和行动者身份如何影响模型的归因评分。页面使用原生 HTML、CSS、JavaScript 和静态 JSON，不依赖外部字体、CDN、第三方脚本或后端服务。
+
+页面以研究问题和当前结果为主，详细的运行状态、来源记录和复现说明通过仓库文档提供。
 
 ## 本地预览
 
@@ -8,31 +10,40 @@
 python -m http.server 8000 --directory site
 ```
 
-然后在浏览器打开 http://localhost:8000/ 。
+然后打开 http://localhost:8000/ 。
 
-> 请通过本地静态服务器访问；直接以 `file://` 双击打开会因浏览器安全策略导致 `fetch` 加载 JSON 失败。附加 `?diagnostics=1` 可让页面把渲染诊断（`renderComplete`、文档滚动宽度等）写入 `<html>` 的 `data-*`，供浏览器验证读取。
+页面通过 `fetch` 读取本地 JSON，因此需要使用静态服务器访问。附加 `?diagnostics=1` 后，页面会把渲染完成状态和文档宽度等诊断信息写入 HTML 属性，供自动测试读取。
 
-## 数据来源
+## 生成页面数据
 
-页面上的所有动态数字（记录数、条件数、构念/题项、信度、条件均值、身份效应、对比、回归、路径、mock 质量、情境案例等）都来自 `site/data/*.json`，由仓库脚本从源文件生成，**不在 HTML 中硬编码**：
+页面中的设计规模、构念信息、统计结果、运行状态和文档入口由脚本从仓库源文件生成：
 
 ```bash
-python scripts/build_site_data.py        # site_summary / roadmap / version_history / historical_results
-python scripts/build_public_report.py    # evaluation_summary / evidence_matrix / engineering_status
-python scripts/build_showcase_data.py    # showcase_story / measurement_summary / analysis_results / reproducibility_summary
-# 各脚本均支持 --check，校验 site/data 与源文件一致
+uv run python scripts/build_site_data.py
+uv run python scripts/build_public_report.py
+uv run python scripts/build_showcase_data.py
 ```
 
-页面加载的 JSON：`site_summary.json`、`showcase_story.json`、`measurement_summary.json`、`analysis_results.json`、`historical_results.json`、`engineering_status.json`、`reproducibility_summary.json`。（`evidence_matrix.json` 仍由 `build_public_report.py` 生成、供内部审计，但不在主页渲染。）
+生成结果写入 `site/data/`。三个脚本均支持 `--check`，用于确认静态 JSON 与源文件一致。可计算的统计数字不直接维护在 HTML 中。
 
-图表以原生 SVG / HTML-CSS 渲染，支持中文标签与 390px 窄屏；三张历史结果图为既有分析产物（`outputs/plots/`），经哈希校验后复制到 `assets/figures/`。研究问题栏目的概念图 `assets/figures/attribution-research-concept.png` 为概念插图，仅解释研究结构，不承载统计结果，也不计入三张历史结果图。
+## 图表与材料
 
-「研究与测量来源」区块的来源卡与参考文献由 `docs/showcase/site_manifest.yaml` 的 `research_sources` 维护，经 `build_showcase_data.py` 生成到 `showcase_story.json`。完整参考文献与逐题映射见 `docs/research_and_measurement_sources.md` 与 `docs/scale_source_mapping.md`；页面只展示简短来源信息，不复制逐题映射表。当前题项池基于既有理论与量表构念进行情境化改写，并非对原量表的完整直接使用。
+结果图来自仓库分析产物，页面构建过程会检查对应文件和哈希。研究结构示意图只解释输入、模型判断和归因输出之间的关系。
 
-## 边界声明
+题项与文献来源见：
 
-历史结果为历史真实 DeepSeek API 的模型输出（AI 模拟数据，非人类被试，单一模型）。`mock` 仅用于工程/CI 流程验证。真实模型接入流程已完成离线验证但尚未真正运行——页面不出现任何真实 token、费用、延迟或模型表现。页面上的评分反映模型在给定材料中的归因反应，它与模型本身是否具有自由意志、以及能否代表人类总体心理规律之间仍有很大距离。
+- [`../docs/research_and_measurement_sources.md`](../docs/research_and_measurement_sources.md)
+- [`../docs/scale_source_mapping.md`](../docs/scale_source_mapping.md)
+- [`../docs/STUDY_CARD.md`](../docs/STUDY_CARD.md)
+
+## 解释范围
+
+页面展示的是模型在当前材料和评分任务下的输出变化。现有数据来自单一模型，部分材料和题项仍有待进一步解耦，结果以描述性比较和关联性诊断为主。
+
+确定性 `mock` 运行只检查配置、解析、计分和产物生成，不进入结果解释。
 
 ## 部署
 
-在线地址：https://sherlock0717.github.io/llm-attribution-behavior-evaluation/ 。发布通过 GitHub Pages（`.github/workflows/pages.yml`，仅在 main push 或手动触发时部署 `site/` 目录，不运行 Jekyll、不含任何密钥或真实 Provider 运行）。
+在线地址：https://sherlock0717.github.io/llm-attribution-behavior-evaluation/
+
+`.github/workflows/pages.yml` 在主分支更新或手动触发时发布 `site/` 目录。部署过程不调用模型接口，也不读取 API 密钥。
