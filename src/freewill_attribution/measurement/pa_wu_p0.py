@@ -149,6 +149,84 @@ def _validate_contract(contract: P0Contract) -> None:
         if str(spec.get("score_id")) in FORBIDDEN_SCORE_IDS:
             raise P0ContractError(f"forbidden derived score declared: {spec.get('score_id')}")
 
+    # Every item must carry a non-empty text field (placeholder text is allowed
+    # at load time but blocked from administration; see assert_administrable).
+    for it in contract.pa_items["items"]:
+        if not str(it.get("text", "")).strip():
+            raise P0ContractError(f"PA item has empty text: {it.get('item_id')}")
+    for it in contract.wu_items["items"]:
+        if not str(it.get("text", "")).strip():
+            raise P0ContractError(f"Wu item has empty text: {it.get('item_id')}")
+
+    # Response scales must be complete.
+    pa_scale = contract.pa_items.get("response_scale", {})
+    if "min" not in pa_scale or "max" not in pa_scale:
+        raise P0ContractError("PA response_scale is incomplete (min/max required)")
+    wu_scales = contract.wu_items.get("response_scale", {})
+    for key in ("independence_goal_influence", "mental_state_inference"):
+        sc = wu_scales.get(key, {})
+        if "min" not in sc or "max" not in sc:
+            raise P0ContractError(f"Wu response_scale '{key}' is incomplete (min/max required)")
+
+    # manifest scoring_version == scoring.yaml scoring_version.
+    if str(contract.manifest.get("scoring_version")) != str(
+        contract.scoring.get("scoring_version")
+    ):
+        raise P0ContractError("manifest scoring_version does not match scoring.yaml")
+
+    # manifest forms == forms.yaml (by form_id set).
+    manifest_form_ids = {str(f["form_id"]) for f in contract.manifest.get("forms", [])}
+    forms_yaml_ids = {str(f["form_id"]) for f in contract.forms["forms"]}
+    if manifest_form_ids != forms_yaml_ids:
+        raise P0ContractError("manifest forms do not match forms.yaml form_ids")
+
+    # form item_count matches built length; instruments match order sequences.
+    known_instruments = {"pa_2024", "wu_shen_2026"}
+    block_sizes = {"pa_2024": len(contract.pa_item_ids), "wu_shen_2026": len(contract.wu_item_ids)}
+    for form in contract.forms["forms"]:
+        declared_instruments = {str(x) for x in form.get("instruments", [])}
+        if not declared_instruments.issubset(known_instruments):
+            raise P0ContractError(f"form {form['form_id']} lists unknown instruments")
+        for order in form["orders"]:
+            seq = [str(x) for x in order["sequence"]]
+            if set(seq) != declared_instruments:
+                raise P0ContractError(
+                    f"form {form['form_id']} order {order['order_id']} sequence "
+                    "does not match declared instruments"
+                )
+            built = sum(block_sizes[i] for i in seq)
+            if built != int(form["item_count"]):
+                raise P0ContractError(
+                    f"form {form['form_id']} item_count {form['item_count']} != built {built}"
+                )
+
+
+# Placeholder markers: item text starting with these is NOT real verbatim text
+# and must never enter an administrable form.
+PENDING_TEXT_MARKERS = ("pending_supplementary_verbatim", "pending_source_verbatim", "pending_")
+
+
+def item_text_is_placeholder(text: str) -> bool:
+    return str(text).strip().startswith("pending_")
+
+
+def assert_administrable(contract: P0Contract) -> None:
+    """Raise if any item still carries placeholder text.
+
+    Structural validation (load_contract) does not require real text so that P0
+    engineering checks can run, but no form may be ADMINISTERED while any item
+    text is a ``pending_*`` placeholder.
+    """
+    offenders: list[str] = []
+    for it in [*contract.pa_items["items"], *contract.wu_items["items"]]:
+        if item_text_is_placeholder(str(it.get("text", ""))):
+            offenders.append(str(it["item_id"]))
+    if offenders:
+        raise P0ContractError(
+            "form is not administrable: placeholder item text present for "
+            f"{offenders}; supply verbatim source text before administration"
+        )
+
 
 # ---------------------------------------------------------------------------
 # Forms
@@ -205,9 +283,11 @@ def derive_scores(contract: P0Contract, ratings: dict[str, int]) -> ScoreResult:
     """Derive PA/Wu sub-scores from raw item ratings under strict rules.
 
     Missing member items never yield a silent complete score: the affected score
-    is skipped and a warning is recorded. No Wu19/combined/PA+Wu total is ever
-    produced.
+    is skipped and a warning is recorded (policy ``skip_affected_score_with_warning``).
+    Out-of-range member ratings raise ``P0ContractError`` (they must never enter a
+    derived score). No Wu19/combined/PA+Wu total is ever produced.
     """
+    ranges = _rating_ranges(contract)
     result = ScoreResult(derived_scores={})
     for spec in contract.scoring.get("derived_scores", []):
         score_id = str(spec["score_id"])
@@ -220,6 +300,13 @@ def derive_scores(contract: P0Contract, ratings: dict[str, int]) -> ScoreResult:
                 f"{score_id}: missing member ratings {missing}; score not computed"
             )
             continue
+        for m in members:
+            low, high = ranges[m]
+            if not (low <= ratings[m] <= high):
+                raise P0ContractError(
+                    f"out-of-range rating cannot enter derived score {score_id}: "
+                    f"{m}={ratings[m]} not in [{low},{high}]"
+                )
         values = [float(ratings[m]) for m in members]
         result.derived_scores[score_id] = round(statistics.fmean(values), 6)
     return result
@@ -246,10 +333,11 @@ def validate_response(
 ) -> list[str]:
     """Validate a raw item-rating response against the form. Returns warnings.
 
-    Raises P0ContractError for structural faults (duplicate/unknown item,
-    non-numeric rating, form/item mismatch). Out-of-range and missing items are
-    reported so callers can decide; ``derive_scores`` additionally guards missing
-    members.
+    Raises ``P0ContractError`` for faults that must never reach scoring:
+    duplicate item, unknown item, non-numeric rating, form/item mismatch AND
+    out-of-range rating. Missing items are reported as a warning (policy
+    ``skip_affected_score_with_warning``); ``derive_scores`` additionally guards
+    missing members.
     """
     expected_ids = build_form_item_ids(contract, form_id, order_id)
     expected_set = set(expected_ids)
@@ -271,7 +359,9 @@ def validate_response(
             raise P0ContractError(f"non-numeric rating for {item_id}: {rating!r}")
         low, high = ranges[item_id]
         if not (low <= rating <= high):
-            warnings.append(f"out_of_range: {item_id}={rating} not in [{low},{high}]")
+            raise P0ContractError(
+                f"out_of_range rating for {item_id}: {rating} not in [{low},{high}]"
+            )
 
     missing = [i for i in expected_ids if i not in seen]
     if missing:
@@ -319,18 +409,102 @@ def account_requests(
 
 
 # ---------------------------------------------------------------------------
-# Deterministic MOCK run (no network, is_mock always True)
+# Source instruments / administration hash / record validation
 # ---------------------------------------------------------------------------
 
 
-def _prompt_hash(*parts: str) -> str:
+def form_source_instruments(contract: P0Contract, form_id: str) -> list[str]:
+    """Return the source_instrument_ids actually used by a form (dynamic)."""
+    form = _find_form(contract, form_id)
+    return [str(x) for x in form.get("instruments", [])]
+
+
+def _item_text_map(contract: P0Contract) -> dict[str, str]:
+    texts: dict[str, str] = {}
+    for it in contract.pa_items["items"]:
+        texts[str(it["item_id"])] = str(it.get("text", ""))
+    for it in contract.wu_items["items"]:
+        texts[str(it["item_id"])] = str(it.get("text", ""))
+    return texts
+
+
+def administration_hash(
+    contract: P0Contract,
+    form_id: str,
+    order_id: str,
+    material: dict[str, str],
+    repeat_index: int,
+) -> str:
+    """Deterministic hash of the administration (NOT a rendered-prompt hash).
+
+    Covers candidate id, scoring version, form/order, the full ordered item ids,
+    the full item texts, the response scales, the material key and repeat index.
+    Changing item text OR item order changes this hash.
+    """
+    ordered_ids = build_form_item_ids(contract, form_id, order_id)
+    texts = _item_text_map(contract)
+    ranges = _rating_ranges(contract)
+    parts = [
+        MEASUREMENT_CANDIDATE_ID,
+        SCORING_VERSION,
+        form_id,
+        order_id,
+    ]
+    for item_id in ordered_ids:
+        low, high = ranges[item_id]
+        parts.append(f"{item_id}::{texts.get(item_id, '')}::[{low},{high}]")
+    parts.extend(
+        [
+            material.get("scenario_id", ""),
+            material.get("condition_id", ""),
+            material.get("identity", ""),
+            material.get("choice_direction", ""),
+            str(repeat_index),
+        ]
+    )
     return hashlib.sha256("|".join(parts).encode("utf-8")).hexdigest()[:16]
+
+
+def validate_record(record: dict[str, Any]) -> None:
+    """Validate a P0 record. Rejects is_mock=false and missing required fields."""
+    if record.get("is_mock") is not True:
+        raise P0ContractError("P0 record must have is_mock=True (real records rejected)")
+    required = (
+        "raw_item_ratings",
+        "derived_scores",
+        "validation_warnings",
+        "scoring_warnings",
+        "administration_hash",
+        "source_instrument_ids",
+    )
+    for field_name in required:
+        if field_name not in record:
+            raise P0ContractError(f"P0 record missing required field: {field_name}")
+
+
+# ---------------------------------------------------------------------------
+# Deterministic MOCK run (no network, is_mock always True)
+# ---------------------------------------------------------------------------
 
 
 def _mock_rating(item_id: str, low: int, high: int, key: str) -> int:
     digest = int(hashlib.sha256((item_id + key).encode("utf-8")).hexdigest()[:8], 16)
     span = high - low + 1
     return low + (digest % span)
+
+
+def _mock_ratings(
+    contract: P0Contract,
+    ordered_ids: list[str],
+    key: str,
+    inject_fault: str | None,
+) -> list[dict[str, Any]]:
+    ranges = _rating_ranges(contract)
+    entries = [
+        {"item_id": i, "rating": _mock_rating(i, ranges[i][0], ranges[i][1], key)}
+        for i in ordered_ids
+    ]
+    return _apply_fault(entries, inject_fault)
 
 
 def mock_run(
@@ -343,11 +517,17 @@ def mock_run(
 ) -> list[dict[str, Any]]:
     """Produce deterministic MOCK P0 records over the given materials.
 
-    ``is_mock`` is always True. ``inject_fault`` (test-only) can produce
-    missing_item / duplicate_item / out_of_range / unknown_item responses.
+    Normal flow per record: construct raw response -> validate_response ->
+    derive_scores -> full record with raw_item_ratings / derived_scores /
+    validation_warnings / scoring_warnings. ``is_mock`` is always True.
+
+    ``inject_fault`` (test-only) produces a raw response with the given fault; the
+    record still stores the raw response so callers can re-validate it and see the
+    fault raise. Faults that would raise inside the normal flow are stored raw
+    (validation deferred to the caller) to keep fault fixtures inspectable.
     """
     ordered_ids = build_form_item_ids(contract, form_id, order_id)
-    ranges = _rating_ranges(contract)
+    source_ids = form_source_instruments(contract, form_id)
     records: list[dict[str, Any]] = []
     for material in materials:
         for repeat_index in range(repeats):
@@ -361,43 +541,49 @@ def mock_run(
                     str(repeat_index),
                 ]
             )
-            rating_entries: list[dict[str, Any]] = []
-            for item_id in ordered_ids:
-                low, high = ranges[item_id]
-                rating_entries.append(
-                    {"item_id": item_id, "rating": _mock_rating(item_id, low, high, key)}
-                )
-            rating_entries = _apply_fault(rating_entries, inject_fault, ranges)
-            records.append(
-                {
-                    "task_id": contract.manifest["task_id"],
-                    "measurement_candidate_id": MEASUREMENT_CANDIDATE_ID,
-                    "administration_form_id": form_id,
-                    "item_order_id": order_id,
-                    "scoring_version": SCORING_VERSION,
-                    "language": "en",
-                    "source_instrument_ids": ["pa_2024", "wu_shen_2026"],
-                    "scenario_id": material.get("scenario_id", ""),
-                    "condition_id": material.get("condition_id", ""),
-                    "identity": material.get("identity", ""),
-                    "choice_direction": material.get("choice_direction", ""),
-                    "repeat_index": repeat_index,
-                    "provider": "mock",
-                    "model": "rule-based-p0",
-                    "is_mock": True,
-                    "prompt_hash": _prompt_hash(form_id, order_id, key),
-                    "item_ids": [e["item_id"] for e in rating_entries],
-                    "ratings": rating_entries,
-                    "created_at": "1970-01-01T00:00:00Z",  # fixed, deterministic
-                }
+            raw = _mock_ratings(contract, ordered_ids, key, inject_fault)
+            adm_hash = administration_hash(
+                contract, form_id, order_id, material, repeat_index
             )
+            record: dict[str, Any] = {
+                "task_id": contract.manifest["task_id"],
+                "measurement_candidate_id": MEASUREMENT_CANDIDATE_ID,
+                "administration_form_id": form_id,
+                "item_order_id": order_id,
+                "scoring_version": SCORING_VERSION,
+                "language": "en",
+                "source_instrument_ids": source_ids,
+                "scenario_id": material.get("scenario_id", ""),
+                "condition_id": material.get("condition_id", ""),
+                "identity": material.get("identity", ""),
+                "choice_direction": material.get("choice_direction", ""),
+                "repeat_index": repeat_index,
+                "provider": "mock",
+                "model": "rule-based-p0",
+                "is_mock": True,
+                "administration_hash": adm_hash,
+                "item_ids": [e["item_id"] for e in raw],
+                "raw_item_ratings": raw,
+                "created_at": "1970-01-01T00:00:00Z",  # fixed, deterministic
+            }
+            if inject_fault is None:
+                warnings = validate_response(contract, form_id, order_id, raw)
+                score = derive_scores(contract, {e["item_id"]: e["rating"] for e in raw})
+                record["validation_warnings"] = warnings
+                record["derived_scores"] = score.derived_scores
+                record["scoring_warnings"] = score.scoring_warnings
+            else:
+                # Fault fixtures: leave derived empty; caller re-validates raw.
+                record["validation_warnings"] = []
+                record["derived_scores"] = {}
+                record["scoring_warnings"] = []
+            records.append(record)
     return records
 
 
 def _apply_fault(
     entries: list[dict[str, Any]],
     fault: str | None,
-    ranges: dict[str, tuple[int, int]],
 ) -> list[dict[str, Any]]:
     if not fault or not entries:
         return entries
@@ -422,8 +608,14 @@ __all__ = [
     "P0ContractError",
     "P0Contract",
     "ScoreResult",
+    "PENDING_TEXT_MARKERS",
     "load_contract",
+    "assert_administrable",
+    "item_text_is_placeholder",
     "build_form_item_ids",
+    "form_source_instruments",
+    "administration_hash",
+    "validate_record",
     "derive_scores",
     "validate_response",
     "account_requests",

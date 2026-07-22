@@ -30,17 +30,21 @@
 
 ## 关键事实与对 step-8 模板的偏差（如实记录）
 
-1. **PA 许可**：作者公开页面（gregtrafton.com/agency）**未标注 CC BY 4.0**；作者隶属
-   美国海军研究实验室，正式复用应邮件联系作者确认。因此 PA 许可记为
-   `unverified_contact_author`，**未**断言 CC BY 4.0。Wu & Shen 2026 确为 CC BY 4.0。
+1. **PA 许可**：正式 ACM 论文（及其中发表的 PA13 题项文本）为 **CC BY 4.0**。本目录使用的
+   **PA13/PA8/PA5 版本成员归属**取自作者公开页面（gregtrafton.com/agency），该网页
+   **本身未单独声明网页内容许可**。三项事实分开记录（见 `items_pa_2024.yaml` 的
+   `license` 字段），不把整个工具收敛为单一标签。Wu & Shen 2026 为 CC BY 4.0。
 2. **PA 量尺为 5 点**（Likert 强烈不同意…强烈同意；两道情境题 terrible…great），
    而非 7 点。按作者公开信息如实记录。
 3. **PA8/PA5 成员**取自作者公开页面的版本归属表（逐条 x 标记，2026-07-22 核验），
    **未自行推断或缩减**。PA8=8 项、PA5=5 项，均为 PA13 的官方子集。
-4. **Wu 逐字题项**：官方 HTML Table 1 已确认最终 19 项的 item ID 与四构念映射；
-   IN/GO/IC 各项的**逐字英文措辞位于 Supplementary Data**，本轮标注为
-   `pending_supplementary_verbatim`，**不臆造**。MSI 六项指标（consciousness/thinking/
-   free will/desires/self-awareness/intentionality）在正文确认，已录入。
+4. **Wu 逐字题项**：官方 HTML Table 1 含全部最终 19 项。MSI 六项概念指标
+   （consciousness/thinking/free will/desires/self-awareness/intentionality）在正文确认，
+   已录入。IN/GO/IC 各项及 MSI 语义差异两端锚点的**逐字英文原文，在本工作环境无法从
+   官方页面直接获取**（OUP 全文对本环境返回 403），因此这些字段暂标为
+   `pending_source_verbatim`，**不臆造、不翻译、不改写**；待取得 Table 1 逐字英文原文后
+   录入。工程校验（表单构建、评分派生、错误校验）不依赖题项文本内容即可运行。
+   **仅初始项目池、完整实验刺激、补充分析**另属 Supplementary 待核验。
 5. **三阶段是组织框架，不是三个量表总分**：无 Wu19 总分、无四构念合成总分、
    无 PA+Wu 总分；`scoring.yaml` 与引擎均拒绝这些。
 6. **注意力检查不计入 PA 总分**（源中存在，但不作为 PA 评分项，故未录入）。

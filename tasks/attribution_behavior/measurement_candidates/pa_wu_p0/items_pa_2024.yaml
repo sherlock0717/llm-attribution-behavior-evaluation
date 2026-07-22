@@ -11,11 +11,11 @@
 # Item membership (PA13/PA8/PA5) and scoring taken from the author's public
 # page (gregtrafton.com/agency), verified 2026-07-22.
 #
-# LICENSE NOTE: the author's public page does NOT state a CC BY 4.0 license for
-# the PA scale (author is affiliated with a U.S. government lab; formal reuse
-# should be confirmed with the author). We therefore record license as
-# "unverified_contact_author" rather than asserting CC BY 4.0. This differs from
-# the step-8 template assumption and is recorded truthfully; see README.
+# LICENSE NOTE: the formal ACM article (and the PA13 item text published in it)
+# is CC BY 4.0. The PA13/PA8/PA5 version MEMBERSHIP used here is taken from the
+# author's public page (gregtrafton.com/agency), which itself does NOT carry a
+# separate license statement for the web page content. We record these facts
+# separately below rather than collapsing the whole tool into one label.
 
 instrument_id: pa_2024
 language: en
@@ -28,7 +28,10 @@ source:
   doi: 10.1145/3640011
   item_membership_source: "gregtrafton.com/agency (author public page)"
   verified_on: "2026-07-22"
-  license: unverified_contact_author   # NOT confirmed CC BY 4.0; see README
+  license:
+    pa_2024_article_and_pa13_item_text: CC BY 4.0
+    pa8_pa5_membership_source: author_public_page
+    author_page_separate_license_statement: not_stated
 
 # Response scale as published by the author (5-point). The two scenario items use
 # a 5-point terrible..great anchor; the remaining items use a 5-point

@@ -15,7 +15,10 @@ scoring_version: pa_wu_p0.v1
 instruments:
   - id: pa_2024
     file: items_pa_2024.yaml
-    license: unverified_contact_author    # PA page does not state CC BY 4.0
+    license:
+      pa_2024_article_and_pa13_item_text: CC BY 4.0
+      pa8_pa5_membership_source: author_public_page
+      author_page_separate_license_statement: not_stated
   - id: wu_shen_2026
     file: items_wu_shen_2026.yaml
     license: CC BY 4.0

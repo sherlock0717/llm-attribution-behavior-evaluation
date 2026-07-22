@@ -1,23 +1,24 @@
 # Wu & Shen 2026 machine agency attribution — EXPERIMENTAL candidate items.
 #
 # P0 mock-only engineering asset. NOT part of the default benchmark run and NOT
-# a validated Chinese instrument. Final ENGLISH item IDs come from the official
-# HTML Table 1 (19 final items). Do NOT translate or rewrite.
+# a validated Chinese instrument. Final ENGLISH item IDs and the four-construct
+# mapping come from the official HTML Table 1 (19 final items). Do NOT translate
+# or rewrite.
 #
 # Source: Wu, Y., & Shen, F. (2026). Machine agency attribution in human-AI
 #         interaction: developing and validating an analytical framework.
 #         Journal of Computer-Mediated Communication, 31(3), zmag009.
 #         DOI: 10.1093/jcmc/zmag009. License: CC BY 4.0.
 #
-# Supplementary Data (initial item pool, full stimuli scripts, some supplementary
-# analyses) is NOT read here and does NOT affect the Table 1 final-item entry.
-#
-# NOTE ON VERBATIM TEXT: only the final item IDs and the four-construct mapping
-# are confirmed from Table 1 in this environment. The exact verbatim English
-# wording of each IN/GO/IC item is recorded as "pending_supplementary_verbatim"
-# rather than fabricated; MSI six indicators are single-word/label indicators
-# (consciousness/thinking/free will/desires/self-awareness/intentionality)
-# confirmed in the main text.
+# VERBATIM TEXT STATUS (honest): the final item IDs and construct mapping are
+# confirmed. The exact VERBATIM ENGLISH wording of each IN/GO/IC item and the
+# MSI semantic-differential anchor pairs could NOT be retrieved from the official
+# page in this environment (OUP full text returns HTTP 403 here) and were NOT
+# provided verbatim in the verification notes. They are therefore recorded as
+# ``pending_source_verbatim`` and are NOT fabricated, translated or paraphrased.
+# ``assert_administrable`` blocks any form from being administered while these
+# placeholders remain. Only initial item pool / full stimuli / supplementary
+# analyses are separately Supplementary-pending.
 
 instrument_id: wu_shen_2026
 language: en
@@ -31,7 +32,8 @@ source:
   license: CC BY 4.0
   final_items_source: "official HTML Table 1"
   verified_on: "2026-07-22"
-  official_html_full_text_read: true
+  official_html_full_text_read: false   # OUP returned 403 in this environment
+  verbatim_item_text_available: false
   supplementary_archive_read: false
 
 response_scale:
@@ -39,17 +41,18 @@ response_scale:
     type: likert_7
     min: 1
     max: 7
+    direction: low_anchor_to_high_anchor
     note: "1=not at all ... 7=very much so"
   mental_state_inference:
     type: semantic_differential_5
     min: 1
     max: 5
-    note: "6 mental-state indicators, 5-point semantic differential"
+    direction: low_anchor_to_high_anchor
+    note: "6 mental-state indicators, 5-point semantic differential; anchor pairs pending source verbatim"
 
 # Four measured variables (three-phase organizing framework: perceptual /
-# inferential / evaluative). NOTE: the three phases are an organizing framework,
-# NOT three scale totals; there is NO combined Wu19 total and NO single
-# machine-agency total.
+# inferential / evaluative). The three phases are an ORGANIZING framework, NOT
+# scale totals: NO Wu19 total, NO combined machine-agency total, NO PA+Wu total.
 constructs:
   perceived_machine_independence:
     phase: perceptual
@@ -68,27 +71,26 @@ constructs:
     response_scale: independence_goal_influence
     items: [wu_ic1, wu_ic3, wu_ic4, wu_ic7, wu_ic8]
 
+# text = pending_source_verbatim until the Table 1 verbatim English wording is
+# supplied. MSI records left/right anchor placeholders (concept indicator noted
+# in `indicator` for provenance only; NOT the verbatim item text).
 items:
-  # perceived_machine_independence
-  - {item_id: wu_in1a, construct: perceived_machine_independence, source_item_id: IN1a, text: pending_supplementary_verbatim}
-  - {item_id: wu_in2a, construct: perceived_machine_independence, source_item_id: IN2a, text: pending_supplementary_verbatim}
-  - {item_id: wu_in3b, construct: perceived_machine_independence, source_item_id: IN3b, text: pending_supplementary_verbatim}
-  - {item_id: wu_in4a, construct: perceived_machine_independence, source_item_id: IN4a, text: pending_supplementary_verbatim}
-  # perceived_machine_goal_orientation
-  - {item_id: wu_go1a, construct: perceived_machine_goal_orientation, source_item_id: GO1a, text: pending_supplementary_verbatim}
-  - {item_id: wu_go2a, construct: perceived_machine_goal_orientation, source_item_id: GO2a, text: pending_supplementary_verbatim}
-  - {item_id: wu_go3b, construct: perceived_machine_goal_orientation, source_item_id: GO3b, text: pending_supplementary_verbatim}
-  - {item_id: wu_go4a, construct: perceived_machine_goal_orientation, source_item_id: GO4a, text: pending_supplementary_verbatim}
-  # mental_state_inference (indicators confirmed in main text)
-  - {item_id: wu_ms1, construct: mental_state_inference, source_item_id: MS1, text: "consciousness"}
-  - {item_id: wu_ms2, construct: mental_state_inference, source_item_id: MS2, text: "thinking"}
-  - {item_id: wu_ms3, construct: mental_state_inference, source_item_id: MS3, text: "free will"}
-  - {item_id: wu_ms4, construct: mental_state_inference, source_item_id: MS4, text: "desires"}
-  - {item_id: wu_ms5, construct: mental_state_inference, source_item_id: MS5, text: "self-awareness"}
-  - {item_id: wu_ms6, construct: mental_state_inference, source_item_id: MS6, text: "intentionality"}
-  # influential_capacity_judgment
-  - {item_id: wu_ic1, construct: influential_capacity_judgment, source_item_id: IC1, text: pending_supplementary_verbatim}
-  - {item_id: wu_ic3, construct: influential_capacity_judgment, source_item_id: IC3, text: pending_supplementary_verbatim}
-  - {item_id: wu_ic4, construct: influential_capacity_judgment, source_item_id: IC4, text: pending_supplementary_verbatim}
-  - {item_id: wu_ic7, construct: influential_capacity_judgment, source_item_id: IC7, text: pending_supplementary_verbatim}
-  - {item_id: wu_ic8, construct: influential_capacity_judgment, source_item_id: IC8, text: pending_supplementary_verbatim}
+  - {item_id: wu_in1a, construct: perceived_machine_independence, source_item_id: IN1a, text: pending_source_verbatim}
+  - {item_id: wu_in2a, construct: perceived_machine_independence, source_item_id: IN2a, text: pending_source_verbatim}
+  - {item_id: wu_in3b, construct: perceived_machine_independence, source_item_id: IN3b, text: pending_source_verbatim}
+  - {item_id: wu_in4a, construct: perceived_machine_independence, source_item_id: IN4a, text: pending_source_verbatim}
+  - {item_id: wu_go1a, construct: perceived_machine_goal_orientation, source_item_id: GO1a, text: pending_source_verbatim}
+  - {item_id: wu_go2a, construct: perceived_machine_goal_orientation, source_item_id: GO2a, text: pending_source_verbatim}
+  - {item_id: wu_go3b, construct: perceived_machine_goal_orientation, source_item_id: GO3b, text: pending_source_verbatim}
+  - {item_id: wu_go4a, construct: perceived_machine_goal_orientation, source_item_id: GO4a, text: pending_source_verbatim}
+  - {item_id: wu_ms1, construct: mental_state_inference, source_item_id: MS1, indicator: consciousness, text: pending_source_verbatim, left_anchor_text: pending_source_verbatim, right_anchor_text: pending_source_verbatim}
+  - {item_id: wu_ms2, construct: mental_state_inference, source_item_id: MS2, indicator: thinking, text: pending_source_verbatim, left_anchor_text: pending_source_verbatim, right_anchor_text: pending_source_verbatim}
+  - {item_id: wu_ms3, construct: mental_state_inference, source_item_id: MS3, indicator: free_will, text: pending_source_verbatim, left_anchor_text: pending_source_verbatim, right_anchor_text: pending_source_verbatim}
+  - {item_id: wu_ms4, construct: mental_state_inference, source_item_id: MS4, indicator: desires, text: pending_source_verbatim, left_anchor_text: pending_source_verbatim, right_anchor_text: pending_source_verbatim}
+  - {item_id: wu_ms5, construct: mental_state_inference, source_item_id: MS5, indicator: self_awareness, text: pending_source_verbatim, left_anchor_text: pending_source_verbatim, right_anchor_text: pending_source_verbatim}
+  - {item_id: wu_ms6, construct: mental_state_inference, source_item_id: MS6, indicator: intentionality, text: pending_source_verbatim, left_anchor_text: pending_source_verbatim, right_anchor_text: pending_source_verbatim}
+  - {item_id: wu_ic1, construct: influential_capacity_judgment, source_item_id: IC1, text: pending_source_verbatim}
+  - {item_id: wu_ic3, construct: influential_capacity_judgment, source_item_id: IC3, text: pending_source_verbatim}
+  - {item_id: wu_ic4, construct: influential_capacity_judgment, source_item_id: IC4, text: pending_source_verbatim}
+  - {item_id: wu_ic7, construct: influential_capacity_judgment, source_item_id: IC7, text: pending_source_verbatim}
+  - {item_id: wu_ic8, construct: influential_capacity_judgment, source_item_id: IC8, text: pending_source_verbatim}
