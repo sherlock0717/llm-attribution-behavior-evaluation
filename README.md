@@ -79,7 +79,6 @@ configs/                    任务、Prompt、模型和指标配置
 outputs/                    当前公开分析产物
 scripts/                    报告与展示页数据生成脚本
 site/                       静态展示页
-search/                     预留检索目录（如存在）
 docs/                       研究说明、测量来源和复现文档
 tests/                      单元、集成和站点测试
 ```
