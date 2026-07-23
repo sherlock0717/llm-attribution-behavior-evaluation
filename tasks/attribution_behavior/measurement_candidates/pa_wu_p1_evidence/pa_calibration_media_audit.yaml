@@ -1,0 +1,97 @@
+# PA (Trafton et al. 2024) calibration MEDIA audit.
+#
+# Audited from the author's public page (gregtrafton.com/agency) on 2026-07-23.
+# The page lists three calibration videos by label/morphology/action, states they
+# are used with the PA13 (v1) Rasch scale to convert raw->latent scores, but
+# provides NO video URL, NO duration, NO media license/reuse statement, and the
+# videos are NOT directly accessible from the page.
+#
+# License unclear -> DO NOT download into the repo, DO NOT rehost; keep link +
+# audit metadata only.
+
+audit_id: pa_wu_p1_evidence.pa_calibration_media_audit.v1
+review_status: internal_agent_review_only
+source_page: "https://gregtrafton.com/agency"
+verified_on: "2026-07-23"
+calibration_purpose: >-
+  校准视频与 PA13 (version 1) Rasch 量表配合，将 raw scores 转换为 latent scores；
+  作者称其为目前最敏感的 PA 测量法，但耗时较长；分析用 R 代码"最终将发布"（尚未提供）。
+
+# Target-rater modality status (do NOT over-generalize about "all LLMs").
+target_rater_modality:
+  selected_model_not_fixed: true                 # 目标评分模型尚未固定
+  current_p1_contract_supports_video: false      # 当前 P1 运行契约尚未定义视频输入
+  multimodal_model_applicability_evaluated: false  # 多模态模型对 PA 校准视频的适用性尚未评估
+
+calibration_media:
+  - calibration_id: pa_cal_service
+    label: Service
+    morphology: Humanoid
+    action_description: "Helping a human find a sports jersey in a store"
+    media_url: null                     # page shows no video URL/embed
+    media_accessible: false
+    media_type: video                   # described as calibration video; file not exposed
+    duration_if_available: null
+    license_or_reuse_status: not_stated
+    may_rehost: false                   # license unclear -> not permitted
+    may_link_only: true                 # only reference the author page
+    text_conversion_risk: high
+    construct_cues: "helpful, task-completing humanoid — high-agency leaning cue"
+    identity_confounds: "humanoid morphology + human-helping context may inflate perceived agency independent of the scale"
+    notes: "无直链/时长/许可；仅作审计记录。"
+  - calibration_id: pa_cal_cheating_rps
+    label: Cheating RPS
+    morphology: Humanoid
+    action_description: "Human playing rock paper scissors; robot cheats"
+    media_url: null
+    media_accessible: false
+    media_type: video
+    duration_if_available: null
+    license_or_reuse_status: not_stated
+    may_rehost: false
+    may_link_only: true
+    text_conversion_risk: high
+    construct_cues: "deception/strategic behavior — strong intentionality/agency cue"
+    identity_confounds: "'cheating' implies intent; morphology humanoid; both may confound with mental-state inference"
+    notes: "无直链/时长/许可；仅作审计记录。"
+  - calibration_id: pa_cal_feeder
+    label: Feeder
+    morphology: Arm
+    action_description: "Picking up food with a fork and feeding a human"
+    media_url: null
+    media_accessible: false
+    media_type: video
+    duration_if_available: null
+    license_or_reuse_status: not_stated
+    may_rehost: false
+    may_link_only: true
+    text_conversion_risk: high
+    construct_cues: "goal-directed manipulation — moderate agency cue"
+    identity_confounds: "arm (non-humanoid) morphology may lower perceived agency vs humanoids — morphology confound across the three"
+    notes: "无直链/时长/许可；仅作审计记录。"
+
+repository_action:
+  media_downloaded_into_repo: false
+  media_rehosted: false
+  reason: "media license/reuse status not_stated -> link-only + audit metadata"
+
+# Section 6 focused questions (answers are internal audit judgments, NOT validity):
+focused_questions:
+  q1_video_vs_text: >-
+    应继续以视频为原始校准媒介。将其转为文本会丢失关键线索（见 q2），且无逐字文本来源；
+    文本化只能作为"熟悉量尺"的示例，不能替代视频校准。
+  q2_video_to_text_losses:
+    - dynamic_motion            # 动态动作/时序
+    - embodiment                # 具身形态（humanoid vs arm）
+    - interaction_with_human    # 与人的实时互动
+    - deception_timing          # Cheating RPS 的欺骗时机（意图线索）
+    - social_context_cues       # 场景社交语境
+  q3_applicable_to_llm_raters: >-
+    未核验。校准视频面向人类评分者与 Rasch 校准。当前 P1 运行契约尚未定义视频输入，
+    目标评分模型尚未固定，多模态模型对 PA 校准视频的适用性尚未评估。因此本轮不能断定其
+    对目标评分模型的适用性；也不据此对"所有 LLM"作一般化结论。
+  q4_role: familiarization_example_only
+  q4_note: >-
+    PA 校准视频当前仍不得直接进入 P1，理由是"当前契约未定义视频输入、目标模型未固定、
+    多模态适用性未核验"（而非"所有 LLM 都不能看视频"）；叠加无可再分发视频与媒介转换风险，
+    故只能作为"熟悉量尺"的示例，不能作为正式阳性对照（formal positive control）。
