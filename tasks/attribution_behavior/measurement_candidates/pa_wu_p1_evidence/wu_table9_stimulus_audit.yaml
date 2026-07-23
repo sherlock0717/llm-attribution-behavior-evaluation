@@ -12,9 +12,11 @@ review_status: internal_agent_review_only
 table9_obtained_this_run: false
 resolved_download_target_discovered: true
 resolved_file_name: zmag009_supplementary_data.zip
+resolved_target_verified_by_external_review: true
+signed_url_captured_in_agent_run: false
 deferred_reason: >-
-  正式 Supplementary 下载目标已发现（签名 OUP CDN，zmag009_supplementary_data.zip），
-  但当前环境获取失败（403），故 Table 9 完整逐字脚本本轮未取得。逐条件审计延后到取得完整脚本后完成。
+  官方 Supplementary 目标及文件名已由外部复核确认（签名 OUP CDN，zmag009_supplementary_data.zip），
+  但当前 Agent 环境未能捕获签名 URL，因此 ZIP 和 Table 9 未取得。逐条件审计延后到取得完整脚本后完成。
 
 # Do NOT treat the original study manipulation as the current D/U manipulation.
 original_manipulation_is_not_du_manipulation: true

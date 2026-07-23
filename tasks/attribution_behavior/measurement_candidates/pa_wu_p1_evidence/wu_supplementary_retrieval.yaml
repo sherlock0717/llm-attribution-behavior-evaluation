@@ -1,16 +1,19 @@
 # Wu & Shen 2026 Supplementary Table 9 — retrieval log and source audit.
 #
-# CORRECTED FACT (this run): the official OUP Volume 31 / Issue 3 article page
-# DOES provide a "Supplementary data" link for Wu & Shen 2026. Following that
-# link, the online supplementary material target resolves to a SIGNED OUP CDN
-# address whose file name is `zmag009_supplementary_data.zip`. We therefore
-# record the resolved target as DISCOVERED. We no longer write "no direct
-# download URL exposed".
+# PRECISE PROVENANCE (this run): the official OUP Volume 31 / Issue 3 article
+# page provides a "Supplementary data" link for Wu & Shen 2026, and the online
+# supplementary material target + file name (`zmag009_supplementary_data.zip`)
+# have been VERIFIED BY EXTERNAL REVIEW. The target type is a signed OUP CDN URL.
 #
-# HONEST DOWNLOAD STATUS: the actual download FAILED in THIS environment — the
-# OUP article/issue pages and the CDN return HTTP 403 (bot protection) here, so
-# the live signature could not be captured and the ZIP was not obtained. This is
-# a THIS-ENVIRONMENT access failure, NOT evidence that the material is absent.
+# IMPORTANT DISTINCTION (do NOT conflate):
+# - "target resolved / verified externally" is TRUE.
+# - "the AGENT run captured the live signed URL" is FALSE.
+# - "the AGENT run actually attempted a signed-URL download" is FALSE.
+# The agent environment could not capture the signed URL from the page (the OUP
+# article/issue pages return HTTP 403 to this environment), so NO signed-URL
+# download was attempted in this agent run, and the ZIP was NOT obtained. This is
+# a THIS-ENVIRONMENT signed-URL-resolution limitation, NOT evidence that the
+# material is absent.
 
 retrieval_id: pa_wu_p1_evidence.wu_supplementary_retrieval.v1
 review_status: internal_agent_review_only
@@ -19,38 +22,40 @@ article_url: "https://academic.oup.com/jcmc/article/31/3/zmag009/8692819"
 issue_url: "https://academic.oup.com/jcmc/issue/31/3"
 supplementary_entry_url: "https://academic.oup.com/jcmc/article/31/3/zmag009/8692819#supplementary-data"
 
-# --- resolved supplementary target (corrected facts) ---
+# --- resolved supplementary target (externally verified) ---
 supplementary_link_discovered: true
 resolved_download_target_discovered: true
 resolved_file_name: zmag009_supplementary_data.zip
 download_url_type: signed_oup_cdn_url
-signed_url_observed: true
-signed_url_note: >-
-  正式页面的 Supplementary data 目标解析为签名 OUP CDN 地址（silverchair-cdn，含签名/过期参数）。
-  完整签名 URL 必须从正式页面实时解析；本环境因 403 无法捕获实时签名串，故不记录臆造的无签名地址。
+resolved_target_verified_by_external_review: true   # target + file name confirmed by external review
+signed_url_captured_in_agent_run: false             # agent env could NOT capture the live signed URL
+actual_signed_url_attempted_in_agent_run: false     # therefore NO signed-URL download was attempted here
+zip_obtained: false
+target_note: >-
+  官方 Supplementary 目标及文件名已由外部复核确认；完整签名 URL 须从正式页面实时解析。
+  当前 Agent 环境未能从页面捕获签名 URL，故本轮未实际尝试签名 URL 下载，也未取得 ZIP。
 
 retrieved_on: "2026-07-23"
 file_name: zmag009_supplementary_data.zip   # resolved target file name
 file_type: application/zip
-sha256: null                                # not computed (download failed this run)
+sha256: null                                # not computed (ZIP not obtained)
 license_statement: "Whole-article Open Access CC BY 4.0. NO separate statement observed for the supplementary ZIP."
 license_scope: unclear_for_supplementary
 table_9_location: "inside zmag009_supplementary_data.zip — Supplementary Table 9 (pre-scripted dialogue scripts by manipulation condition)"
 
-# --- retrieval status (section 2, signed-URL-failed branch) ---
-retrieval_status: failed_with_resolved_signed_url
+# --- retrieval status (precise failure stage) ---
+retrieval_status: target_resolved_externally_zip_not_obtained
 failure:
+  stage: signed_url_resolution_in_agent_environment
   resolved_download_target_discovered: true
   resolved_file_name: zmag009_supplementary_data.zip
-  failure_type: access_forbidden_bot_protection
-  http_status_or_client_error: 403
-  attempted_signed_url: true
-  attempted_urls:
-    - "https://academic.oup.com/jcmc/article/31/3/zmag009/8692819 (page, to resolve signed link) -> 403"
-    - "https://academic.oup.com/jcmc/issue/31/3 (issue page) -> 403"
+  article_page_http_status: 403
+  issue_page_http_status: 403
+  signed_url_captured_in_agent_run: false
+  actual_signed_url_attempted_in_agent_run: false
   environment_note: >-
-    本环境（含直接 HTTP 客户端与抓取工具）对 OUP academic.oup.com 与 silverchair-cdn 均返回 403，
-    无法在本轮捕获实时签名 URL 或下载 ZIP。属本环境访问受限。
+    官方补充入口与目标文件名已确认（外部复核）；当前 Agent 环境未能从页面捕获签名 URL
+    （article/issue 页面对本环境返回 403），因此没有实际尝试签名 URL 下载，也没有取得 ZIP。
 
 # What IS confirmed from the article body (minimal HTML), fragment-level only:
 confirmed_from_body_text:
@@ -59,14 +64,14 @@ confirmed_from_body_text:
   in_text_example_fragments_only: true
   full_verbatim_table9_in_body: false
 
-# Repository action: license scope unclear + ZIP not obtained -> nothing committed.
+# Repository action: ZIP not obtained + supplementary license scope unclear -> nothing committed.
 repository_action:
   full_supplementary_file_committed: false
-  reason: "download failed this run (403) + supplementary license scope unclear; do NOT commit the ZIP"
+  reason: "ZIP not obtained (signed URL not captured in agent run) + supplementary license scope unclear; do NOT commit the ZIP"
   stored_here: [resolved_target_metadata, file_name, sha256_null_not_downloaded, table9_location, short_excerpt_location, audit_conclusion]
 
 audit_conclusion: >-
-  已发现正式的 Supplementary 下载目标（签名 OUP CDN，zmag009_supplementary_data.zip），
-  但当前环境获取失败（403），完整 Table 9 逐字脚本本轮未取得。现有正文片段仅为举例，
+  官方 Supplementary 目标及文件名已由外部复核确认（签名 OUP CDN，zmag009_supplementary_data.zip），
+  但当前 Agent 环境未能捕获签名 URL，因此 ZIP 和 Table 9 未取得。现有正文片段仅为举例，
   不能替代完整脚本。Wu 阳性对照仍停留在"正文逐字片段 + source-adapted prototype"级别，
   不得声称已获得原始完整刺激；也不得声称材料不存在（下载目标已确认存在）。

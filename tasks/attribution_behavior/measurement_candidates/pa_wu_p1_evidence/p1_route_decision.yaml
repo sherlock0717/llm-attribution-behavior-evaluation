@@ -74,9 +74,9 @@ matrix:
     positive_control_availability:
       level: partial
       reason: >-
-        仅有 Wu 正文逐字片段 + adapted prototype；完整 Table 9 的正式下载目标已发现
-        （签名 OUP CDN，zmag009_supplementary_data.zip），但本环境获取失败（403），完整脚本本轮未取得；
-        PA 校准仅视频、不可作正式对照。仍为 fragment-level 证据。
+        仅有 Wu 正文逐字片段 + adapted prototype；完整 Table 9 的官方 Supplementary 目标及文件名
+        已由外部复核确认（签名 OUP CDN，zmag009_supplementary_data.zip），但当前 Agent 环境未能捕获签名 URL，
+        因此 ZIP 和 Table 9 未取得；PA 校准仅视频、不可作正式对照。仍为 fragment-level 证据。
     scoring_contract_compatibility:
       level: high
       reason: "与 P0 引擎/评分契约完全兼容（PA13/8/5、IN4/GO4/MSI6/IC5，无禁止总分）。"
@@ -90,7 +90,7 @@ matrix:
       level: narrow
       reason: "只能支持 RQ1(工程可完成性) 与 RQ2(线索识别)，不涉 D/U、身份、翻译。"
     blocking_evidence_gaps:
-      items: ["Wu 完整 Table 9 未取得（下载目标已发现，本环境 403 获取失败）；阳性对照仅片段级"]
+      items: ["Wu 完整 Table 9 未取得（目标及文件名已外部复核确认，Agent 环境未捕获签名 URL，ZIP 未取得）；阳性对照仅片段级"]
       reason: "阳性对照识别检验的强度受限于片段级证据；完整脚本目标已确认存在但本轮未取得。"
     recommended_status: ready_for_mock_package_only
     recommended_status_reason: >-
@@ -126,7 +126,7 @@ matrix:
       level: narrow
       reason: "仅工程可完成性/线索识别，且受翻译等价性未验证限制。"
     blocking_evidence_gaps:
-      items: ["中文译本等价性未验证", "Wu 完整 Table 9 未取得（下载目标已发现，本环境 403 获取失败）"]
+      items: ["中文译本等价性未验证", "Wu 完整 Table 9 未取得（目标已外部复核确认，Agent 环境未捕获签名 URL，ZIP 未取得）"]
       reason: "翻译等价性(RQ5)未前置，独立解释受限。"
     recommended_status: needs_more_evidence
     recommended_status_reason: >-
@@ -166,7 +166,7 @@ matrix:
         - "措辞等价性(wording equivalence)未检验"
         - "测量不变性(measurement invariance)未前置"
         - "中文译本等价性未验证"
-        - "Wu 完整 Table 9 未取得（下载目标已发现，本环境 403 获取失败）"
+        - "Wu 完整 Table 9 未取得（目标已外部复核确认，Agent 环境未捕获签名 URL，ZIP 未取得）"
       reason: "身份平行结论的前提条件全部缺失。"
     recommended_status: needs_more_evidence
     recommended_status_reason: >-

@@ -136,25 +136,42 @@ def test_r2_not_validated(route_decision: dict) -> None:
 
 def test_wu_supplementary_status_separated(wu_retrieval: dict) -> None:
     # The resolved supplementary download TARGET must be recorded as discovered
-    # with the correct file name (regardless of whether this run's fetch worked).
+    # and externally verified, independent of any agent-run download attempt.
     assert wu_retrieval["resolved_download_target_discovered"] is True
     assert str(wu_retrieval["resolved_file_name"]) == "zmag009_supplementary_data.zip"
     assert wu_retrieval["supplementary_link_discovered"] is True
+    assert wu_retrieval["resolved_target_verified_by_external_review"] is True
 
-    status = str(wu_retrieval["retrieval_status"])
-    obtained = wu_retrieval["repository_action"]["full_supplementary_file_committed"]
+    captured = wu_retrieval["signed_url_captured_in_agent_run"]
+    attempted = wu_retrieval["actual_signed_url_attempted_in_agent_run"]
+    zip_obtained = wu_retrieval["zip_obtained"]
 
-    if status.startswith("failed"):
-        # failure branch: full script NOT obtained; sha256 MAY be empty; and the
-        # failure must still record that the resolved target was discovered.
-        assert obtained is False
-        assert wu_retrieval["failure"]["resolved_download_target_discovered"] is True
-        assert str(wu_retrieval["failure"]["resolved_file_name"]) == "zmag009_supplementary_data.zip"
-        assert wu_retrieval["failure"]["attempted_signed_url"] is True
+    if captured is False:
+        # not captured in agent run -> no signed-url attempt, no zip, empty sha256,
+        # and the Table 9 per-condition audit stays deferred.
+        assert attempted is False
+        assert zip_obtained is False
+        assert wu_retrieval.get("sha256") is None
+        assert wu_retrieval["repository_action"]["full_supplementary_file_committed"] is False
+        audit = _load(EVID_DIR / "wu_table9_stimulus_audit.yaml")
+        assert audit["table9_obtained_this_run"] is False
+        for cond in audit["conditions"]:
+            assert cond["verbatim_text_available"] is False
     else:
-        # success branch: sha256 non-empty and Table 9 location recorded.
+        # captured in a future run AND download succeeded -> attempt True, sha256
+        # non-empty, and the four-condition audit must be completed.
+        assert attempted is True
+        assert zip_obtained is True
         assert str(wu_retrieval.get("sha256") or "").strip()
-        assert str(wu_retrieval.get("table_9_location") or "").strip()
+        audit = _load(EVID_DIR / "wu_table9_stimulus_audit.yaml")
+        assert audit["table9_obtained_this_run"] is True
+        conds = {str(c["condition_id"]) for c in audit["conditions"]}
+        assert conds == {
+            "low_independence", "high_independence",
+            "low_goal_orientation", "high_goal_orientation",
+        }
+        for c in audit["conditions"]:
+            assert c["verbatim_text_available"] is True
 
     # In NO case may the log claim the material does not exist unless negated.
     text = (EVID_DIR / "wu_supplementary_retrieval.yaml").read_text(encoding="utf-8")
