@@ -7,7 +7,9 @@ Covered checks (task section 11):
  2. each route has the required decision-matrix fields
  3. R3 is flagged as adaptation, not a source-faithful version
  4. the provisional Chinese route is not marked validated
- 5. Wu supplementary link / retrieval / full-script status are separated
+ 5. Wu supplementary retrieval is a THREE-stage state machine
+    (A: signed URL not captured; B: captured+attempted but download failed;
+     C: ZIP obtained) with implications zip->attempted->captured
  6. no in-repo rehosted media file when PA media license is unclear
  7. no Wu19 / machine-agency / PA+Wu total generated
  8. no real-model call code
@@ -134,6 +136,12 @@ def test_r2_not_validated(route_decision: dict) -> None:
 # --- 5: Wu supplementary link / retrieval / full-script separated ------------
 
 
+EXPECTED_CONDITION_IDS = {
+    "low_independence", "high_independence",
+    "low_goal_orientation", "high_goal_orientation",
+}
+
+
 def test_wu_supplementary_status_separated(wu_retrieval: dict) -> None:
     # The resolved supplementary download TARGET must be recorded as discovered
     # and externally verified, independent of any agent-run download attempt.
@@ -146,30 +154,51 @@ def test_wu_supplementary_status_separated(wu_retrieval: dict) -> None:
     attempted = wu_retrieval["actual_signed_url_attempted_in_agent_run"]
     zip_obtained = wu_retrieval["zip_obtained"]
 
+    # --- general implications (hold in every stage) ------------------------
+    # A successful ZIP implies a signed-url attempt was made; an attempt implies
+    # the signed url was captured. Capturing/attempting does NOT imply success.
+    if zip_obtained is True:
+        assert attempted is True, "zip_obtained -> actual_signed_url_attempted_in_agent_run"
+    if attempted is True:
+        assert captured is True, (
+            "actual_signed_url_attempted_in_agent_run -> signed_url_captured_in_agent_run"
+        )
+
+    audit = _load(EVID_DIR / "wu_table9_stimulus_audit.yaml")
+    retrieval_status = str(wu_retrieval.get("retrieval_status", ""))
+
+    # --- three explicit stages (no captured==zip conflation) ---------------
     if captured is False:
-        # not captured in agent run -> no signed-url attempt, no zip, empty sha256,
-        # and the Table 9 per-condition audit stays deferred.
+        # STAGE A: signed URL not captured in the agent run.
         assert attempted is False
         assert zip_obtained is False
         assert wu_retrieval.get("sha256") is None
-        assert wu_retrieval["repository_action"]["full_supplementary_file_committed"] is False
-        audit = _load(EVID_DIR / "wu_table9_stimulus_audit.yaml")
         assert audit["table9_obtained_this_run"] is False
+        assert len(audit["conditions"]) == 4
         for cond in audit["conditions"]:
             assert cond["verbatim_text_available"] is False
-    else:
-        # captured in a future run AND download succeeded -> attempt True, sha256
-        # non-empty, and the four-condition audit must be completed.
+    elif zip_obtained is False:
+        # STAGE B: signed URL captured AND attempted, but the download FAILED.
         assert attempted is True
-        assert zip_obtained is True
+        assert wu_retrieval.get("sha256") is None
+        assert wu_retrieval["repository_action"]["full_supplementary_file_committed"] is False
+        assert audit["table9_obtained_this_run"] is False
+        assert len(audit["conditions"]) == 4
+        for cond in audit["conditions"]:
+            assert cond["verbatim_text_available"] is False
+        # retrieval_status must NOT claim success in the failed-download stage.
+        assert "not_obtained" in retrieval_status or "fail" in retrieval_status.lower(), (
+            f"failed-download stage must not report success: {retrieval_status!r}"
+        )
+    else:
+        # STAGE C: ZIP download SUCCEEDED (implies captured & attempted True).
+        assert captured is True
+        assert attempted is True
         assert str(wu_retrieval.get("sha256") or "").strip()
-        audit = _load(EVID_DIR / "wu_table9_stimulus_audit.yaml")
         assert audit["table9_obtained_this_run"] is True
         conds = {str(c["condition_id"]) for c in audit["conditions"]}
-        assert conds == {
-            "low_independence", "high_independence",
-            "low_goal_orientation", "high_goal_orientation",
-        }
+        assert conds == EXPECTED_CONDITION_IDS
+        assert len(audit["conditions"]) == 4
         for c in audit["conditions"]:
             assert c["verbatim_text_available"] is True
 
