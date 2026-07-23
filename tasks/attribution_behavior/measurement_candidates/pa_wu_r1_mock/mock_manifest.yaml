@@ -1,0 +1,118 @@
+# PA-Wu R1 English machine-only MOCK package manifest.
+#
+# Declares the mock-only execution package for route R1. This is NOT part of the
+# default benchmark, runs NO real model, performs NO network I/O, and produces
+# NO research findings. Scoring/validation is delegated to the P0 engine
+# (freewill_attribution.measurement.pa_wu_p0); there is NO second scoring logic,
+# and the administration_hash is computed by the P0 engine.
+
+manifest_id: pa_wu_r1_mock.manifest.v1
+review_status: internal_agent_review_only
+package_status: mock_only
+route_id: R1
+
+reuses:
+  p0_engine_module: freewill_attribution.measurement.pa_wu_p0
+  p0_scoring_version: pa_wu_p0.v1
+  administration_hash_from_p0: true
+  p0_forms_used:
+    - {form_id: pa13_wu19_combined, order_id: pa_first}
+    - {form_id: wu19_only, order_id: wu_only}
+
+files:
+  - README.md
+  - mock_run_contract.yaml
+  - mock_input_cases.jsonl
+  - mock_model_outputs.jsonl
+  - expected_scored_outputs.jsonl
+  - mock_manifest.yaml
+  - run_mock.py
+  - validate_mock_package.py
+
+# --- input cases (8 total): validated through the real validation chain ---
+input_cases:
+  total: 8
+  neutral_scenarios: 2          # r1_neutral_01 (combined), r1_neutral_02 (wu19_only)
+  wu_cue_scenarios: 2           # low_independence (body_fragment),
+                                # high_independence (source_adapted_prototype)
+  bad_cases:
+    - {case_id: r1_bad_missing_field, type: missing_required_field, missing: language}
+    - {case_id: r1_bad_forbidden_total, type: forbidden_total, requested: WU19_TOTAL}
+    - {case_id: r1_bad_wrong_language, type: wrong_language, language: zh}
+    - {case_id: r1_bad_wrong_identity, type: wrong_identity, target_identity: human}
+  good_total: 4
+  bad_total: 4
+
+# --- static model-output fixtures (14 total) ---
+# Each output references an EXISTING, VALID input case; output-layer faults are
+# injected on top of a valid input case so the rejecting layer is unambiguous.
+# mock_model_outputs.jsonl carries NO expected_outcome / failure_code_expected;
+# expected_scored_outputs.jsonl is the SINGLE static oracle.
+model_output_fixtures:
+  total: 14
+  kinds:
+    - complete_valid_combined     # PA13/PA8/PA5 + Wu four sub-scores (32 items)
+    - complete_valid             # wu19_only four Wu sub-scores
+    - missing_item
+    - scale_out_of_range          # IN 1..7 violated
+    - scale_out_of_range_msi      # MSI 1..5 violated (same failure_code out_of_range)
+    - illegal_item_id
+    - forbidden_total
+    - wrong_language              # output-layer response_language=zh
+    - wrong_identity              # output-layer response_identity=human
+    - missing_response_language
+    - missing_response_identity
+    - illegal_free_text           # non-numeric rating
+    - duplicate_item
+    - unparseable_json
+
+# --- failure codes (closed set) ---
+failure_codes:
+  - missing_items
+  - out_of_range
+  - unknown_item
+  - duplicate_item
+  - non_numeric_rating
+  - forbidden_total
+  - wrong_language
+  - wrong_identity
+  - unparseable_json
+  - missing_required_field
+  - wrong_route
+  - item_set_version_mismatch
+  - selected_items_mismatch
+  - illegal_positive_control
+  - unknown_output_case
+  - output_contract_mismatch
+  - p0_contract_error
+
+# --- positive-control levels (STRICT enum; formal_calibrated is FORBIDDEN) ---
+positive_control_levels_allowed:
+  - body_fragment
+  - source_adapted_prototype
+  - none
+positive_control_levels_forbidden:
+  - formal_calibrated_positive_control
+
+# --- forbidden totals (mirror P0; never produced) ---
+forbidden_score_ids:
+  - WU19_TOTAL
+  - MACHINE_AGENCY_TOTAL
+  - PA_WU_TOTAL
+
+# --- determinism: MUST equal the actual run hash (validator enforces equality) ---
+deterministic_run_hash_reference: 7c83def4c93ad26f
+
+invariants:
+  is_mock_always_true: true
+  no_real_model: true
+  no_network: true
+  no_api_key: true
+  no_default_benchmark_change: true
+  no_chinese_scale_created: true
+  reads_no_r2_r3_assets: true
+
+notes: >-
+  Mock outputs are engineering-validation signals only, never research findings.
+  No D/U effect, identity effect, or measurement-invariance analysis is performed.
+  Research conclusion remains "C — needs more evidence".

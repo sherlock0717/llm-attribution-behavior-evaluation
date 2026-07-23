@@ -1,0 +1,68 @@
+# PA-Wu R1 English machine-only MOCK run contract.
+#
+# This contract FIXES the R1 route boundary for a MOCK-ONLY execution package.
+# It does NOT run a real model, does NOT execute a real P1, and produces NO
+# research findings. All scoring reuses the P0 engine
+# (freewill_attribution.measurement.pa_wu_p0); NO second scoring logic exists.
+
+contract_id: pa_wu_r1_mock.mock_run_contract.v1
+review_status: internal_agent_review_only
+reuses_p0_scoring: true                 # scoring/validation delegated to pa_wu_p0 engine
+p0_scoring_version: pa_wu_p0.v1
+
+# --- fixed R1 route boundary (this round allows ONLY R1) ---
+route:
+  route_id: R1
+  name: "English source-faithful, machine-only"
+  language: en
+  target_identity: machine
+  human_parallel_version: false
+  translation_used: false
+  is_construct_adaptation: false
+  real_model_execution: false
+  package_status: mock_only
+
+# --- explicitly excluded this round (guards; must stay false/absent) ---
+excluded:
+  r2_chinese_route: false
+  r3_ai_human_parallel: false
+  du_effect_test: false
+  identity_effect_test: false
+  measurement_invariance_test: false
+  formal_validity_conclusion: false
+
+# --- administration forms used by the mock package (P0 forms only) ---
+forms_used:
+  - form_id: pa13_wu19_combined
+    order_id: pa_first
+  - form_id: wu19_only
+    order_id: wu_only
+
+# --- positive-control levels allowed in this package (STRICT enum) ---
+# formal_calibrated_positive_control is FORBIDDEN this round.
+positive_control_levels_allowed:
+  - body_fragment                 # verbatim short fragment already public in Wu body text
+  - source_adapted_prototype      # prototype built from source-described logic (must be flagged)
+  - none
+positive_control_levels_forbidden:
+  - formal_calibrated_positive_control
+
+# --- forbidden totals (mirror P0 FORBIDDEN_SCORE_IDS; never produced) ---
+forbidden_score_ids:
+  - WU19_TOTAL
+  - MACHINE_AGENCY_TOTAL
+  - PA_WU_TOTAL
+
+# --- deterministic execution guarantees ---
+determinism:
+  mock_outputs_are_static_fixtures: true      # NOT model-generated
+  no_network: true
+  no_api_key: true
+  no_real_model_client: true
+  fixed_created_at: "1970-01-01T00:00:00Z"
+
+notes: >-
+  Mock outputs are engineering-validation signals ONLY, never research findings.
+  This package does not translate items, does not claim Chinese-scale validity,
+  does not claim AI/human measurement invariance, and does not claim a calibrated
+  positive control. Research conclusion remains "C — needs more evidence".
