@@ -17,6 +17,12 @@ calibration_purpose: >-
   校准视频与 PA13 (version 1) Rasch 量表配合，将 raw scores 转换为 latent scores；
   作者称其为目前最敏感的 PA 测量法，但耗时较长；分析用 R 代码"最终将发布"（尚未提供）。
 
+# Target-rater modality status (do NOT over-generalize about "all LLMs").
+target_rater_modality:
+  selected_model_not_fixed: true                 # 目标评分模型尚未固定
+  current_p1_contract_supports_video: false      # 当前 P1 运行契约尚未定义视频输入
+  multimodal_model_applicability_evaluated: false  # 多模态模型对 PA 校准视频的适用性尚未评估
+
 calibration_media:
   - calibration_id: pa_cal_service
     label: Service
@@ -81,9 +87,11 @@ focused_questions:
     - deception_timing          # Cheating RPS 的欺骗时机（意图线索）
     - social_context_cues       # 场景社交语境
   q3_applicable_to_llm_raters: >-
-    存疑。校准视频面向人类评分者与 Rasch 校准；LLM 评分者无法观看视频，
-    文本替代会改变刺激模态，故不能直接迁移；且缺乏 LLM 适用性证据。
+    未核验。校准视频面向人类评分者与 Rasch 校准。当前 P1 运行契约尚未定义视频输入，
+    目标评分模型尚未固定，多模态模型对 PA 校准视频的适用性尚未评估。因此本轮不能断定其
+    对目标评分模型的适用性；也不据此对"所有 LLM"作一般化结论。
   q4_role: familiarization_example_only
   q4_note: >-
-    在缺少可再分发视频、缺少 LLM 适用性证据、且媒介需转换的情况下，PA 校准实体
-    只能作为"熟悉量尺"的示例，不能作为正式阳性对照（formal positive control）。
+    PA 校准视频当前仍不得直接进入 P1，理由是"当前契约未定义视频输入、目标模型未固定、
+    多模态适用性未核验"（而非"所有 LLM 都不能看视频"）；叠加无可再分发视频与媒介转换风险，
+    故只能作为"熟悉量尺"的示例，不能作为正式阳性对照（formal positive control）。

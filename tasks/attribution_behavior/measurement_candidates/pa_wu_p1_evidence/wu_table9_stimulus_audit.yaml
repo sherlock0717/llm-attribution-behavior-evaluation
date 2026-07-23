@@ -10,7 +10,11 @@
 audit_id: pa_wu_p1_evidence.wu_table9_stimulus_audit.v1
 review_status: internal_agent_review_only
 table9_obtained_this_run: false
-deferred_reason: "Supplementary Table 9 not retrieved (403 + supplementary license scope unclear)."
+resolved_download_target_discovered: true
+resolved_file_name: zmag009_supplementary_data.zip
+deferred_reason: >-
+  正式 Supplementary 下载目标已发现（签名 OUP CDN，zmag009_supplementary_data.zip），
+  但当前环境获取失败（403），故 Table 9 完整逐字脚本本轮未取得。逐条件审计延后到取得完整脚本后完成。
 
 # Do NOT treat the original study manipulation as the current D/U manipulation.
 original_manipulation_is_not_du_manipulation: true

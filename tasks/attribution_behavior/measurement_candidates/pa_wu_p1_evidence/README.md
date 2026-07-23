@@ -21,10 +21,12 @@
 
 ## 证据缺口小结（本轮实测）
 
-- **Wu Supplementary Table 9**：本轮从 OUP 文章页与补充 CDN 端点获取均返回 **HTTP 403**；
-  公开补充入口存在（文章声明 "Supplementary material is available at JCMC online"），但未暴露直链；
-  补充材料**无单独许可声明**（仅整篇 CC BY 4.0，是否覆盖补充未说明）。→ 完整脚本**未取得**，
-  未下载任何文件。**"本轮下载失败" ≠ "材料不存在"。**
+- **Wu Supplementary Table 9**：正式 OUP Vol.31/Issue 3 文章页**提供 Supplementary data 链接**，
+  其在线补充材料目标可解析到**签名 OUP CDN 地址**，文件名 **`zmag009_supplementary_data.zip`**
+  （`resolved_download_target_discovered: true`）。但本环境对 OUP 文章/期号页与 CDN 均返回 **HTTP 403**
+  （bot 防护），本轮**无法捕获实时签名 URL 或下载 ZIP**，故 `retrieval_status: failed_with_resolved_signed_url`；
+  补充材料**无单独许可声明**（仅整篇 CC BY 4.0，是否覆盖补充未说明）。→ 完整脚本**本轮未取得**、
+  未下载任何文件。**已发现正式下载目标，但当前环境获取失败；"获取失败" ≠ "材料不存在"。**
 - **PA 校准视频**：作者页仅列标签/形态/行为（Service·Cheating RPS 为 Humanoid；Feeder 为 Arm），
   **无视频直链、无时长、无媒体许可**，视频不可直接访问。→ 不下载、不重托管，仅链接+审计元数据。
   校准实体只能作为"熟悉量尺"的示例，**不能作为正式阳性对照**（无 LLM 适用性证据 + 媒介需转换）。
@@ -62,7 +64,10 @@
 
 ## 最终结论
 
-见文末决策；简述：**C — 仍需补证**（详见下）。
+**C — 仍需补证。**
+原因（修正）：Wu 完整 Table 9 的**正式下载目标已发现**（签名 OUP CDN，`zmag009_supplementary_data.zip`），
+**但当前环境获取失败**（403 bot 防护）；叠加唯一主路线未冻结、Prompt/identity 未固定、完整阳性对照未取得、
+真实调用未授权、预算/恢复策略未审批。故不得写为"可运行 P1"。
 "执行包设计"仍**不等于**运行真实模型。
 
 ## 边界声明（不越界）

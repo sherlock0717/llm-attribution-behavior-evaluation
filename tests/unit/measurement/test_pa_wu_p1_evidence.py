@@ -135,24 +135,34 @@ def test_r2_not_validated(route_decision: dict) -> None:
 
 
 def test_wu_supplementary_status_separated(wu_retrieval: dict) -> None:
-    assert str(wu_retrieval["retrieval_status"]) == "failed_this_run"
-    assert wu_retrieval["failure"]["whether_public_link_exists"] is True
-    assert wu_retrieval["failure"]["http_status"] == 403
-    assert wu_retrieval["download_url"] is None
-    assert wu_retrieval["sha256"] is None
-    assert wu_retrieval["repository_action"]["full_supplementary_file_committed"] is False
-    # "failed this run" must NOT be stated as "material does not exist".
-    # The phrase may appear ONLY inside an explicit negation ("NOT the same as").
+    # The resolved supplementary download TARGET must be recorded as discovered
+    # with the correct file name (regardless of whether this run's fetch worked).
+    assert wu_retrieval["resolved_download_target_discovered"] is True
+    assert str(wu_retrieval["resolved_file_name"]) == "zmag009_supplementary_data.zip"
+    assert wu_retrieval["supplementary_link_discovered"] is True
+
+    status = str(wu_retrieval["retrieval_status"])
+    obtained = wu_retrieval["repository_action"]["full_supplementary_file_committed"]
+
+    if status.startswith("failed"):
+        # failure branch: full script NOT obtained; sha256 MAY be empty; and the
+        # failure must still record that the resolved target was discovered.
+        assert obtained is False
+        assert wu_retrieval["failure"]["resolved_download_target_discovered"] is True
+        assert str(wu_retrieval["failure"]["resolved_file_name"]) == "zmag009_supplementary_data.zip"
+        assert wu_retrieval["failure"]["attempted_signed_url"] is True
+    else:
+        # success branch: sha256 non-empty and Table 9 location recorded.
+        assert str(wu_retrieval.get("sha256") or "").strip()
+        assert str(wu_retrieval.get("table_9_location") or "").strip()
+
+    # In NO case may the log claim the material does not exist unless negated.
     text = (EVID_DIR / "wu_supplementary_retrieval.yaml").read_text(encoding="utf-8")
     low = text.lower()
     idx = 0
     while (idx := low.find("does not exist", idx)) != -1:
-        # look at the preceding sentence: the phrase must be inside a negation
-        # such as "... is not the same as 'the material does not exist'".
         window = low[max(0, idx - 60):idx]
-        assert "not" in window, (
-            "unqualified 'material does not exist' claim in retrieval log"
-        )
+        assert "not" in window, "unqualified 'material does not exist' claim in retrieval log"
         idx += len("does not exist")
 
 
@@ -170,6 +180,18 @@ def test_no_rehosted_pa_media(pa_media: dict) -> None:
     media_exts = {".mp4", ".mov", ".avi", ".webm", ".mkv", ".zip", ".pdf", ".docx"}
     offenders = [p.name for p in EVID_DIR.rglob("*") if p.suffix.lower() in media_exts]
     assert offenders == [], f"unexpected media/binary files committed: {offenders}"
+
+
+def test_pa_modality_status_not_overgeneralized(pa_media: dict) -> None:
+    # The reason PA video cannot enter P1 must be contract/model status, NOT an
+    # over-generalized "all LLMs cannot watch video".
+    m = pa_media["target_rater_modality"]
+    assert m["selected_model_not_fixed"] is True
+    assert m["current_p1_contract_supports_video"] is False
+    assert m["multimodal_model_applicability_evaluated"] is False
+    text = (EVID_DIR / "pa_calibration_media_audit.yaml").read_text(encoding="utf-8").lower()
+    assert "llm raters cannot watch video" not in text
+    assert "无法观看视频" not in text
 
 
 # --- 7: no forbidden totals --------------------------------------------------
