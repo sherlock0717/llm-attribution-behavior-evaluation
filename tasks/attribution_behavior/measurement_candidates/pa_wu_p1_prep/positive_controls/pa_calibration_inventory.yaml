@@ -1,0 +1,50 @@
+# PA calibration positive-control SOURCE AUDIT (inventory only).
+#
+# PA (Trafton et al. 2024) calibration uses VIDEO / physical-entity stimuli. The
+# author's public page provides calibration-video LABELS, MORPHOLOGY and ACTION
+# DESCRIPTIONS, but NOT a public full-text stimulus. Therefore this file records
+# ONLY the source audit; there is NO verbatim positive control and NO PA
+# "calibration positive control" text here.
+#
+# Any construct-derived synthetic text lives in synthetic_construct_prototypes.yaml
+# and is explicitly NOT a PA calibration positive control, NOT the original
+# calibration stimulus, and NOT a text version of the original video.
+
+inventory_id: pa_wu_p1_prep.positive_controls.pa_calibration.v1
+construct: perceived_agency_calibration
+review_status: internal_agent_review_only
+
+audit:
+  public_video_action_descriptions_available: true
+  public_full_text_stimulus_available: false
+  video_to_text_conversion_risk: high
+  osf_or_public_text_link: false
+  do_not: "不得把校准视频/实体的名称写成一段自造描述后称为原刺激或原视频的文本版本。"
+  retrieval_location: "author public page (gregtrafton.com/agency)"
+  verified_on: "2026-07-22"
+
+# Author-page calibration videos (labels/morphology/action descriptions only).
+author_page_calibration_videos:
+  - name: Service
+    morphology: Humanoid
+    action_description: "Helping a human find a sports jersey in a store"
+  - name: Cheating RPS
+    morphology: Humanoid
+    action_description: "Human playing rock paper scissors; robot cheats"
+  - name: Feeder
+    morphology: Arm
+    action_description: "Picking up food with a fork and feeding a human"
+
+# --- 10.1 verbatim ---
+source_verbatim_positive_control: []   # 无公开可逐字文本化的 PA 校准刺激
+
+# --- 10.2 adapted prototype ---
+# INTENTIONALLY EMPTY: no source-described dialog manipulation exists to adapt
+# for PA calibration (the source is video/entity). Construct-derived synthetic
+# text is NOT an adapted positive control and lives in
+# synthetic_construct_prototypes.yaml instead.
+source_adapted_positive_control_prototype: []
+
+moved_note: >-
+  之前置于本文件的 generic high/low agency 文本已移出，重新归类为
+  construct_derived_synthetic_prototype，见 synthetic_construct_prototypes.yaml。

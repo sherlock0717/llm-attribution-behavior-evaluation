@@ -1,0 +1,33 @@
+# CONSTRUCT-DERIVED SYNTHETIC PROTOTYPES (not positive controls).
+#
+# These texts are derived from the PA CONSTRUCT logic only. They are:
+#   - NOT a PA calibration positive control
+#   - NOT the original PA calibration stimulus
+#   - NOT a text version of the original PA video
+# They must NOT be used to argue PA calibration reproduction. They exist only as
+# internal, unvalidated, construct-derived synthetic prototypes.
+
+prototypes_id: pa_wu_p1_prep.synthetic_construct_prototypes.v1
+review_status: internal_agent_review_only
+kind: construct_derived_synthetic_prototype
+
+used_for_pa_calibration_reproduction: false
+is_positive_control: false
+is_original_stimulus: false
+is_text_version_of_original_video: false
+
+prototypes:
+  - kind: construct_derived_synthetic_prototype
+    construct: perceived_agency
+    pole: high_agency_anchor
+    derived_from: "PA construct logic (purposeful, sets/pursues goals, communicates, adapts) — NOT any specific PA stimulus"
+    synthetic_text: "（构念派生合成原型，非任何原刺激）一个有目的地行动、能设定并追求目标、并能与人交流、适应不同情境的实体。"
+    medium_conversion_risk: high
+    status: prototype_unvalidated
+  - kind: construct_derived_synthetic_prototype
+    construct: perceived_agency
+    pole: low_agency_anchor
+    derived_from: "PA construct logic (fixed operation, no goals, no adaptation, no communication) — NOT any specific PA stimulus"
+    synthetic_text: "（构念派生合成原型，非任何原刺激）一个仅按固定方式运作、不设定目标、不适应情境、不与人交流的实体。"
+    medium_conversion_risk: high
+    status: prototype_unvalidated

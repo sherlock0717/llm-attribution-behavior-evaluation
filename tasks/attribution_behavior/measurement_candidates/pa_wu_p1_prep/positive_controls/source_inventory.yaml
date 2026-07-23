@@ -1,0 +1,71 @@
+# Positive-control SOURCE AUDIT inventory.
+#
+# Records, per construct, whether verbatim source stimuli were obtained, and the
+# retrieval location / license. Honest: full verbatim scripts NOT obtained; only
+# in-text verbatim FRAGMENTS + source-described manipulation logic are available.
+
+inventory_id: pa_wu_p1_prep.positive_controls.source_inventory.v1
+review_status: internal_agent_review_only
+
+sources:
+  - source: "Wu, Y., & Shen, F. (2026)"
+    study: "Study 3"
+    venue: "Journal of Computer-Mediated Communication, 31(3), zmag009"
+    doi: 10.1093/jcmc/zmag009
+    license: CC BY 4.0
+    scenario_summary: "情感支持对话：用户询问 AI 如何安慰一位刚失业的第三方。"
+    constructs_audited:
+      - construct: perceived_machine_independence
+        in_text_example_fragments_available: true     # 正文 EXPERIMENTAL MANIPULATIONS 举例片段
+        public_supplementary_link_available: true      # 官方文章提供 Supplementary Data 入口
+        supplementary_retrieved_in_this_run: false     # 本轮尚未提取补充材料
+        full_script_obtained: false                    # 完整逐字脚本未取得
+        full_script_expected_location: "Supplementary Table 9"
+        osf_or_prereg_link_in_article: false
+        retrieval_location: "official OUP minimal HTML (article-minimal/8692819), body text only"
+        verified_on: "2026-07-22"
+      - construct: perceived_machine_goal_orientation
+        in_text_example_fragments_available: true
+        public_supplementary_link_available: true
+        supplementary_retrieved_in_this_run: false
+        full_script_obtained: false
+        full_script_expected_location: "Supplementary Table 9"
+        osf_or_prereg_link_in_article: false
+        retrieval_location: "official OUP minimal HTML (article-minimal/8692819), body text only"
+        verified_on: "2026-07-22"
+        effect_strength_note: "原研究 goal-orientation 操纵效应相对较弱；不得当作绝对金标准。"
+
+  - source: "Trafton, J. G., et al. (2024)"
+    study: "PA calibration (video / physical entity stimuli)"
+    venue: "ACM Transactions on Human-Robot Interaction, 13(1)"
+    doi: 10.1145/3640011
+    license:
+      article: CC BY 4.0
+      calibration_stimuli_public_text: not_available
+    constructs_audited:
+      - construct: perceived_agency_calibration
+        public_video_action_descriptions_available: true   # 作者公开页提供校准视频标签/形态/行为描述
+        public_full_text_stimulus_available: false          # 无可逐字文本化的完整刺激
+        video_to_text_conversion_risk: high
+        author_page_calibration_videos:
+          - name: Service
+            morphology: Humanoid
+            action_description: "Helping a human find a sports jersey in a store"
+          - name: Cheating RPS
+            morphology: Humanoid
+            action_description: "Human playing rock paper scissors; robot cheats"
+          - name: Feeder
+            morphology: Arm
+            action_description: "Picking up food with a fork and feeding a human"
+        medium_conversion_risk: "视频/实体 -> 文本存在媒介转换风险；不得把实体名称写成自造描述后称原刺激。"
+        retrieval_location: "author public page (gregtrafton.com/agency) — video labels/morphology/action descriptions + membership/scoring; no full-text stimulus"
+        verified_on: "2026-07-22"
+
+data_availability_statement:
+  wu_shen_2026: "The data underlying this article will be shared by the first author upon reasonable request."
+  note: "无公开 OSF；补充材料托管于 JCMC online；本环境未取得补充材料完整内容。"
+
+still_missing_evidence:
+  - "Wu Supplementary Table 9 完整逐字对话脚本（四条件）"
+  - "PA 校准视频/实体的可公开文本化刺激"
+  - "任一工具面向本项目 D/U 材料的内容效度证据（本轮不产出）"

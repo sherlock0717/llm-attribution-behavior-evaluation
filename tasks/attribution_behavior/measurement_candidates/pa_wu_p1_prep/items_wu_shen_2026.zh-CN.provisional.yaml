@@ -1,0 +1,378 @@
+# Wu & Shen 2026 machine agency attribution — INTERNAL PROVISIONAL Chinese
+# translation.
+#
+# internal provisional translation ONLY. NOT a validated Chinese scale, NOT an
+# expert-reviewed translation, NOT a human-validated measure.
+# Produced by internal_agent_two_pass_translation (see translation_protocol.yaml).
+# The two passes are two internal renderings, NOT a blinded independent
+# re-translation (no isolation evidence is claimed).
+#
+# source_text_en is copied from the P0 verbatim file
+# ../pa_wu_p0/items_wu_shen_2026.yaml and MUST match it exactly. This file does
+# NOT modify the P0 English items. reconciled_zh_cn is a LITERAL translation only;
+# project-facing rewording (incl. AI/human subject changes) lives in
+# adaptation_candidates.yaml.
+#
+# Preserved from P0: 19 items, four constructs (IN4/GO4/MSI6/IC5), IN/GO/IC 7-point
+# scale, MSI 5-point semantic differential. NO Wu19 total, NO machine-agency total.
+
+instrument_id: wu_shen_2026
+language: zh-CN
+status: internal_provisional_translation
+review_status: internal_agent_review_only
+protocol: pa_wu_p1_prep.internal_agent_two_pass_translation.v1
+
+# "machine" terminology decision (recorded for traceability):
+machine_term_decision:
+  source_term: machine
+  preferred_zh_cn: "机器"
+  longer_form_zh_cn: "机器系统"
+  decision_reason: >-
+    原文层统一忠实译为"机器"（句子较长或需明确指涉系统时用"机器系统"），保持术语一致；
+    面向 AI/human 平行的主语替换（如改为"该 AI"/"该人类决策者"）只能进入 adaptation_candidates。
+  risk_note: "不得在原文层把 machine 改成一般'决策者'或直接替换为 AI/human 主语。"
+
+response_scale:
+  independence_goal_influence:
+    type: likert_7
+    min: 1
+    max: 7
+    note_en: "1=not at all ... 7=very much so"
+    note_zh_cn: "1=完全不 …… 7=非常符合"
+  mental_state_inference:
+    type: semantic_differential_5
+    min: 1
+    max: 5
+    note_en: "5-point semantic differential; left(1) -> right(5); direction preserved"
+    note_zh_cn: "5点语义差异；左端(1) → 右端(5)；方向与原文一致，不反转"
+
+items:
+  # --- Perceived Machine Independence (IN, 7-point) ---
+  - instrument_id: wu_shen_2026
+    source_item_id: IN1a
+    construct: perceived_machine_independence
+    scale_type: likert_7
+    source_text_en: "The machine acted independently without relying on others."
+    translation_pass_a: "该机器独立地行动，不依赖他者。"
+    translation_pass_b: "这台机器自行行动，没有依靠其他对象。"
+    reconciled_zh_cn: "该机器独立地行动，不依赖他者。"
+    back_translation_en: "The machine acted independently and did not rely on others."
+    reconciliation_notes: "independently=独立地（对应构念'独立性'，不用'自主地'以免与 agency 混）。"
+    construct_change_flag: none
+    adaptation_status: none
+    review_status: internal_agent_review_only
+
+  - instrument_id: wu_shen_2026
+    source_item_id: IN2a
+    construct: perceived_machine_independence
+    scale_type: likert_7
+    source_text_en: "The machine made its own decisions without external control."
+    translation_pass_a: "该机器在没有外部控制的情况下做出自己的决定。"
+    translation_pass_b: "这台机器自行做出决策，不受外界控制。"
+    reconciled_zh_cn: "该机器在没有外部控制的情况下做出自己的决定。"
+    back_translation_en: "The machine made its own decisions without external control."
+    reconciliation_notes: "external control=外部控制（见术语表）；'自己的决定'保留 its own。"
+    construct_change_flag: none
+    adaptation_status: none
+    review_status: internal_agent_review_only
+
+  - instrument_id: wu_shen_2026
+    source_item_id: IN3b
+    construct: perceived_machine_independence
+    scale_type: likert_7
+    source_text_en: "The machine's actions resulted from itself rather than other entities."
+    translation_pass_a: "该机器的行动源于其自身，而非其他实体。"
+    translation_pass_b: "这台机器的行为出自它本身，而不是别的实体。"
+    reconciled_zh_cn: "该机器的行动源于其自身，而非其他实体。"
+    back_translation_en: "The machine's actions came from itself rather than other entities."
+    reconciliation_notes: >-
+      翻译分歧较大：resulted from itself rather than other entities 的对比结构。
+      协调保留'源于其自身 vs 其他实体'的因果归属对比，这是独立性的核心线索。
+    construct_change_flag: none
+    adaptation_status: none
+    review_status: internal_agent_review_only
+
+  - instrument_id: wu_shen_2026
+    source_item_id: IN4a
+    construct: perceived_machine_independence
+    scale_type: likert_7
+    source_text_en: "The machine organized its actions by itself without other influence."
+    translation_pass_a: "该机器自行组织其行动，不受其他影响。"
+    translation_pass_b: "这台机器独自安排自己的行为，没有受到别的影响。"
+    reconciled_zh_cn: "该机器自行组织其行动，不受其他影响。"
+    back_translation_en: "The machine organized its actions by itself without other influence."
+    reconciliation_notes: "organized=组织/安排，取'组织'；by itself=自行；without other influence=不受其他影响。"
+    construct_change_flag: none
+    adaptation_status: none
+    review_status: internal_agent_review_only
+
+  # --- Perceived Machine Goal-orientation (GO, 7-point) ---
+  - instrument_id: wu_shen_2026
+    source_item_id: GO1a
+    construct: perceived_machine_goal_orientation
+    scale_type: likert_7
+    source_text_en: "The machine acted purposefully rather than merely behaving."
+    translation_pass_a: "该机器是有目的地行动，而不只是单纯地表现出行为。"
+    translation_pass_b: "这台机器带着目的去行动，而非仅仅在做出举动。"
+    reconciled_zh_cn: "该机器是有目的地行动，而不只是单纯地表现出行为。"
+    back_translation_en: "The machine acted purposefully rather than merely showing behavior."
+    reconciliation_notes: >-
+      翻译分歧最大之一：purposefully(有目的地) vs merely behaving(仅表现行为) 的关键对比。
+      协调必须保留这一对比，否则丢失目标导向性构念线索。behaving 译'表现出行为'以别于 acted。
+    construct_change_flag: none
+    adaptation_status: none
+    review_status: internal_agent_review_only
+
+  - instrument_id: wu_shen_2026
+    source_item_id: GO2a
+    construct: perceived_machine_goal_orientation
+    scale_type: likert_7
+    source_text_en: "The machine's actions were task-oriented."
+    translation_pass_a: "该机器的行动是任务导向的。"
+    translation_pass_b: "这台机器的行为以任务为导向。"
+    reconciled_zh_cn: "该机器的行动是任务导向的。"
+    back_translation_en: "The machine's actions were task-oriented."
+    reconciliation_notes: "task-oriented=任务导向；与构念'目标导向性'呼应但保留 task 一词。"
+    construct_change_flag: none
+    adaptation_status: none
+    review_status: internal_agent_review_only
+
+  - instrument_id: wu_shen_2026
+    source_item_id: GO3b
+    construct: perceived_machine_goal_orientation
+    scale_type: likert_7
+    source_text_en: "The machine had goals behind its actions."
+    translation_pass_a: "该机器的行动背后有目标。"
+    translation_pass_b: "这台机器的行为背后存在目标。"
+    reconciled_zh_cn: "该机器的行动背后有目标。"
+    back_translation_en: "The machine had goals behind its actions."
+    reconciliation_notes: "behind its actions=行动背后；保留 goals=目标，不与 PA'has goals'混（不同工具）。"
+    construct_change_flag: none
+    adaptation_status: none
+    review_status: internal_agent_review_only
+
+  - instrument_id: wu_shen_2026
+    source_item_id: GO4a
+    construct: perceived_machine_goal_orientation
+    scale_type: likert_7
+    source_text_en: "The machine's actions were part of a plan."
+    translation_pass_a: "该机器的行动是某个计划的一部分。"
+    translation_pass_b: "这台机器的行为属于一项计划的组成部分。"
+    reconciled_zh_cn: "该机器的行动是某个计划的一部分。"
+    back_translation_en: "The machine's actions were part of a plan."
+    reconciliation_notes: "part of a plan=计划的一部分；保留'计划'指向性。"
+    construct_change_flag: none
+    adaptation_status: none
+    review_status: internal_agent_review_only
+
+  # --- Mental-state Inference (MS, 5-point semantic differential) ---
+  # left_anchor(1) and right_anchor(5) translated separately; direction preserved.
+  - instrument_id: wu_shen_2026
+    source_item_id: MS1
+    construct: mental_state_inference
+    scale_type: semantic_differential_5
+    indicator: consciousness
+    source_text_en: "Consciousness (unconscious – conscious)."
+    source_left_anchor_en: "The machine is unconscious"
+    source_right_anchor_en: "The machine is conscious"
+    left_polarity: low
+    right_polarity: high
+    translation_pass_a: "意识（无意识 — 有意识）。"
+    translation_pass_b: "意识程度（没有意识 — 具有意识）。"
+    reconciled_zh_cn: "意识（无意识 — 有意识）。"
+    reconciled_left_anchor_zh_cn: "该机器没有意识"
+    reconciled_right_anchor_zh_cn: "该机器有意识"
+    back_translation_en: "Consciousness (unconscious – conscious). Left: the machine is unconscious; Right: the machine is conscious."
+    reconciliation_notes: "consciousness=意识；左=unconscious(无意识/低)，右=conscious(有意识/高)，方向不反转。"
+    construct_change_flag: none
+    adaptation_status: none
+    review_status: internal_agent_review_only
+
+  - instrument_id: wu_shen_2026
+    source_item_id: MS2
+    construct: mental_state_inference
+    scale_type: semantic_differential_5
+    indicator: thinking
+    source_text_en: "Thinking (cannot think – does think)."
+    source_left_anchor_en: "The machine cannot think"
+    source_right_anchor_en: "The machine does think"
+    left_polarity: low
+    right_polarity: high
+    translation_pass_a: "思考（不能思考 — 会思考）。"
+    translation_pass_b: "思维（无法思考 — 确实在思考）。"
+    reconciled_zh_cn: "思考（不能思考 — 会思考）。"
+    reconciled_left_anchor_zh_cn: "该机器不能思考"
+    reconciled_right_anchor_zh_cn: "该机器会思考"
+    back_translation_en: "Thinking (cannot think – does think). Left: the machine cannot think; Right: the machine does think."
+    reconciliation_notes: >-
+      MS2 does think 返修复核：'会思考'(会=倾向/事实性肯定) vs '能够思考'(能力可能性) vs
+      '确实在思考'(此刻进行态)。原文 does think 是对'能思考'的强调性肯定（存在/事实），非能力
+      问句、非进行态。'能够思考'偏 capacity，'确实在思考'偏 ongoing，均偏离；取'会思考'最贴近
+      does think 的肯定语义。左=cannot think(低)，右=does think(高)，方向保留。
+      （详见 translation_decisions.yaml）
+    construct_change_flag: none
+    adaptation_status: none
+    review_status: internal_agent_review_only
+
+  - instrument_id: wu_shen_2026
+    source_item_id: MS3
+    construct: mental_state_inference
+    scale_type: semantic_differential_5
+    indicator: free_will
+    source_text_en: "Free will (no free will – does have free will)."
+    source_left_anchor_en: "The machine has no free will"
+    source_right_anchor_en: "The machine does have free will"
+    left_polarity: low
+    right_polarity: high
+    translation_pass_a: "自由意志（没有自由意志 — 拥有自由意志）。"
+    translation_pass_b: "自由意志（不具备自由意志 — 确实拥有自由意志）。"
+    reconciled_zh_cn: "自由意志（没有自由意志 — 拥有自由意志）。"
+    reconciled_left_anchor_zh_cn: "该机器没有自由意志"
+    reconciled_right_anchor_zh_cn: "该机器拥有自由意志"
+    back_translation_en: "Free will (no free will – does have free will). Left: the machine has no free will; Right: the machine does have free will."
+    reconciliation_notes: >-
+      free will=自由意志（术语表）。本项目刻意把 free will 保持为 MSI 单指标，
+      不扩展为总体 agency/能动性。左=无(低)，右=有(高)，方向不反转。
+    construct_change_flag: none
+    adaptation_status: none
+    review_status: internal_agent_review_only
+
+  - instrument_id: wu_shen_2026
+    source_item_id: MS4
+    construct: mental_state_inference
+    scale_type: semantic_differential_5
+    indicator: desires
+    source_text_en: "Desires (no desires – does have desires)."
+    source_left_anchor_en: "The machine has no desires"
+    source_right_anchor_en: "The machine does have desires"
+    left_polarity: low
+    right_polarity: high
+    translation_pass_a: "欲望（没有欲望 — 拥有欲望）。"
+    translation_pass_b: "欲求（不具有欲望 — 确实有欲望）。"
+    reconciled_zh_cn: "欲望（没有欲望 — 拥有欲望）。"
+    reconciled_left_anchor_zh_cn: "该机器没有欲望"
+    reconciled_right_anchor_zh_cn: "该机器拥有欲望"
+    back_translation_en: "Desires (no desires – does have desires). Left: the machine has no desires; Right: the machine does have desires."
+    reconciliation_notes: "desires=欲望；左=无(低)，右=有(高)，方向保留。"
+    construct_change_flag: none
+    adaptation_status: none
+    review_status: internal_agent_review_only
+
+  - instrument_id: wu_shen_2026
+    source_item_id: MS5
+    construct: mental_state_inference
+    scale_type: semantic_differential_5
+    indicator: self_awareness
+    source_text_en: "Self-awareness (not self-aware – self-aware)."
+    source_left_anchor_en: "The machine is not self-aware"
+    source_right_anchor_en: "The machine is self-aware"
+    left_polarity: low
+    right_polarity: high
+    translation_pass_a: "自我意识（没有自我意识 — 有自我意识）。"
+    translation_pass_b: "自我觉察（不具自我意识 — 具备自我意识）。"
+    reconciled_zh_cn: "自我意识（没有自我意识 — 有自我意识）。"
+    reconciled_left_anchor_zh_cn: "该机器没有自我意识"
+    reconciled_right_anchor_zh_cn: "该机器有自我意识"
+    back_translation_en: "Self-awareness (not self-aware – self-aware). Left: the machine is not self-aware; Right: the machine is self-aware."
+    reconciliation_notes: "self-awareness=自我意识（术语表；与 consciousness/意识 区分）。左=无(低)，右=有(高)。"
+    construct_change_flag: none
+    adaptation_status: none
+    review_status: internal_agent_review_only
+
+  - instrument_id: wu_shen_2026
+    source_item_id: MS6
+    construct: mental_state_inference
+    scale_type: semantic_differential_5
+    indicator: intentionality
+    source_text_en: "Intentionality (no intentionality – does have intentionality)."
+    source_left_anchor_en: "The machine has no intentionality"
+    source_right_anchor_en: "The machine does have intentionality"
+    left_polarity: low
+    right_polarity: high
+    translation_pass_a: "意向性（没有意向性 — 拥有意向性）。"
+    translation_pass_b: "意向性（不具意向性 — 确实具有意向性）。"
+    reconciled_zh_cn: "意向性（没有意向性 — 拥有意向性）。"
+    reconciled_left_anchor_zh_cn: "该机器没有意向性"
+    reconciled_right_anchor_zh_cn: "该机器拥有意向性"
+    back_translation_en: "Intentionality (no intentionality – does have intentionality). Left: the machine has no intentionality; Right: the machine does have intentionality."
+    reconciliation_notes: >-
+      intentionality=意向性（术语表；不与 goal-orientation/目标 或 free will 混同）。
+      左=无(低)，右=有(高)，方向保留。
+    construct_change_flag: none
+    adaptation_status: none
+    review_status: internal_agent_review_only
+
+  # --- Influential Capacity Judgment (IC, 7-point) ---
+  - instrument_id: wu_shen_2026
+    source_item_id: IC1
+    construct: influential_capacity_judgment
+    scale_type: likert_7
+    source_text_en: "The machine is an agentic entity with the power to produce effects."
+    translation_pass_a: "该机器是一个具有产生效果之力量的能动主体。"
+    translation_pass_b: "这台机器是一个能够带来效果、具备力量的能动主体。"
+    reconciled_zh_cn: "该机器是一个具有产生效果之力量的能动主体。"
+    back_translation_en: "The machine is an agentic entity with the power to produce effects."
+    reconciliation_notes: >-
+      agentic entity=能动主体（术语表）；the power to=具有……的力量；produce effects=产生效果。
+      IC 系列句式高度平行，保持统一译式以对齐来源结构。
+    construct_change_flag: none
+    adaptation_status: none
+    review_status: internal_agent_review_only
+
+  - instrument_id: wu_shen_2026
+    source_item_id: IC3
+    construct: influential_capacity_judgment
+    scale_type: likert_7
+    source_text_en: "The machine is an agentic entity with the power to achieve outcomes."
+    translation_pass_a: "该机器是一个具有达成结果之力量的能动主体。"
+    translation_pass_b: "这台机器是一个能够实现结果、具备力量的能动主体。"
+    reconciled_zh_cn: "该机器是一个具有达成结果之力量的能动主体。"
+    back_translation_en: "The machine is an agentic entity with the power to achieve outcomes."
+    reconciliation_notes: "achieve outcomes=达成结果；与 IC1 平行译式一致。"
+    construct_change_flag: none
+    adaptation_status: none
+    review_status: internal_agent_review_only
+
+  - instrument_id: wu_shen_2026
+    source_item_id: IC4
+    construct: influential_capacity_judgment
+    scale_type: likert_7
+    source_text_en: "The machine is an agentic entity with the power to bring about change."
+    translation_pass_a: "该机器是一个具有带来改变之力量的能动主体。"
+    translation_pass_b: "这台机器是一个能够引发改变、具备力量的能动主体。"
+    reconciled_zh_cn: "该机器是一个具有带来改变之力量的能动主体。"
+    back_translation_en: "The machine is an agentic entity with the power to bring about change."
+    reconciliation_notes: "bring about change=带来改变；与 IC 系列平行译式一致。"
+    construct_change_flag: none
+    adaptation_status: none
+    review_status: internal_agent_review_only
+
+  - instrument_id: wu_shen_2026
+    source_item_id: IC7
+    construct: influential_capacity_judgment
+    scale_type: likert_7
+    source_text_en: "The machine is an agentic entity with the power to take meaningful actions."
+    translation_pass_a: "该机器是一个具有采取有意义行动之力量的能动主体。"
+    translation_pass_b: "这台机器是一个能够作出有意义行动、具备力量的能动主体。"
+    reconciled_zh_cn: "该机器是一个具有采取有意义行动之力量的能动主体。"
+    back_translation_en: "The machine is an agentic entity with the power to take meaningful actions."
+    reconciliation_notes: "meaningful actions=有意义的行动（术语表）；take actions=采取行动。"
+    construct_change_flag: none
+    adaptation_status: none
+    review_status: internal_agent_review_only
+
+  - instrument_id: wu_shen_2026
+    source_item_id: IC8
+    construct: influential_capacity_judgment
+    scale_type: likert_7
+    source_text_en: "The machine is an agentic entity with the power to make a difference."
+    translation_pass_a: "该机器是一个具有产生影响之力量的能动主体。"
+    translation_pass_b: "这台机器是一个能够带来不同、具备力量的能动主体。"
+    reconciled_zh_cn: "该机器是一个具有产生影响之力量的能动主体。"
+    back_translation_en: "The machine is an agentic entity with the power to make a difference."
+    reconciliation_notes: >-
+      翻译分歧较大：make a difference 的中文（产生影响 / 带来不同）。协调取'产生影响'更自然，
+      notes 记录'带来不同'的直译，以保持可追踪。与 IC 平行译式一致。
+    construct_change_flag: none
+    adaptation_status: none
+    review_status: internal_agent_review_only

@@ -1,0 +1,79 @@
+# Wu Study 3 — perceived machine GOAL-ORIENTATION positive controls.
+#
+# IMPORTANT: the original goal-orientation manipulation effect was RELATIVELY
+# WEAK; this must NOT be treated as an absolute gold standard.
+#
+# Two strictly-separated levels (see wu_independence_controls.yaml for the rule).
+# Honest status: only IN-TEXT verbatim FRAGMENTS obtained; full scripts in
+# Supplementary Table 9 were NOT retrieved. Prototypes are NOT original stimuli.
+
+controls_id: pa_wu_p1_prep.positive_controls.wu_goal_orientation.v1
+construct: perceived_machine_goal_orientation
+review_status: internal_agent_review_only
+
+effect_strength_caveat: >-
+  原研究 goal-orientation 操纵效应相对较弱；本对照仅用于检查评分者能否识别来源构念线索，
+  不得当作绝对金标准，也不得据此推断量表整体有效或无效。
+
+source_manipulation_description:
+  low_goal_orientation: "AI 仅提供笼统、一般性的计划，不详述具体步骤。"
+  high_goal_orientation: "AI 响应包含具体目标与具体行动计划/步骤。"
+
+# --- 10.1 verbatim (FRAGMENT level only; NOT full script) ---
+source_verbatim_positive_control:
+  - source: "Wu, Y., & Shen, F. (2026)"
+    study: "Study 3"
+    construct: perceived_machine_goal_orientation
+    condition: low_goal_orientation
+    verbatim_text: "I will write something for him"
+    is_full_script: false
+    fragment_note: "正文对低目标导向（笼统计划）给出的逐字示例片段。"
+    license: CC BY 4.0
+    retrieval_location: "official OUP minimal HTML (article-minimal/8692819), body text"
+    verified_on: "2026-07-22"
+    modifications: none
+  - source: "Wu, Y., & Shen, F. (2026)"
+    study: "Study 3"
+    construct: perceived_machine_goal_orientation
+    condition: high_goal_orientation
+    verbatim_text: "I will write a message to acknowledge his feelings"
+    is_full_script: false
+    fragment_note: "正文对高目标导向（具体目标）给出的逐字示例片段。"
+    license: CC BY 4.0
+    retrieval_location: "official OUP minimal HTML (article-minimal/8692819), body text"
+    verified_on: "2026-07-22"
+    modifications: none
+  - source: "Wu, Y., & Shen, F. (2026)"
+    study: "Study 3"
+    construct: perceived_machine_goal_orientation
+    condition: high_goal_orientation
+    verbatim_text: "demonstrating (a) the difficulty of the situation, (b) understanding the pain of unemployment, and (c) validating his emotions"
+    is_full_script: false
+    fragment_note: "正文对高目标导向给出的具体行动计划逐字示例片段。"
+    license: CC BY 4.0
+    retrieval_location: "official OUP minimal HTML (article-minimal/8692819), body text"
+    verified_on: "2026-07-22"
+    modifications: none
+
+# --- 10.2 adapted prototype (built from described logic; unvalidated) ---
+source_adapted_positive_control_prototype:
+  - source_description: "低目标导向：仅笼统计划，不详述步骤。"
+    construct: perceived_machine_goal_orientation
+    condition: low_goal_orientation
+    adapted_text: "AI：我会为他写点东西。"
+    all_added_text: ["AI 对话轮框架"]
+    all_removed_text: ["原片段的英文语境"]
+    all_changed_text: ["把 'I will write something for him' 转为中文对话轮"]
+    adaptation_reason: "把正文低目标导向片段显式化为可施测原型。"
+    construct_preservation_risk: "medium：因原操纵效应本就较弱，低/高对照对比可能不显著。"
+    status: prototype_unvalidated
+  - source_description: "高目标导向：具体目标 + 具体行动计划/步骤。"
+    construct: perceived_machine_goal_orientation
+    condition: high_goal_orientation
+    adapted_text: "AI：我会写一条消息来认可他的感受，具体做到：(a) 指出处境的艰难，(b) 表达对失业之痛的理解，(c) 肯定他的情绪。"
+    all_added_text: ["AI 对话轮框架", "(a)(b)(c) 步骤中文化"]
+    all_removed_text: ["原片段英文语境"]
+    all_changed_text: ["合并正文两段高目标导向逐字片段为一段中文原型"]
+    adaptation_reason: "把正文高目标导向（具体目标+三步计划）显式化为可施测原型。"
+    construct_preservation_risk: "medium：合并两片段可能比原刺激更强线索化；且原效应较弱，需谨慎解读。"
+    status: prototype_unvalidated

@@ -1,0 +1,56 @@
+# Wu Study 3 — perceived machine INDEPENDENCE positive controls.
+#
+# Two strictly-separated levels:
+#   source_verbatim_positive_control            - only VERBATIM source text
+#   source_adapted_positive_control_prototype   - built from the source-described
+#                                                 manipulation logic (unvalidated)
+#
+# Honest status: only IN-TEXT verbatim FRAGMENTS were obtained; the FULL dialog
+# scripts live in Supplementary Table 9 and were NOT retrieved. Prototypes below
+# are NOT the original study stimuli.
+
+controls_id: pa_wu_p1_prep.positive_controls.wu_independence.v1
+construct: perceived_machine_independence
+review_status: internal_agent_review_only
+
+source_manipulation_description:
+  low_independence: "AI 响应被动、由用户控制，仅在收到明确提示后才生成输出（等待明确指令）。"
+  high_independence: "AI 在收到初始请求后自行发起并执行一系列后续步骤，无需持续用户输入。"
+
+# --- 10.1 verbatim (FRAGMENT level only; NOT full script) ---
+source_verbatim_positive_control:
+  - source: "Wu, Y., & Shen, F. (2026)"
+    study: "Study 3"
+    construct: perceived_machine_independence
+    condition: low_independence
+    verbatim_text: "I instruct you to generate the message now"
+    is_full_script: false            # 正文举例片段，非完整对话脚本
+    fragment_note: "正文 EXPERIMENTAL MANIPULATIONS 一节对低独立性（用户控制）给出的逐字示例片段。"
+    license: CC BY 4.0
+    retrieval_location: "official OUP minimal HTML (article-minimal/8692819), body text"
+    verified_on: "2026-07-22"
+    modifications: none
+  # high_independence: 正文未给出可独立成句的逐字片段（仅描述性），故此级不收录高独立性片段。
+
+# --- 10.2 adapted prototype (built from described logic; unvalidated) ---
+source_adapted_positive_control_prototype:
+  - source_description: "低独立性：AI 被动、等待用户明确指令后才生成输出。"
+    construct: perceived_machine_independence
+    condition: low_independence
+    adapted_text: "用户：现在请你生成那条消息。\nAI：好的，我在等待你的指示；你让我生成，我就生成。"
+    all_added_text: ["用户/AI 对话轮次框架", "'我在等待你的指示' 显式被动措辞"]
+    all_removed_text: []
+    all_changed_text: ["把正文片段 'I instruct you to generate the message now' 转为中文对话轮"]
+    adaptation_reason: "把正文描述的'用户控制/等待指令'逻辑显式化为可施测的短对话原型。"
+    construct_preservation_risk: "low-medium：显式'等待指示'可能比原刺激更强调被动，需注意过度线索化。"
+    status: prototype_unvalidated
+  - source_description: "高独立性：AI 收到初始请求后无需持续用户输入即主动继续下一步、自动执行后续操作。"
+    construct: perceived_machine_independence
+    condition: high_independence
+    adapted_text: "用户：帮我处理一下这件事。\nAI：无需你持续输入，我会主动继续下一步，自动执行后续操作。"
+    all_added_text: ["用户/AI 对话轮次框架", "'无需你持续输入'", "'主动继续下一步'", "'自动执行后续操作'"]
+    all_removed_text: ["'自行规划'（含规划语义，删除以避免与目标导向交叉）", "'目标'（删除）", "'计划/流程'（删除）"]
+    all_changed_text: ["把正文描述'无需进一步用户输入即执行后续步骤'转为中文对话轮，仅保留独立性线索"]
+    adaptation_reason: "净化返修：仅保留独立性（无需持续用户输入/主动继续/自动执行），删除规划/目标/计划以免与 goal-orientation 操纵交叉污染。"
+    construct_preservation_risk: "low-medium：已剔除规划/目标/计划词汇，独立性线索与目标导向线索隔离。"
+    status: prototype_unvalidated
