@@ -83,6 +83,7 @@ failure_codes:
   - selected_items_mismatch
   - illegal_positive_control
   - unknown_output_case
+  - output_contract_mismatch
   - p0_contract_error
 
 # --- positive-control levels (STRICT enum; formal_calibrated is FORBIDDEN) ---
@@ -100,7 +101,7 @@ forbidden_score_ids:
   - PA_WU_TOTAL
 
 # --- determinism: MUST equal the actual run hash (validator enforces equality) ---
-deterministic_run_hash_reference: 41542c07450f6f9e
+deterministic_run_hash_reference: 7c83def4c93ad26f
 
 invariants:
   is_mock_always_true: true

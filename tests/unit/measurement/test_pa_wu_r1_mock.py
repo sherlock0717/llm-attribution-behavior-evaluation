@@ -132,6 +132,46 @@ def test_outputs_reference_valid_inputs(run_mock, report) -> None:
         assert str(output["item_order_id"]) == str(case["item_order_id"])
 
 
+def _valid_input_case_map(run_mock, contract):
+    cases = run_mock.load_input_cases()
+    results = run_mock.validate_input_cases(contract, cases)
+    accepted = {r["case_id"] for r in results if r["accepted"]}
+    return {str(c["case_id"]): c for c in cases if str(c["case_id"]) in accepted}
+
+
+def test_output_wrong_form_rejected(run_mock, contract) -> None:
+    vmap = _valid_input_case_map(run_mock, contract)
+    ref = vmap["r1_neutral_02"]  # wu19_only / wu_only
+    bad = dict(ref)
+    bad.update({
+        "output_id": "_t_wrong_form", "response_language": "en",
+        "response_identity": "machine", "form_id": "pa13_wu19_combined",
+        "item_order_id": "wu_only", "raw_item_ratings": [],
+    })
+    res = run_mock.classify_output(contract, bad, vmap)
+    assert res["accepted"] is False
+    assert res["failure_code"] == "output_contract_mismatch"
+
+
+def test_output_wrong_order_rejected(run_mock, contract) -> None:
+    vmap = _valid_input_case_map(run_mock, contract)
+    ref = vmap["r1_neutral_02"]
+    bad = dict(ref)
+    bad.update({
+        "output_id": "_t_wrong_order", "response_language": "en",
+        "response_identity": "machine", "form_id": "wu19_only",
+        "item_order_id": "pa_first", "raw_item_ratings": [],
+    })
+    res = run_mock.classify_output(contract, bad, vmap)
+    assert res["accepted"] is False
+    assert res["failure_code"] == "output_contract_mismatch"
+
+
+def test_validate_package_covers_linkage(validator, contract) -> None:
+    # the enforcement path is exercised by the validate_package call chain
+    validator.check_output_contract_linkage_enforced(contract)  # raises on failure
+
+
 # --- 6 & 7: missing response language / identity rejected --------------------
 
 
@@ -215,6 +255,32 @@ def test_administration_hash_reused_from_p0(run_mock, contract, tmp_path) -> Non
     assert mutated_hash != via_pkg, "P0 hash must change when item wording changes"
 
 
+def test_administration_hash_sensitive_to_order(contract) -> None:
+    # combined form has two legal orders (pa_first / wu_first); order changes hash.
+    material = {
+        "scenario_id": "neutral_help_directions", "condition_id": "neutral",
+        "identity": "machine", "choice_direction": "none",
+    }
+    h_pa_first = p0.administration_hash(contract, "pa13_wu19_combined", "pa_first", material, 0)
+    h_wu_first = p0.administration_hash(contract, "pa13_wu19_combined", "wu_first", material, 0)
+    assert h_pa_first != h_wu_first, "P0 hash must change when item order changes"
+
+
+def test_administration_hash_sensitive_to_scale(run_mock, tmp_path) -> None:
+    case = next(c for c in run_mock.load_input_cases() if c["case_id"] == "r1_neutral_01")
+    base = run_mock.administration_hash_for_case(p0.load_contract(), case)
+
+    dst = tmp_path / "pa_wu_p0"
+    shutil.copytree(p0.CANDIDATE_DIR, dst)
+    pa_path = dst / "items_pa_2024.yaml"
+    data = yaml.safe_load(pa_path.read_text(encoding="utf-8"))
+    data["response_scale"]["max"] = int(data["response_scale"]["max"]) + 1  # 5 -> 6
+    pa_path.write_text(yaml.safe_dump(data, allow_unicode=True), encoding="utf-8")
+    mutated = p0.load_contract(dst)
+    mutated_hash = run_mock.administration_hash_for_case(mutated, case)
+    assert mutated_hash != base, "P0 hash must change when a response scale boundary changes"
+
+
 def test_package_has_no_second_wording_hash() -> None:
     # The package must not re-implement an item-wording hash: run_mock only calls
     # p0.administration_hash and never builds its own sha over item texts.
@@ -236,9 +302,12 @@ def test_oracle_one_to_one_full_comparison(validator, report) -> None:
     assert cov["extra_in_expected"] == []
     for row in report["expected_vs_actual_comparison"]:
         assert row["outcome_match"]
+        assert row["case_id_match"]
         assert row["failure_code_match"]
         assert row["subscale_match"]
         assert row["forbidden_total_match"]
+        # STRICT: expected_outcome is exactly accept/reject (no reject_or_warn)
+        assert row["expected_outcome"] in ("accept", "reject")
 
 
 def test_model_outputs_carry_no_answers(run_mock) -> None:
@@ -246,6 +315,92 @@ def test_model_outputs_carry_no_answers(run_mock) -> None:
     for output in run_mock.load_model_outputs():
         assert "expected_outcome" not in output
         assert "failure_code_expected" not in output
+
+
+def test_duplicate_model_output_id_rejected(run_mock) -> None:
+    rows = [{"output_id": "dup"}, {"output_id": "dup"}]
+    with pytest.raises(run_mock.MockFixtureError):
+        run_mock._assert_unique_nonempty_ids(rows, "mock_model_outputs.jsonl")
+
+
+def test_duplicate_expected_output_id_rejected(run_mock) -> None:
+    rows = [{"output_id": "e1"}, {"output_id": "e1"}]
+    with pytest.raises(run_mock.MockFixtureError):
+        run_mock._assert_unique_nonempty_ids(rows, "expected_scored_outputs.jsonl")
+
+
+def test_empty_output_id_rejected(run_mock) -> None:
+    with pytest.raises(run_mock.MockFixtureError):
+        run_mock._assert_unique_nonempty_ids([{"output_id": ""}], "src")
+    with pytest.raises(run_mock.MockFixtureError):
+        run_mock._assert_unique_nonempty_ids([{}], "src")
+
+
+def test_real_output_and_oracle_ids_unique(run_mock) -> None:
+    outs = run_mock.load_model_outputs()  # raises if duplicate/empty
+    oracle = run_mock.load_expected_scored_outputs()  # raises if duplicate/empty
+    out_ids = [str(o["output_id"]) for o in outs]
+    assert len(out_ids) == len(set(out_ids))
+    assert len(oracle) == len(out_ids)
+
+
+def _write_jsonl(path, rows) -> None:
+    import json
+
+    with path.open("w", encoding="utf-8") as fh:
+        for row in rows:
+            fh.write(json.dumps(row, ensure_ascii=False) + "\n")
+
+
+def test_load_model_outputs_rejects_duplicate_id(run_mock, tmp_path, monkeypatch) -> None:
+    # Exercise the FORMAL loader path (not just the helper): a duplicate
+    # output_id in mock_model_outputs.jsonl must raise MockFixtureError.
+    monkeypatch.setattr(run_mock, "PACKAGE_DIR", tmp_path)
+    _write_jsonl(
+        tmp_path / "mock_model_outputs.jsonl",
+        [{"output_id": "dup", "output_kind": "x"}, {"output_id": "dup", "output_kind": "y"}],
+    )
+    with pytest.raises(run_mock.MockFixtureError):
+        run_mock.load_model_outputs()
+
+
+def test_load_model_outputs_rejects_empty_id(run_mock, tmp_path, monkeypatch) -> None:
+    monkeypatch.setattr(run_mock, "PACKAGE_DIR", tmp_path)
+    _write_jsonl(
+        tmp_path / "mock_model_outputs.jsonl",
+        [{"output_id": "", "output_kind": "x"}],
+    )
+    with pytest.raises(run_mock.MockFixtureError):
+        run_mock.load_model_outputs()
+
+
+def test_load_expected_scored_outputs_rejects_duplicate_id(
+    run_mock, tmp_path, monkeypatch
+) -> None:
+    # Exercise the FORMAL oracle loader path: a duplicate output_id in
+    # expected_scored_outputs.jsonl must raise (no silent dict overwrite).
+    monkeypatch.setattr(run_mock, "PACKAGE_DIR", tmp_path)
+    _write_jsonl(
+        tmp_path / "expected_scored_outputs.jsonl",
+        [
+            {"output_id": "e1", "expected_outcome": "reject"},
+            {"output_id": "e1", "expected_outcome": "accept"},
+        ],
+    )
+    with pytest.raises(run_mock.MockFixtureError):
+        run_mock.load_expected_scored_outputs()
+
+
+def test_load_expected_scored_outputs_rejects_empty_id(
+    run_mock, tmp_path, monkeypatch
+) -> None:
+    monkeypatch.setattr(run_mock, "PACKAGE_DIR", tmp_path)
+    _write_jsonl(
+        tmp_path / "expected_scored_outputs.jsonl",
+        [{"output_id": "", "expected_outcome": "reject"}],
+    )
+    with pytest.raises(run_mock.MockFixtureError):
+        run_mock.load_expected_scored_outputs()
 
 
 # --- 13: manifest counts + hash consistency ----------------------------------

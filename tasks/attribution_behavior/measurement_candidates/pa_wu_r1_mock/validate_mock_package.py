@@ -115,16 +115,67 @@ def check_positive_control_levels() -> None:
                 )
 
 
+ALLOWED_OUTCOMES = frozenset({"accept", "reject"})
+
+
 def check_oracle_one_to_one(report: dict[str, Any]) -> None:
+    # Loading the oracle already rejects duplicate/empty ids (run_mock loader).
     cov = report["oracle_coverage"]
     if cov["missing_from_expected"]:
         raise MockPackageError(f"outputs missing from oracle: {cov['missing_from_expected']}")
     if cov["extra_in_expected"]:
         raise MockPackageError(f"oracle has extra ids: {cov['extra_in_expected']}")
     for row in report["expected_vs_actual_comparison"]:
-        for key in ("outcome_match", "failure_code_match", "subscale_match", "forbidden_total_match"):
+        # STRICT: expected_outcome must be exactly accept/reject (no reject_or_warn).
+        if str(row["expected_outcome"]) not in ALLOWED_OUTCOMES:
+            raise MockPackageError(
+                f"{row['output_id']}: illegal expected_outcome {row['expected_outcome']!r}"
+            )
+        for key in (
+            "outcome_match",
+            "case_id_match",
+            "failure_code_match",
+            "subscale_match",
+            "forbidden_total_match",
+        ):
             if not row[key]:
                 raise MockPackageError(f"{row['output_id']}: {key} failed")
+
+
+def check_output_contract_linkage_enforced(contract: p0.P0Contract) -> None:
+    """Actively prove the runner rejects form/order-mismatched outputs.
+
+    Runs classify_output on synthetic outputs that reference a VALID input case
+    but carry a wrong form_id / item_order_id, so the enforcement path is
+    covered by the validate_package call chain (not just by pytest fixtures).
+    """
+    cases = run_mock.load_input_cases()
+    input_results = run_mock.validate_input_cases(contract, cases)
+    accepted = {r["case_id"] for r in input_results if r["accepted"]}
+    valid_input_cases = {
+        str(c["case_id"]): c for c in cases if str(c["case_id"]) in accepted
+    }
+    ref = next(c for c in cases if c["case_id"] == "r1_neutral_02")  # wu19_only/wu_only
+
+    wrong_form = dict(ref)
+    wrong_form.update(
+        {"output_id": "_synthetic_wrong_form", "response_language": "en",
+         "response_identity": "machine", "form_id": "pa13_wu19_combined",
+         "item_order_id": "wu_only", "raw_item_ratings": []}
+    )
+    res = run_mock.classify_output(contract, wrong_form, valid_input_cases)
+    if res["failure_code"] != "output_contract_mismatch":
+        raise MockPackageError("wrong form_id output was not rejected as output_contract_mismatch")
+
+    wrong_order = dict(ref)
+    wrong_order.update(
+        {"output_id": "_synthetic_wrong_order", "response_language": "en",
+         "response_identity": "machine", "form_id": "wu19_only",
+         "item_order_id": "pa_first", "raw_item_ratings": []}
+    )
+    res = run_mock.classify_output(contract, wrong_order, valid_input_cases)
+    if res["failure_code"] != "output_contract_mismatch":
+        raise MockPackageError("wrong item_order_id output was not rejected as output_contract_mismatch")
 
 
 def check_no_forbidden_totals(report: dict[str, Any]) -> None:
@@ -200,6 +251,7 @@ def validate_package() -> dict[str, Any]:
     contract = p0.load_contract()
     check_input_cases(contract)
     check_positive_control_levels()
+    check_output_contract_linkage_enforced(contract)
     run_hash = check_determinism(contract)
     report = run_mock.build_run_report(contract)
     if report["deterministic_run_hash"] != run_hash:

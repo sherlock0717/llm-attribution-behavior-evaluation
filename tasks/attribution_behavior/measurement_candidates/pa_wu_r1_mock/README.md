@@ -51,10 +51,15 @@ administration_hash / mock_only`。合法 case 必须满足：必填字段完整
 
 ## 输出 fixture 如何验证
 
-每个输出 fixture **引用一个存在且合法的输入 case**；`response_language`/`response_identity` 为**必填**，
-缺失返回 `missing_required_field`，且必须分别为 `en`/`machine`。输出层坏例（`wrong_language`/
-`wrong_identity`/`forbidden_total` 等）都构建在**合法输入 case** 之上、仅在输出本身注入故障，
-从而拒绝层次明确。硬性量尺/ID/重复/缺失规则委托 P0 `validate_response`；分数由 P0 `derive_scores` 派生。
+每个输出 fixture **引用一个存在且合法的输入 case**。运行器 `classify_output` 接收
+`valid_input_cases: dict[str, dict]`（case_id → 已接受的输入 case），并在 P0 评分**之前**
+**强制连接**：`output.form_id == input_case.form_id` 且 `output.item_order_id == input_case.item_order_id`，
+不一致直接返回 `output_contract_mismatch`（此为运行器强制，不只是测试断言；validator 的
+`validate_package` 调用链通过 `check_output_contract_linkage_enforced` 主动构造 form/order 错误的
+临时 output 实际覆盖该分支）。`response_language`/`response_identity` 为**必填**，缺失返回
+`missing_required_field`，且必须分别为 `en`/`machine`。输出层坏例（`wrong_language`/`wrong_identity`/
+`forbidden_total` 等）都构建在**合法输入 case** 之上、仅在输出本身注入故障，从而拒绝层次明确。
+硬性量尺/ID/重复/缺失规则委托 P0 `validate_response`；分数由 P0 `derive_scores` 派生。
 
 **14 条输出 fixture**：完整合法 combined（覆盖 PA13/PA8/PA5 + Wu 四分量表，32 项）、完整合法 wu19_only、
 缺条目、量尺越界（IN 与 MSI 各一）、非法 item ID、生成禁止总分、错误语言、错误身份、
@@ -70,12 +75,19 @@ administration_hash / mock_only`。合法 case 必须满足：必填字段完整
 ## 唯一 oracle 与 administration_hash
 
 - `expected_scored_outputs.jsonl` 是**唯一静态期望值来源**（`run_mock.load_expected_scored_outputs()`），
-  运行器按 `output_id` 与实际结果**一一比对**（无缺失/无多余、outcome/failure_code/分量表分/禁止总分标记精确一致）。
-  `mock_model_outputs.jsonl` **已移除** `expected_outcome` 与 `failure_code_expected`，避免输入 fixture 自带答案；
-  测试**不再**硬编码第二套 failure-code 映射。
+  运行器按 `output_id` 与实际结果**一一比对**（无缺失/无多余、outcome/failure_code/分量表分/禁止总分标记/
+  `case_id` 精确一致）。`mock_model_outputs.jsonl` **已移除** `expected_outcome` 与 `failure_code_expected`，
+  避免输入 fixture 自带答案；测试**不再**硬编码第二套 failure-code 映射。
+- **ID 唯一性**：两个正式 loader（`load_model_outputs()` / `load_expected_scored_outputs()`）都会校验
+  `output_id` **非空且唯一**，重复或空值抛 `MockFixtureError`；oracle **不再**用字典推导式静默覆盖重复 ID。
+- **outcome 严格**：oracle 的 `expected_outcome` 只允许 `accept` / `reject`（已删除 `reject_or_warn` 兼容逻辑，
+  `out_missing_item` 的 outcome 现为 `reject`），比对为 `actual_outcome == expected_outcome` 精确相等；
+  validator 显式拒绝其他 outcome 枚举。
 - `administration_hash` 通过 `p0.administration_hash(...)` 计算（form/order + scenario_id +
   target_identity→identity + 固定 condition_id + 固定 choice_direction + repeat_index=0），
-  测试证明其确定性复现、且对 item wording/顺序/量尺变化敏感、包内无第二套 wording hash。
+  **已实测**对三类变化敏感：item **wording**（腐蚀临时契约改文本）、item **order**（同一 combined form 的
+  pa_first vs wu_first）、response **scale** 边界（腐蚀临时契约改量尺 max）。`selected_item_ids` 漂移由输入 case
+  校验拒绝；包内**无第二套 wording hash**。
 
 ## 失败码（闭集）
 

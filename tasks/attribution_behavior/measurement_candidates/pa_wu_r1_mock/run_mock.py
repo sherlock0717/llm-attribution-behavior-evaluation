@@ -32,6 +32,10 @@ from freewill_attribution.measurement import pa_wu_p0 as p0
 
 PACKAGE_DIR = Path(__file__).resolve().parent
 
+
+class MockFixtureError(RuntimeError):
+    """Raised when a static fixture file is structurally invalid (e.g. duplicate/empty id)."""
+
 # Fixed R1 boundary (mirrors mock_run_contract.yaml).
 R1_LANGUAGE = "en"
 R1_IDENTITY = "machine"
@@ -53,6 +57,7 @@ FAILURE_CODES = (
     "selected_items_mismatch",
     "illegal_positive_control",
     "unknown_output_case",
+    "output_contract_mismatch",
     "p0_contract_error",
 )
 
@@ -94,14 +99,35 @@ def load_input_cases() -> list[dict[str, Any]]:
     return _read_jsonl(PACKAGE_DIR / "mock_input_cases.jsonl")
 
 
+def _assert_unique_nonempty_ids(rows: list[dict[str, Any]], source: str) -> None:
+    """Every row must carry a non-empty, unique output_id (no silent overwrite)."""
+    seen: set[str] = set()
+    for row in rows:
+        oid = str(row.get("output_id", "")).strip()
+        if not oid:
+            raise MockFixtureError(f"{source}: empty/missing output_id in row {row!r}")
+        if oid in seen:
+            raise MockFixtureError(f"{source}: duplicate output_id {oid!r}")
+        seen.add(oid)
+
+
 def load_model_outputs() -> list[dict[str, Any]]:
-    return _read_jsonl(PACKAGE_DIR / "mock_model_outputs.jsonl")
+    rows = _read_jsonl(PACKAGE_DIR / "mock_model_outputs.jsonl")
+    _assert_unique_nonempty_ids(rows, "mock_model_outputs.jsonl")
+    return rows
 
 
 def load_expected_scored_outputs() -> dict[str, dict[str, Any]]:
-    """Single static oracle: output_id -> expected record."""
+    """Single static oracle: output_id -> expected record.
+
+    Duplicate or empty output_ids raise (no dict-comprehension silent overwrite).
+    """
     rows = _read_jsonl(PACKAGE_DIR / "expected_scored_outputs.jsonl")
-    return {str(r["output_id"]): r for r in rows}
+    _assert_unique_nonempty_ids(rows, "expected_scored_outputs.jsonl")
+    oracle: dict[str, dict[str, Any]] = {}
+    for row in rows:
+        oracle[str(row["output_id"])] = row
+    return oracle
 
 
 # ---------------------------------------------------------------------------
@@ -231,9 +257,14 @@ def administration_hash_for_case(contract: p0.P0Contract, case: dict[str, Any]) 
 def classify_output(
     contract: p0.P0Contract,
     output: dict[str, Any],
-    valid_input_case_ids: frozenset[str],
+    valid_input_cases: dict[str, dict[str, Any]],
 ) -> dict[str, Any]:
-    """Validate a single static mock output; return a normalized result."""
+    """Validate a single static mock output; return a normalized result.
+
+    ``valid_input_cases`` maps case_id -> the ACCEPTED input case dict. The
+    output must reference an existing valid case AND its form_id/item_order_id
+    must match that input case, or it is rejected with ``output_contract_mismatch``.
+    """
     output_id = str(output.get("output_id"))
     case_id = str(output.get("case_id"))
     kind = str(output.get("output_kind"))
@@ -252,9 +283,17 @@ def classify_output(
         "scoring_warnings": [],
     }
 
-    # 0) The output must reference an EXISTING, VALID input case.
-    if case_id not in valid_input_case_ids:
+    # 0a) The output must reference an EXISTING, VALID input case.
+    input_case = valid_input_cases.get(case_id)
+    if input_case is None:
         result["failure_code"] = "unknown_output_case"
+        return result
+
+    # 0b) form_id / item_order_id MUST match the referenced input case.
+    if form_id != str(input_case.get("form_id")) or order_id != str(
+        input_case.get("item_order_id")
+    ):
+        result["failure_code"] = "output_contract_mismatch"
         return result
 
     # 1) response_language / response_identity are REQUIRED at the output layer.
@@ -369,9 +408,10 @@ def build_run_report(contract: p0.P0Contract | None = None) -> dict[str, Any]:
 
     input_cases = load_input_cases()
     input_results = validate_input_cases(contract, input_cases)
-    valid_input_ids = frozenset(
-        r["case_id"] for r in input_results if r["accepted"]
-    )
+    accepted_case_ids = {r["case_id"] for r in input_results if r["accepted"]}
+    valid_input_cases = {
+        str(c["case_id"]): c for c in input_cases if str(c["case_id"]) in accepted_case_ids
+    }
 
     outputs = load_model_outputs()
     expected = load_expected_scored_outputs()
@@ -385,7 +425,7 @@ def build_run_report(contract: p0.P0Contract | None = None) -> dict[str, Any]:
     output_ids = [str(o.get("output_id")) for o in outputs]
 
     for output in outputs:
-        res = classify_output(contract, output, valid_input_ids)
+        res = classify_output(contract, output, valid_input_cases)
         oid = res["output_id"]
         output_results.append(res)
         failure_codes[oid] = res["failure_code"]
@@ -396,10 +436,10 @@ def build_run_report(contract: p0.P0Contract | None = None) -> dict[str, Any]:
         exp = expected.get(oid, {})
         actual_outcome = "accept" if res["accepted"] else "reject"
         expected_outcome = str(exp.get("expected_outcome", ""))
-        outcome_match = (
-            actual_outcome == expected_outcome
-            or (expected_outcome == "reject_or_warn" and actual_outcome == "reject")
-        )
+        # STRICT: only "accept"/"reject" are valid; exact equality (no reject_or_warn).
+        outcome_match = actual_outcome == expected_outcome
+        # oracle.case_id must agree with the output's referenced case_id
+        case_id_match = str(exp.get("case_id", "")) == res["case_id"]
         expected_fc = exp.get("expected_failure_code")
         actual_subscales = res["subscale_level_scores"]
         expected_subscales = exp.get("expected_subscale_level_scores", {})
@@ -412,6 +452,7 @@ def build_run_report(contract: p0.P0Contract | None = None) -> dict[str, Any]:
                 "expected_outcome": expected_outcome,
                 "actual_outcome": actual_outcome,
                 "outcome_match": outcome_match,
+                "case_id_match": case_id_match,
                 "expected_failure_code": expected_fc,
                 "actual_failure_code": res["failure_code"],
                 "failure_code_match": (expected_fc == res["failure_code"]),
