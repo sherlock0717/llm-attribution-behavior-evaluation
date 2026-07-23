@@ -5,19 +5,17 @@ them by DELEGATING to the P0 engine
 (``freewill_attribution.measurement.pa_wu_p0``). It never generates model
 output, never calls a network, never reads an API key, and never reads the
 R2/R3 assets. All scoring/validation reuses the P0 contract; there is NO second
-scoring implementation here.
+scoring implementation here, and the item-wording ``administration_hash`` is
+computed by the P0 engine (never re-implemented).
 
 R1 route boundary (fixed): language=en, target_identity=machine, machine-only,
 no translation, not a construct adaptation, package_status=mock_only.
 
-Outputs (see ``build_run_report``):
-- package_manifest
-- case_validation_results
-- item_level_scores
-- subscale_level_scores
-- expected_vs_actual_comparison
-- failure_codes
-- deterministic_run_hash
+The runner separates INPUT-case validation from OUTPUT-fixture validation:
+- ``validate_input_cases`` -> input_case_validation_results
+- ``classify_output``      -> output_validation_results
+``expected_scored_outputs.jsonl`` is the SINGLE static oracle for output
+outcomes / failure codes / sub-scores.
 
 No forbidden total (WU19_TOTAL / MACHINE_AGENCY_TOTAL / PA_WU_TOTAL) is ever
 emitted; requesting one yields a ``forbidden_total`` failure code.
@@ -50,7 +48,36 @@ FAILURE_CODES = (
     "wrong_identity",
     "unparseable_json",
     "missing_required_field",
+    "wrong_route",
+    "item_set_version_mismatch",
+    "selected_items_mismatch",
+    "illegal_positive_control",
+    "unknown_output_case",
+    "p0_contract_error",
 )
+
+INPUT_CASE_REQUIRED_FIELDS = (
+    "case_id",
+    "scenario_id",
+    "source_route",
+    "language",
+    "target_identity",
+    "condition_id",
+    "choice_direction",
+    "scenario_text",
+    "item_set_version",
+    "form_id",
+    "item_order_id",
+    "selected_item_ids",
+    "expected_response_schema",
+    "positive_control_provenance",
+    "mock_only",
+)
+
+POSITIVE_CONTROL_LEVELS_ALLOWED = frozenset(
+    {"body_fragment", "source_adapted_prototype", "none"}
+)
+FORBIDDEN_POSITIVE_CONTROL_LEVEL = "formal_calibrated_positive_control"
 
 
 def _read_jsonl(path: Path) -> list[dict[str, Any]]:
@@ -71,21 +98,142 @@ def load_model_outputs() -> list[dict[str, Any]]:
     return _read_jsonl(PACKAGE_DIR / "mock_model_outputs.jsonl")
 
 
+def load_expected_scored_outputs() -> dict[str, dict[str, Any]]:
+    """Single static oracle: output_id -> expected record."""
+    rows = _read_jsonl(PACKAGE_DIR / "expected_scored_outputs.jsonl")
+    return {str(r["output_id"]): r for r in rows}
+
+
 # ---------------------------------------------------------------------------
-# Per-output classification (delegates to P0 for scale/id/scoring rules)
+# INPUT-case validation (real validation chain, not a label-based skip)
+# ---------------------------------------------------------------------------
+
+
+def validate_input_case(contract: p0.P0Contract, case: dict[str, Any]) -> dict[str, Any]:
+    """Validate a single input case; always returns a concrete result.
+
+    Result keys: case_id, accepted, failure_codes, validation_errors, form_id,
+    item_order_id, administration_hash, mock_only.
+    """
+    case_id = str(case.get("case_id", ""))
+    form_id = str(case.get("form_id", ""))
+    order_id = str(case.get("item_order_id", ""))
+    errors: list[str] = []
+    codes: list[str] = []
+
+    # 1) required fields present
+    for field_name in INPUT_CASE_REQUIRED_FIELDS:
+        if field_name not in case:
+            errors.append(f"missing_required_field:{field_name}")
+            if "missing_required_field" not in codes:
+                codes.append("missing_required_field")
+
+    # 2) R1 route boundary (only checked when the field exists)
+    if "source_route" in case and str(case["source_route"]) != "R1":
+        errors.append(f"source_route!=R1:{case['source_route']}")
+        codes.append("wrong_route")
+    if "language" in case and str(case["language"]) != R1_LANGUAGE:
+        errors.append(f"language!=en:{case['language']}")
+        codes.append("wrong_language")
+    if "target_identity" in case and str(case["target_identity"]) != R1_IDENTITY:
+        errors.append(f"target_identity!=machine:{case['target_identity']}")
+        codes.append("wrong_identity")
+    if "mock_only" in case and case["mock_only"] is not True:
+        errors.append("mock_only!=true")
+        codes.append("missing_required_field")
+
+    # 3) item_set_version == P0 scoring version
+    if "item_set_version" in case and str(case["item_set_version"]) != p0.SCORING_VERSION:
+        errors.append(f"item_set_version!={p0.SCORING_VERSION}:{case['item_set_version']}")
+        codes.append("item_set_version_mismatch")
+
+    # 4) form/order resolvable by P0 + selected_item_ids exactly equals P0 build
+    admin_hash: str | None = None
+    try:
+        expected_ids = p0.build_form_item_ids(contract, form_id, order_id)
+        if "selected_item_ids" in case:
+            if [str(x) for x in case["selected_item_ids"]] != expected_ids:
+                errors.append("selected_item_ids!=p0.build_form_item_ids (order-sensitive)")
+                codes.append("selected_items_mismatch")
+        # administration_hash reuses the P0 engine (never re-implemented here)
+        admin_hash = administration_hash_for_case(contract, case)
+    except p0.P0ContractError as exc:
+        errors.append(f"p0:{exc}")
+        codes.append(_map_p0_error(str(exc)))
+
+    # 5) requested_scores must not contain a forbidden total
+    requested = case.get("requested_scores")
+    if isinstance(requested, list) and any(
+        str(s) in p0.FORBIDDEN_SCORE_IDS for s in requested
+    ):
+        errors.append("requested_scores contains a forbidden total")
+        codes.append("forbidden_total")
+
+    # 6) positive-control enum + provenance
+    prov = case.get("positive_control_provenance", {})
+    level = str(prov.get("level", "none")) if isinstance(prov, dict) else "none"
+    if level not in POSITIVE_CONTROL_LEVELS_ALLOWED or level == FORBIDDEN_POSITIVE_CONTROL_LEVEL:
+        errors.append(f"illegal positive_control level:{level}")
+        codes.append("illegal_positive_control")
+    if level == "source_adapted_prototype" and isinstance(prov, dict):
+        if prov.get("is_prototype") is not True or prov.get("is_full_script") is not False:
+            errors.append("prototype must set is_prototype=true and is_full_script=false")
+            codes.append("illegal_positive_control")
+
+    accepted = not errors
+    return {
+        "case_id": case_id,
+        "accepted": accepted,
+        "failure_codes": codes,
+        "failure_code": codes[0] if codes else None,
+        "validation_errors": errors,
+        "form_id": form_id,
+        "item_order_id": order_id,
+        "administration_hash": admin_hash,
+        "mock_only": bool(case.get("mock_only", False)),
+    }
+
+
+def validate_input_cases(
+    contract: p0.P0Contract, cases: list[dict[str, Any]] | None = None
+) -> list[dict[str, Any]]:
+    cases = cases if cases is not None else load_input_cases()
+    return [validate_input_case(contract, c) for c in cases]
+
+
+def _identity_for_hash(case: dict[str, Any]) -> str:
+    # target_identity maps to the P0 record `identity` field.
+    return str(case.get("target_identity", ""))
+
+
+def administration_hash_for_case(contract: p0.P0Contract, case: dict[str, Any]) -> str:
+    """Reuse p0.administration_hash for a case (repeat_index=0, fixed material)."""
+    material = {
+        "scenario_id": str(case.get("scenario_id", "")),
+        "condition_id": str(case.get("condition_id", "")),
+        "identity": _identity_for_hash(case),
+        "choice_direction": str(case.get("choice_direction", "")),
+    }
+    return p0.administration_hash(
+        contract,
+        str(case["form_id"]),
+        str(case["item_order_id"]),
+        material,
+        0,
+    )
+
+
+# ---------------------------------------------------------------------------
+# OUTPUT-fixture classification (delegates to P0 for scale/id/scoring rules)
 # ---------------------------------------------------------------------------
 
 
 def classify_output(
     contract: p0.P0Contract,
     output: dict[str, Any],
+    valid_input_case_ids: frozenset[str],
 ) -> dict[str, Any]:
-    """Validate a single static mock output; return a normalized result.
-
-    Returns a dict with: output_id, case_id, output_kind, accepted (bool),
-    failure_code (str|None), item_level_scores (dict), subscale_level_scores
-    (dict), and the P0 validation/scoring warnings.
-    """
+    """Validate a single static mock output; return a normalized result."""
     output_id = str(output.get("output_id"))
     case_id = str(output.get("case_id"))
     kind = str(output.get("output_kind"))
@@ -104,24 +252,29 @@ def classify_output(
         "scoring_warnings": [],
     }
 
-    # 1) Unparseable JSON payload -> cannot even parse ratings.
+    # 0) The output must reference an EXISTING, VALID input case.
+    if case_id not in valid_input_case_ids:
+        result["failure_code"] = "unknown_output_case"
+        return result
+
+    # 1) response_language / response_identity are REQUIRED at the output layer.
+    if "response_language" not in output or "response_identity" not in output:
+        result["failure_code"] = "missing_required_field"
+        return result
+    if str(output["response_language"]) != R1_LANGUAGE:
+        result["failure_code"] = "wrong_language"
+        return result
+    if str(output["response_identity"]) != R1_IDENTITY:
+        result["failure_code"] = "wrong_identity"
+        return result
+
+    # 2) Unparseable JSON payload -> cannot even parse ratings.
     if output.get("raw_item_ratings") is None and output.get("raw_text_payload") is not None:
         try:
             json.loads(str(output["raw_text_payload"]))
         except (ValueError, TypeError):
             result["failure_code"] = "unparseable_json"
             return result
-        # If it *did* parse we fall through, but our fixture is intentionally broken.
-
-    # 2) R1 boundary: wrong language / identity (checked before scoring).
-    resp_lang = output.get("response_language")
-    if resp_lang is not None and str(resp_lang) != R1_LANGUAGE:
-        result["failure_code"] = "wrong_language"
-        return result
-    resp_identity = output.get("response_identity")
-    if resp_identity is not None and str(resp_identity) != R1_IDENTITY:
-        result["failure_code"] = "wrong_identity"
-        return result
 
     # 3) Forbidden aggregate totals must never be produced.
     for key in ("extra_totals", "requested_scores"):
@@ -168,6 +321,11 @@ def classify_output(
 
 
 def _map_p0_error(message: str) -> str:
+    """Map a P0ContractError message to a failure code.
+
+    Unrecognized errors are NEVER silently mapped to ``unknown_item``; they
+    surface as ``p0_contract_error`` so no misclassification is hidden.
+    """
     low = message.lower()
     if "duplicate item_id" in low:
         return "duplicate_item"
@@ -179,7 +337,9 @@ def _map_p0_error(message: str) -> str:
         return "non_numeric_rating"
     if "missing item_id/rating" in low:
         return "missing_required_field"
-    return "unknown_item"
+    if "unknown form_id" in low or "unknown item_order_id" in low:
+        return "p0_contract_error"
+    return "p0_contract_error"
 
 
 # ---------------------------------------------------------------------------
@@ -206,31 +366,46 @@ def _package_manifest(contract: p0.P0Contract) -> dict[str, Any]:
 def build_run_report(contract: p0.P0Contract | None = None) -> dict[str, Any]:
     """Run the full deterministic mock and return the structured report."""
     contract = contract or p0.load_contract()
-    outputs = load_model_outputs()
 
-    case_results: list[dict[str, Any]] = []
+    input_cases = load_input_cases()
+    input_results = validate_input_cases(contract, input_cases)
+    valid_input_ids = frozenset(
+        r["case_id"] for r in input_results if r["accepted"]
+    )
+
+    outputs = load_model_outputs()
+    expected = load_expected_scored_outputs()
+
+    output_results: list[dict[str, Any]] = []
     item_level_scores: dict[str, dict[str, Any]] = {}
     subscale_level_scores: dict[str, dict[str, Any]] = {}
     comparison: list[dict[str, Any]] = []
     failure_codes: dict[str, str | None] = {}
 
+    output_ids = [str(o.get("output_id")) for o in outputs]
+
     for output in outputs:
-        res = classify_output(contract, output)
+        res = classify_output(contract, output, valid_input_ids)
         oid = res["output_id"]
-        case_results.append(res)
+        output_results.append(res)
         failure_codes[oid] = res["failure_code"]
         if res["accepted"]:
             item_level_scores[oid] = res["item_level_scores"]
             subscale_level_scores[oid] = res["subscale_level_scores"]
 
-        expected_outcome = str(output.get("expected_outcome", ""))
+        exp = expected.get(oid, {})
         actual_outcome = "accept" if res["accepted"] else "reject"
-        # "reject_or_warn" fixtures are satisfied by a warn-based rejection too.
+        expected_outcome = str(exp.get("expected_outcome", ""))
         outcome_match = (
             actual_outcome == expected_outcome
             or (expected_outcome == "reject_or_warn" and actual_outcome == "reject")
         )
-        expected_fc = output.get("failure_code_expected")
+        expected_fc = exp.get("expected_failure_code")
+        actual_subscales = res["subscale_level_scores"]
+        expected_subscales = exp.get("expected_subscale_level_scores", {})
+        forbidden_present = any(
+            f in actual_subscales for f in p0.FORBIDDEN_SCORE_IDS
+        )
         comparison.append(
             {
                 "output_id": oid,
@@ -239,17 +414,35 @@ def build_run_report(contract: p0.P0Contract | None = None) -> dict[str, Any]:
                 "outcome_match": outcome_match,
                 "expected_failure_code": expected_fc,
                 "actual_failure_code": res["failure_code"],
-                "failure_code_match": (expected_fc is None or expected_fc == res["failure_code"]),
+                "failure_code_match": (expected_fc == res["failure_code"]),
+                "expected_subscale_level_scores": expected_subscales,
+                "actual_subscale_level_scores": actual_subscales,
+                "subscale_match": (
+                    {k: float(v) for k, v in expected_subscales.items()}
+                    == {k: float(v) for k, v in actual_subscales.items()}
+                ),
+                "expected_forbidden_total_present": bool(exp.get("forbidden_total_present", False)),
+                "actual_forbidden_total_present": forbidden_present,
+                "forbidden_total_match": (
+                    bool(exp.get("forbidden_total_present", False)) == forbidden_present
+                ),
             }
         )
 
     report = {
         "package_manifest": _package_manifest(contract),
-        "case_validation_results": case_results,
+        "input_case_validation_results": input_results,
+        "output_validation_results": output_results,
         "item_level_scores": item_level_scores,
         "subscale_level_scores": subscale_level_scores,
         "expected_vs_actual_comparison": comparison,
         "failure_codes": failure_codes,
+        "oracle_coverage": {
+            "output_ids": sorted(output_ids),
+            "expected_ids": sorted(expected),
+            "missing_from_expected": sorted(set(output_ids) - set(expected)),
+            "extra_in_expected": sorted(set(expected) - set(output_ids)),
+        },
     }
     report["deterministic_run_hash"] = compute_run_hash(report)
     return report

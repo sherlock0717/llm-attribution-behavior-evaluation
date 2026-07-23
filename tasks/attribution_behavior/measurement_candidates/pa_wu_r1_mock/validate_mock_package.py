@@ -1,13 +1,17 @@
 """Structural validator for the PA-Wu R1 MOCK package (NO real model, NO network).
 
-Validates the static package assets and the deterministic mock run:
-- package schema (required files + input/output case fields present)
+Validates the static package assets, the manifest, and the deterministic mock
+run:
+- package schema (required files + input/output case fields)
 - R1 route boundary is fixed (en / machine / mock_only, no translation/adaptation)
+- INPUT cases run through the real validation chain (validate_input_cases)
+- OUTPUT fixtures reference an existing, VALID input case; output-layer faults
+- expected_scored_outputs.jsonl is the SINGLE oracle: one-to-one with outputs,
+  outcome / failure_code / sub-scores / forbidden_total all match
+- manifest is actually loaded and cross-checked (counts, enums, versions, hash)
 - positive_control_level uses ONLY the allowed enum; the forbidden
-  ``formal_calibrated_positive_control`` never appears
-- source-adapted prototypes are explicitly flagged as prototypes
+  ``formal_calibrated_positive_control`` never appears as an active level
 - fixture determinism (same inputs -> identical run hash)
-- every declared bad case is rejected with the expected failure code
 - NO forbidden total is ever produced
 
 This module is import-safe (no side effects) and is exercised by the unit test.
@@ -18,6 +22,8 @@ from __future__ import annotations
 import importlib.util
 from pathlib import Path
 from typing import Any
+
+import yaml
 
 from freewill_attribution.measurement import pa_wu_p0 as p0
 
@@ -49,20 +55,6 @@ REQUIRED_FILES = (
     "validate_mock_package.py",
 )
 
-INPUT_CASE_REQUIRED_FIELDS = (
-    "case_id",
-    "scenario_id",
-    "source_route",
-    "language",
-    "target_identity",
-    "scenario_text",
-    "item_set_version",
-    "selected_item_ids",
-    "expected_response_schema",
-    "positive_control_provenance",
-    "mock_only",
-)
-
 POSITIVE_CONTROL_LEVELS_ALLOWED = frozenset(
     {"body_fragment", "source_adapted_prototype", "none"}
 )
@@ -73,71 +65,66 @@ class MockPackageError(RuntimeError):
     """Raised when the R1 mock package is structurally inconsistent."""
 
 
+def load_manifest() -> dict[str, Any]:
+    with (PACKAGE_DIR / "mock_manifest.yaml").open(encoding="utf-8") as fh:
+        return yaml.safe_load(fh)
+
+
 def check_required_files() -> None:
     missing = [name for name in REQUIRED_FILES if not (PACKAGE_DIR / name).is_file()]
     if missing:
         raise MockPackageError(f"missing required package files: {missing}")
 
 
-def check_input_cases() -> list[dict[str, Any]]:
+def check_input_cases(contract: p0.P0Contract) -> list[dict[str, Any]]:
+    """Run the real input validation chain; assert good/bad split is honest."""
     cases = run_mock.load_input_cases()
     if not cases:
         raise MockPackageError("no input cases found")
-    for case in cases:
-        for field_name in INPUT_CASE_REQUIRED_FIELDS:
-            # A declared bad case may deliberately omit exactly one field.
-            if field_name not in case and not str(case.get("_bad_case", "")).startswith(
-                "missing_required_field"
-            ):
-                raise MockPackageError(
-                    f"input case {case.get('case_id')} missing field {field_name}"
-                )
-        if "_bad_case" not in case:
-            if str(case["source_route"]) != "R1":
-                raise MockPackageError(f"{case['case_id']}: source_route must be R1")
-            if str(case["language"]) != "en":
-                raise MockPackageError(f"{case['case_id']}: language must be en")
-            if str(case["target_identity"]) != "machine":
-                raise MockPackageError(f"{case['case_id']}: target_identity must be machine")
-        level = str(case.get("positive_control_provenance", {}).get("level", "none"))
-        if level not in POSITIVE_CONTROL_LEVELS_ALLOWED:
-            raise MockPackageError(f"{case['case_id']}: illegal positive_control level {level}")
-    return cases
+    results = run_mock.validate_input_cases(contract, cases)
+    for case, res in zip(cases, results, strict=True):
+        is_bad = "_bad_case" in case
+        if is_bad and res["accepted"]:
+            raise MockPackageError(f"bad input case {res['case_id']} was accepted")
+        if not is_bad and not res["accepted"]:
+            raise MockPackageError(
+                f"good input case {res['case_id']} rejected: {res['validation_errors']}"
+            )
+    return results
 
 
 def check_positive_control_levels() -> None:
-    """No asset may use the forbidden formal-calibrated positive-control label,
-    and every source-adapted prototype must be explicitly flagged as prototype."""
+    """The forbidden formal-calibrated label may appear only in a forbidden
+    context; source-adapted prototypes must be explicitly flagged as prototype."""
     for path in PACKAGE_DIR.rglob("*"):
         if path.suffix.lower() not in (".yaml", ".jsonl", ".md", ".py"):
             continue
         text = path.read_text(encoding="utf-8")
         if FORBIDDEN_POSITIVE_CONTROL_LEVEL in text and "forbidden" not in text.lower():
-            # allowed only when explicitly named as forbidden (contract/validator/docs)
             raise MockPackageError(
                 f"forbidden positive-control label present unqualified in {path.name}"
             )
+        if f'"level": "{FORBIDDEN_POSITIVE_CONTROL_LEVEL}"' in text:
+            raise MockPackageError(f"forbidden level assigned as active level in {path.name}")
     for case in run_mock.load_input_cases():
         prov = case.get("positive_control_provenance", {})
         if str(prov.get("level")) == "source_adapted_prototype":
-            if not prov.get("is_prototype"):
+            if not prov.get("is_prototype") or prov.get("is_full_script") is not False:
                 raise MockPackageError(
-                    f"{case['case_id']}: source_adapted_prototype must set is_prototype=true"
-                )
-            if prov.get("is_full_script") is not False:
-                raise MockPackageError(
-                    f"{case['case_id']}: prototype must set is_full_script=false"
+                    f"{case['case_id']}: prototype must set is_prototype=true, is_full_script=false"
                 )
 
 
-def check_determinism(contract: p0.P0Contract | None = None) -> str:
-    """Run the mock twice and assert an identical deterministic hash."""
-    contract = contract or p0.load_contract()
-    r1 = run_mock.build_run_report(contract)
-    r2 = run_mock.build_run_report(contract)
-    if r1["deterministic_run_hash"] != r2["deterministic_run_hash"]:
-        raise MockPackageError("mock run is non-deterministic (hash mismatch)")
-    return r1["deterministic_run_hash"]
+def check_oracle_one_to_one(report: dict[str, Any]) -> None:
+    cov = report["oracle_coverage"]
+    if cov["missing_from_expected"]:
+        raise MockPackageError(f"outputs missing from oracle: {cov['missing_from_expected']}")
+    if cov["extra_in_expected"]:
+        raise MockPackageError(f"oracle has extra ids: {cov['extra_in_expected']}")
+    for row in report["expected_vs_actual_comparison"]:
+        for key in ("outcome_match", "failure_code_match", "subscale_match", "forbidden_total_match"):
+            if not row[key]:
+                raise MockPackageError(f"{row['output_id']}: {key} failed")
 
 
 def check_no_forbidden_totals(report: dict[str, Any]) -> None:
@@ -147,17 +134,79 @@ def check_no_forbidden_totals(report: dict[str, Any]) -> None:
                 raise MockPackageError(f"forbidden total produced: {forbidden}")
 
 
+def check_determinism(contract: p0.P0Contract | None = None) -> str:
+    contract = contract or p0.load_contract()
+    r1 = run_mock.build_run_report(contract)
+    r2 = run_mock.build_run_report(contract)
+    if r1["deterministic_run_hash"] != r2["deterministic_run_hash"]:
+        raise MockPackageError("mock run is non-deterministic (hash mismatch)")
+    return r1["deterministic_run_hash"]
+
+
+def check_manifest(report: dict[str, Any]) -> None:
+    """Actually load the manifest and cross-check its declarations."""
+    m = load_manifest()
+
+    # files
+    if set(m["files"]) != set(REQUIRED_FILES):
+        raise MockPackageError("manifest file list does not match required files")
+
+    # input counts
+    cases = run_mock.load_input_cases()
+    good = [c for c in cases if "_bad_case" not in c]
+    bad = [c for c in cases if "_bad_case" in c]
+    ic = m["input_cases"]
+    if ic["total"] != len(cases) or ic["good_total"] != len(good) or ic["bad_total"] != len(bad):
+        raise MockPackageError("manifest input_cases counts mismatch")
+    if len(m["input_cases"]["bad_cases"]) != len(bad):
+        raise MockPackageError("manifest bad_cases list length mismatch")
+
+    # output counts + kinds
+    outputs = run_mock.load_model_outputs()
+    if m["model_output_fixtures"]["total"] != len(outputs):
+        raise MockPackageError("manifest output total mismatch")
+    manifest_kinds = set(m["model_output_fixtures"]["kinds"])
+    actual_kinds = {str(o["output_kind"]) for o in outputs}
+    if manifest_kinds != actual_kinds:
+        raise MockPackageError(f"manifest output kinds mismatch: {manifest_kinds ^ actual_kinds}")
+
+    # failure code closed set
+    if set(m["failure_codes"]) != set(run_mock.FAILURE_CODES):
+        raise MockPackageError("manifest failure_codes do not match runner FAILURE_CODES")
+
+    # P0 scoring version + forbidden score ids
+    if str(m["reuses"]["p0_scoring_version"]) != p0.SCORING_VERSION:
+        raise MockPackageError("manifest p0_scoring_version mismatch")
+    if set(m["forbidden_score_ids"]) != set(p0.FORBIDDEN_SCORE_IDS):
+        raise MockPackageError("manifest forbidden_score_ids mismatch")
+
+    # positive-control enums
+    if set(m["positive_control_levels_allowed"]) != POSITIVE_CONTROL_LEVELS_ALLOWED:
+        raise MockPackageError("manifest allowed positive-control enum mismatch")
+    if FORBIDDEN_POSITIVE_CONTROL_LEVEL not in m["positive_control_levels_forbidden"]:
+        raise MockPackageError("manifest must forbid formal_calibrated_positive_control")
+
+    # deterministic hash reference MUST equal the actual run hash
+    if str(m["deterministic_run_hash_reference"]) != report["deterministic_run_hash"]:
+        raise MockPackageError(
+            "manifest deterministic_run_hash_reference != actual run hash "
+            f"({m['deterministic_run_hash_reference']} != {report['deterministic_run_hash']})"
+        )
+
+
 def validate_package() -> dict[str, Any]:
     """Full package validation; returns the deterministic run report."""
     check_required_files()
-    check_input_cases()
-    check_positive_control_levels()
     contract = p0.load_contract()
+    check_input_cases(contract)
+    check_positive_control_levels()
     run_hash = check_determinism(contract)
     report = run_mock.build_run_report(contract)
-    check_no_forbidden_totals(report)
     if report["deterministic_run_hash"] != run_hash:
         raise MockPackageError("run hash changed between determinism check and report")
+    check_oracle_one_to_one(report)
+    check_no_forbidden_totals(report)
+    check_manifest(report)
     return report
 
 

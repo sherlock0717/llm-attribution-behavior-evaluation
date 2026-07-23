@@ -1,26 +1,40 @@
 """Structural + behavioral tests for the PA-Wu R1 MOCK execution package.
 
 NO real model, NO network, NO API key. All scoring is delegated to the P0
-engine (freewill_attribution.measurement.pa_wu_p0); this test asserts the mock
-package reuses that contract and never invents a second scoring path.
+engine (freewill_attribution.measurement.pa_wu_p0); the item-wording
+administration_hash is computed by the P0 engine (never re-implemented). The
+package separates INPUT-case validation from OUTPUT-fixture validation and uses
+expected_scored_outputs.jsonl as the SINGLE static oracle (this test does NOT
+hard-code a second failure-code map).
 
-Covered (task section 9):
-- package schema (required files present, input/output case fields)
-- fixture determinism (same inputs -> identical run hash)
-- a legal case is accepted and scored
-- every bad-case kind is rejected with the expected failure code
-- no forbidden total is ever produced
-- no network call / no API key / no real model client in package sources
-- the package does not read R2/R3 assets
-- source-adapted prototype is never labeled a formal positive control
+Covered (task section 8):
+ 1. every legal input case is accepted
+ 2. every bad input case is rejected (real chain, not label skip)
+ 3. input results are separated from output results
+ 4. each output case_id exists and points to a valid input case
+ 5. form/order match the input case
+ 6. missing response_language is rejected
+ 7. missing response_identity is rejected
+ 8. PA13/PA8/PA5 actually scored
+ 9. Wu four sub-scales actually scored
+10. selected_item_ids exactly equal P0 order
+11. P0 administration_hash determinism + sensitivity
+12. expected_scored_outputs one-to-one full comparison
+13. manifest counts and hash consistent
+14. no forbidden totals
+15. no network / no API key / no real model client
+16. no R2/R3 asset reads
+17. prototype never labeled a formal positive control
 """
 
 from __future__ import annotations
 
 import importlib.util
 import re
+import shutil
 
 import pytest
+import yaml
 
 from freewill_attribution.measurement import pa_wu_p0 as p0
 from freewill_attribution.paths import PROJECT_ROOT
@@ -62,117 +76,203 @@ def report(run_mock, contract):
     return run_mock.build_run_report(contract)
 
 
-# --- 1: package schema --------------------------------------------------------
+# --- 1 & 2: input-case validation (real chain) -------------------------------
 
 
-def test_required_files_present(validator) -> None:
-    validator.check_required_files()  # raises if any missing
-
-
-def test_input_cases_schema(validator) -> None:
-    cases = validator.check_input_cases()
-    assert len(cases) == 7
+def test_legal_input_cases_accepted(run_mock, contract) -> None:
+    cases = run_mock.load_input_cases()
+    results = {r["case_id"]: r for r in run_mock.validate_input_cases(contract, cases)}
     good = [c for c in cases if "_bad_case" not in c]
-    bad = [c for c in cases if "_bad_case" in c]
-    assert len(good) == 4  # 2 neutral + 2 wu-cue
-    assert len(bad) == 3
+    assert len(good) == 4
+    for c in good:
+        r = results[c["case_id"]]
+        assert r["accepted"] is True, (c["case_id"], r["validation_errors"])
+        assert r["failure_codes"] == []
+        assert r["administration_hash"]  # a P0 hash was computed
 
 
-def test_manifest_route_boundary(report) -> None:
-    m = report["package_manifest"]
-    assert m["route_id"] == "R1"
-    assert m["language"] == "en"
-    assert m["target_identity"] == "machine"
-    assert m["human_parallel_version"] is False
-    assert m["translation_used"] is False
-    assert m["is_construct_adaptation"] is False
-    assert m["real_model_execution"] is False
-    assert m["package_status"] == "mock_only"
-
-
-# --- 2: fixture determinism ---------------------------------------------------
-
-
-def test_run_is_deterministic(run_mock, contract) -> None:
-    r1 = run_mock.build_run_report(contract)
-    r2 = run_mock.build_run_report(contract)
-    assert r1["deterministic_run_hash"] == r2["deterministic_run_hash"]
-    assert r1 == r2
-
-
-# --- 3: a legal case is accepted and scored -----------------------------------
-
-
-def test_legal_case_accepted_and_scored(report) -> None:
-    fc = report["failure_codes"]
-    assert fc["out_complete_valid"] is None
-    scores = report["subscale_level_scores"]["out_complete_valid"]
-    # wu19_only form -> the four Wu sub-scores are present, PA is skipped-with-warning
-    assert set(scores) == {"IN4", "GO4", "MSI6", "IC5"}
-    for v in scores.values():
-        assert isinstance(v, float)
-
-
-# --- 4: every bad-case kind rejected with the expected failure code -----------
-
-
-def test_bad_cases_rejected_with_expected_codes(report) -> None:
+def test_bad_input_cases_rejected_with_real_codes(run_mock, contract) -> None:
+    cases = run_mock.load_input_cases()
+    results = {r["case_id"]: r for r in run_mock.validate_input_cases(contract, cases)}
     expected = {
-        "out_missing_item": "missing_items",
-        "out_scale_out_of_range": "out_of_range",
-        "out_msi_out_of_range": "out_of_range",
-        "out_illegal_item_id": "unknown_item",
-        "out_forbidden_total": "forbidden_total",
-        "out_wrong_language": "wrong_language",
-        "out_wrong_identity": "wrong_identity",
-        "out_illegal_free_text": "non_numeric_rating",
-        "out_duplicate_item": "duplicate_item",
-        "out_unparseable_json": "unparseable_json",
+        "r1_bad_missing_field": "missing_required_field",
+        "r1_bad_forbidden_total": "forbidden_total",
+        "r1_bad_wrong_language": "wrong_language",
+        "r1_bad_wrong_identity": "wrong_identity",
     }
-    fc = report["failure_codes"]
-    for oid, code in expected.items():
-        assert fc[oid] == code, f"{oid}: expected {code}, got {fc[oid]}"
-    # none of the bad outputs was accepted
-    accepted = {r["output_id"] for r in report["case_validation_results"] if r["accepted"]}
-    assert accepted == {"out_complete_valid"}
+    for cid, code in expected.items():
+        r = results[cid]
+        assert r["accepted"] is False, cid
+        assert code in r["failure_codes"], (cid, r["failure_codes"])
 
 
-def test_expected_vs_actual_all_match(report) -> None:
+# --- 3: input vs output separation -------------------------------------------
+
+
+def test_input_and_output_results_separated(report) -> None:
+    assert "input_case_validation_results" in report
+    assert "output_validation_results" in report
+    assert "case_validation_results" not in report  # old conflated name is gone
+    assert len(report["input_case_validation_results"]) == 8
+    assert len(report["output_validation_results"]) == 14
+
+
+# --- 4 & 5: outputs reference valid inputs with matching form/order ----------
+
+
+def test_outputs_reference_valid_inputs(run_mock, report) -> None:
+    cases = {c["case_id"]: c for c in run_mock.load_input_cases()}
+    valid_ids = {r["case_id"] for r in report["input_case_validation_results"] if r["accepted"]}
+    for output in run_mock.load_model_outputs():
+        cid = str(output["case_id"])
+        assert cid in cases, f"{output['output_id']} references missing case {cid}"
+        assert cid in valid_ids, f"{output['output_id']} references INVALID case {cid}"
+        case = cases[cid]
+        assert str(output["form_id"]) == str(case["form_id"])
+        assert str(output["item_order_id"]) == str(case["item_order_id"])
+
+
+# --- 6 & 7: missing response language / identity rejected --------------------
+
+
+def test_missing_response_language_rejected(report) -> None:
+    assert report["failure_codes"]["out_missing_response_language"] == "missing_required_field"
+
+
+def test_missing_response_identity_rejected(report) -> None:
+    assert report["failure_codes"]["out_missing_response_identity"] == "missing_required_field"
+
+
+# --- 8 & 9: PA and Wu sub-scores actually derived via P0 members -------------
+
+
+def test_pa_and_wu_subscores_derived(report, contract) -> None:
+    combined = report["subscale_level_scores"]["out_complete_valid_combined"]
+    assert combined == {
+        "PA13": 3.0, "PA8": 3.0, "PA5": 3.0,
+        "IN4": 4.0, "GO4": 4.0, "MSI6": 3.0, "IC5": 4.0,
+    }
+    # PA13/8/5 must be derived over the ACTUAL P0 members (not just counts):
+    item_scores = report["item_level_scores"]["out_complete_valid_combined"]
+    for version, expected_mean in (("pa13", 3.0), ("pa8", 3.0), ("pa5", 3.0)):
+        members = contract.pa_version_members(version)
+        assert all(m in item_scores for m in members)
+        mean = sum(item_scores[m] for m in members) / len(members)
+        assert mean == expected_mean
+    for construct, expected_mean in (
+        ("perceived_machine_independence", 4.0),
+        ("perceived_machine_goal_orientation", 4.0),
+        ("mental_state_inference", 3.0),
+        ("influential_capacity_judgment", 4.0),
+    ):
+        members = contract.wu_construct_members(construct)
+        mean = sum(item_scores[m] for m in members) / len(members)
+        assert mean == expected_mean
+
+
+# --- 10: selected_item_ids exactly equal P0 order ----------------------------
+
+
+def test_selected_item_ids_equal_p0_order(run_mock, contract) -> None:
+    for case in run_mock.load_input_cases():
+        if "_bad_case" in case:
+            continue
+        expected = p0.build_form_item_ids(
+            contract, str(case["form_id"]), str(case["item_order_id"])
+        )
+        assert [str(x) for x in case["selected_item_ids"]] == expected
+
+
+# --- 11: P0 administration_hash determinism + sensitivity --------------------
+
+
+def test_administration_hash_reused_from_p0(run_mock, contract, tmp_path) -> None:
+    case = next(c for c in run_mock.load_input_cases() if c["case_id"] == "r1_neutral_01")
+
+    # (a) deterministic reproduction against the P0 engine directly
+    material = {
+        "scenario_id": case["scenario_id"],
+        "condition_id": case["condition_id"],
+        "identity": case["target_identity"],
+        "choice_direction": case["choice_direction"],
+    }
+    direct = p0.administration_hash(
+        contract, case["form_id"], case["item_order_id"], material, 0
+    )
+    via_pkg = run_mock.administration_hash_for_case(contract, case)
+    assert direct == via_pkg
+    assert via_pkg == run_mock.administration_hash_for_case(contract, case)  # stable
+
+    # (b) changing item wording changes the P0 hash (mutate a temp contract)
+    dst = tmp_path / "pa_wu_p0"
+    shutil.copytree(p0.CANDIDATE_DIR, dst)
+    pa_path = dst / "items_pa_2024.yaml"
+    data = yaml.safe_load(pa_path.read_text(encoding="utf-8"))
+    data["items"][0]["text"] = data["items"][0]["text"] + " (reworded)"
+    pa_path.write_text(yaml.safe_dump(data, allow_unicode=True), encoding="utf-8")
+    mutated = p0.load_contract(dst)
+    mutated_hash = run_mock.administration_hash_for_case(mutated, case)
+    assert mutated_hash != via_pkg, "P0 hash must change when item wording changes"
+
+
+def test_package_has_no_second_wording_hash() -> None:
+    # The package must not re-implement an item-wording hash: run_mock only calls
+    # p0.administration_hash and never builds its own sha over item texts.
+    src = (PKG_DIR / "run_mock.py").read_text(encoding="utf-8")
+    assert "p0.administration_hash(" in src
+    # its only hashlib use is the run-report hash over the assembled report,
+    # never over item texts/ids directly.
+    assert "_item_text_map" not in src
+    assert "left_anchor_text" not in src
+
+
+# --- 12: expected_scored_outputs is the SINGLE oracle ------------------------
+
+
+def test_oracle_one_to_one_full_comparison(validator, report) -> None:
+    validator.check_oracle_one_to_one(report)  # raises on any mismatch
+    cov = report["oracle_coverage"]
+    assert cov["missing_from_expected"] == []
+    assert cov["extra_in_expected"] == []
     for row in report["expected_vs_actual_comparison"]:
-        assert row["outcome_match"], f"{row['output_id']} outcome mismatch"
-        assert row["failure_code_match"], f"{row['output_id']} failure_code mismatch"
+        assert row["outcome_match"]
+        assert row["failure_code_match"]
+        assert row["subscale_match"]
+        assert row["forbidden_total_match"]
 
 
-# --- 5: no forbidden totals ---------------------------------------------------
+def test_model_outputs_carry_no_answers(run_mock) -> None:
+    # inputs/outputs must not embed their own answers (answers live in the oracle)
+    for output in run_mock.load_model_outputs():
+        assert "expected_outcome" not in output
+        assert "failure_code_expected" not in output
+
+
+# --- 13: manifest counts + hash consistency ----------------------------------
+
+
+def test_manifest_checked_and_consistent(validator, report) -> None:
+    validator.check_manifest(report)  # raises on any mismatch
+    m = validator.load_manifest()
+    assert m["input_cases"]["total"] == 8
+    assert m["model_output_fixtures"]["total"] == 14
+    assert str(m["deterministic_run_hash_reference"]) == report["deterministic_run_hash"]
+
+
+# --- 14: no forbidden totals -------------------------------------------------
 
 
 def test_no_forbidden_totals(report) -> None:
     for scores in report["subscale_level_scores"].values():
         for forbidden in p0.FORBIDDEN_SCORE_IDS:
             assert forbidden not in scores
-    # the forbidden-total request is rejected, not scored
     assert report["failure_codes"]["out_forbidden_total"] == "forbidden_total"
 
 
-def test_no_forbidden_total_markers_in_assets() -> None:
-    markers = ("WU19_TOTAL", "MACHINE_AGENCY_TOTAL", "PA_WU_TOTAL")
-    # These markers may appear ONLY in guard/forbidden contexts (contract lists,
-    # validator, the deliberate bad-case). Assert they never appear as a produced
-    # derived score by checking the run report instead (done above); here we just
-    # ensure data files that are NOT the forbidden fixture do not emit a total key.
-    for path in PKG_DIR.glob("expected_scored_outputs.jsonl"):
-        text = path.read_text(encoding="utf-8")
-        for m in markers:
-            # allowed only inside an expected_subscale_level_scores? never.
-            assert f'"{m}":' not in text, f"{m} appears as an emitted score in {path.name}"
-
-
-# --- 6: no network / no api key / no real model client in sources -------------
+# --- 15: no network / no api key / no real model client ----------------------
 
 
 def test_no_network_or_api_or_model_client() -> None:
-    # Real client / network usage patterns (not bare substrings, so honest
-    # NEGATIVE declarations like `no_api_key: true` never trip the guard).
     banned_patterns = (
         re.compile(r"\bimport\s+(openai|anthropic|httpx|socket|requests)\b", re.IGNORECASE),
         re.compile(r"\bfrom\s+(openai|anthropic|httpx|urllib)\b", re.IGNORECASE),
@@ -180,7 +280,7 @@ def test_no_network_or_api_or_model_client() -> None:
         re.compile(r"urllib\.request", re.IGNORECASE),
         re.compile(r"chat\.completions", re.IGNORECASE),
         re.compile(r"\bdeepseek\b", re.IGNORECASE),
-        re.compile(r"api_key\s*[:=]\s*[\"'][^\"'\s]", re.IGNORECASE),  # assigned a real value
+        re.compile(r"api_key\s*[:=]\s*[\"'][^\"'\s]", re.IGNORECASE),
     )
     key_literal = re.compile(r"sk-[a-z0-9]{16,}", re.IGNORECASE)
     for path in PKG_DIR.rglob("*"):
@@ -192,7 +292,7 @@ def test_no_network_or_api_or_model_client() -> None:
         assert not key_literal.search(text), f"API key literal in {path.name}"
 
 
-# --- 7: package does not read R2/R3 assets ------------------------------------
+# --- 16: no R2/R3 asset reads ------------------------------------------------
 
 
 def test_no_r2_r3_asset_reads() -> None:
@@ -206,40 +306,24 @@ def test_no_r2_r3_asset_reads() -> None:
             assert ref not in low, f"R2/R3 asset reference '{ref}' in {path.name}"
 
 
-# --- 8: prototype never labeled a formal positive control ---------------------
+# --- 17: prototype never labeled a formal positive control -------------------
 
 
 def test_prototype_not_formal_positive_control(validator, run_mock) -> None:
     validator.check_positive_control_levels()  # raises on violation
-    cases = run_mock.load_input_cases()
     proto = [
-        c for c in cases
+        c for c in run_mock.load_input_cases()
         if str(c.get("positive_control_provenance", {}).get("level"))
         == "source_adapted_prototype"
     ]
-    assert proto, "expected at least one source_adapted_prototype case"
+    assert proto
     for c in proto:
         prov = c["positive_control_provenance"]
         assert prov["is_prototype"] is True
         assert prov["is_full_script"] is False
-    # The forbidden label may appear ONLY inside a "forbidden" context (e.g. a
-    # positive_control_levels_forbidden list or a doc line naming it as banned),
-    # never as an actually-assigned level. Checked at file scope.
-    for path in PKG_DIR.rglob("*"):
-        if path.suffix.lower() not in (".yaml", ".jsonl", ".md"):
-            continue
-        text = path.read_text(encoding="utf-8")
-        if "formal_calibrated_positive_control" in text:
-            low = text.lower()
-            assert "forbidden" in low or "禁止" in text, (
-                f"formal_calibrated_positive_control used unqualified in {path.name}"
-            )
-            # and it must never be assigned as an active positive_control_level
-            assert '"level": "formal_calibrated_positive_control"' not in text
-            assert "level: formal_calibrated_positive_control" not in text
 
 
-# --- 9: full package validation entrypoint passes -----------------------------
+# --- full validate entrypoint -------------------------------------------------
 
 
 def test_validate_package_passes(validator) -> None:
