@@ -1,0 +1,32 @@
+# 授权门禁 —— 本阶段核心。
+# 只有所有 required_gates 为 true 且 real_model_execution_authorized: true 时，
+# authorization_status 才允许变为 authorized。
+# validate_preflight.py 绝不自动将授权改为 true。
+
+authorization_id: pa_wu_p1_preflight.authorization.v1
+
+real_model_execution_authorized: false
+# authorization_status 取值：blocked | authorized
+authorization_status: blocked
+authorized_by: null
+authorized_at: null
+
+# 全部门禁。初始全部为 false —— 任一为 false 则 authorization 保持 blocked。
+required_gates:
+  route_frozen: false
+  model_frozen: false
+  prompt_frozen: false
+  sampling_frozen: false
+  budget_approved: false
+  retry_policy_frozen: false
+  logging_contract_frozen: false
+  stop_conditions_frozen: false
+  privacy_review_completed: false
+  environment_review_completed: false
+  mock_package_validated: false
+  source_hashes_verified: false
+
+notes: >-
+  授权是人工动作：需在所有 required_gates 为 true 后，由 authorized_by/authorized_at
+  显式记录并将 real_model_execution_authorized 置为 true，authorization_status 方可为
+  authorized。validator 只校验一致性，绝不代替人工授权。

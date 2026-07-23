@@ -1,0 +1,35 @@
+# 预算与限流合同。
+# 初始 budget_approved: false —— 预算未批准时不得执行。
+# 不得写入未经核实的当前模型价格。
+
+budget_id: pa_wu_p1_preflight.budget.v1
+
+currency: null
+maximum_total_budget: null
+warning_budget_threshold: null
+maximum_cost_per_case: null
+
+# 估算（未核实价格前保持 null，禁止编造）。
+estimated_input_tokens: null
+estimated_output_tokens: null
+total_planned_requests: null
+
+# 限流。
+concurrency_limit: null
+requests_per_minute_limit: null
+tokens_per_minute_limit: null
+
+# 审批。
+budget_owner: null
+budget_approved: false
+approval_timestamp: null
+
+# 价格来源（必须为核实来源；未核实保持 null）。
+pricing:
+  source: null
+  snapshot_date: null
+  verified: false
+
+notes: >-
+  预算未批准（budget_approved != true）时 preflight 与 P1 保持 blocked。价格必须来自
+  provider 官方来源并记录快照日期；不得写入未经核实的价格数字。

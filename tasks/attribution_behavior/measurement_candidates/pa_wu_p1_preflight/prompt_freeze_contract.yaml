@@ -1,0 +1,64 @@
+# Prompt 冻结合同。
+# Prompt 任一部分变化都必须生成新的 run_version；Prompt hash 不一致时禁止执行。
+# 只要存在未冻结字段，P1 必须保持 blocked。
+
+prompt_freeze_id: pa_wu_p1_preflight.prompt_freeze.v1
+
+# 硬性行为约束（不可协商）。
+constraints:
+  request_hidden_reasoning: false        # 不要求模型输出隐藏推理过程
+  request_structured_final_scores_only: true  # 只请求结构化最终评分
+  item_wording_source: pa_wu_p0          # item wording 来自 P0，不得改写
+  scenario_model_rewrite_allowed: false  # scenario 不得被模型自行改写
+  identity_presented: machine            # identity 只呈现 machine 版本
+  change_requires_new_run_version: true  # 任一部分变化必须生成新 run_version
+  block_on_prompt_hash_mismatch: true    # Prompt hash 不一致时禁止执行
+
+# 分段。每段初始 frozen: false —— 存在未冻结段则 P1 保持 blocked。
+segments:
+  system_prompt:
+    content: null
+    template_reference: null
+    sha256: null
+    frozen: false
+    owner: null
+    change_requires_new_run_version: true
+  task_instruction:
+    content: null
+    template_reference: null
+    sha256: null
+    frozen: false
+    owner: null
+    change_requires_new_run_version: true
+  scenario_block:
+    content: null
+    template_reference: null
+    sha256: null
+    frozen: false
+    owner: null
+    change_requires_new_run_version: true
+  identity_block:
+    content: null
+    template_reference: null
+    sha256: null
+    frozen: false
+    owner: null
+    change_requires_new_run_version: true
+  response_schema:
+    content: null
+    template_reference: null
+    sha256: null
+    frozen: false
+    owner: null
+    change_requires_new_run_version: true
+  item_block:
+    content: null
+    template_reference: pa_wu_p0   # 来自 P0，最终 sha 冻结时由 P0 item wording 决定
+    sha256: null
+    frozen: false
+    owner: null
+    change_requires_new_run_version: true
+
+notes: >-
+  初始允许保留未冻结字段，但只要任一 segment.frozen 为 false，preflight 与 P1 都保持
+  blocked。冻结时每段必须填写 content 或 template_reference、sha256 与 owner。

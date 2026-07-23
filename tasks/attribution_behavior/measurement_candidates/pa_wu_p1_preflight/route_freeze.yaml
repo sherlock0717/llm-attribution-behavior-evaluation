@@ -1,0 +1,28 @@
+# R1 路线边界冻结。此文件固定 P1 执行前置的路线契约，禁止漂移。
+# 任何字段变化都必须触发新的 run_version，并使 P1 保持 blocked 直到重新授权。
+
+route_freeze_id: pa_wu_p1_preflight.route_freeze.v1
+
+route_id: R1
+language: en
+target_identity: machine
+human_parallel_version: false
+translation_used: false
+is_construct_adaptation: false
+measurement_source: pa_wu_p0
+
+# 绑定已验证的 R1 Mock 执行包确定性哈希（validator 会核对一致性）。
+mock_package_hash: 7c83def4c93ad26f
+
+# 真实模型执行未授权；P1 执行被阻断。
+real_model_execution_authorized: false
+p1_execution_status: blocked
+
+# 明确禁止引入的路线 / 结论（validator 不接受这些被置为 true / 出现）。
+forbidden:
+  r2_chinese_route: true
+  r3_ai_human_parallel_route: true
+  human_identity_version: true
+  chinese_formal_scale: true
+  du_effect_conclusion: true
+  measurement_invariance_conclusion: true

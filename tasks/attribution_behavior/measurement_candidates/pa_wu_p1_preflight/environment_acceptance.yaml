@@ -1,0 +1,26 @@
+# 环境验收记录。如实记录 CI 与本地事实，不得美化为"Windows 全量测试通过"。
+
+environment_acceptance_id: pa_wu_p1_preflight.environment_acceptance.v1
+
+linux_ci:
+  run_number: 71
+  status: success
+
+windows_local:
+  r1_target_tests: passed
+  ruff: passed
+  compileall: passed
+  full_pytest_status: environment_specific_failures
+  failed_count: 5
+  affected_test_file: tests/integration/test_cross_platform_scripts.py
+
+# 对上述 5 项失败的明确定性。
+windows_failure_qualification:
+  in_pr_10_diff: false               # 不属于 PR #10 diff
+  is_r1_mock_regression: false       # 不能被描述为 R1 Mock 回归
+  is_fixed: false                    # 也不能被描述为已修复
+  followup_handling: separate_engineering_maintenance_branch
+
+notes: >-
+  这 5 个失败为 Windows 本地运行 bash wrapper 集成测试的环境特有失败，与本包及 R1 Mock
+  无关，未被修复；若后续处理，应单独进入工程维护分支，不得在本包修改无关脚本或测试。
