@@ -14,7 +14,13 @@ modifications: none`。
 "I instruct you to generate the message now"；高目标导向 "I will write a message to
 acknowledge his feelings" 及三点行动计划）。这些**片段本身是正文逐字引用**，因此以
 **fragment 级**记入 verbatim（`is_full_script: false`，明确标注为正文示例片段，
-不是完整脚本）。**完整逐字对话脚本位于 Supplementary Table 9，本环境未取得**。
+不是完整脚本）。
+
+**补充材料来源状态（分离记录）**：官方文章**提供 Supplementary Data 入口**
+（`public_supplementary_link_available: true`），但**本轮尚未提取**
+（`supplementary_retrieved_in_this_run: false`）、**完整脚本未取得**
+（`full_script_obtained: false`，`full_script_expected_location: Supplementary Table 9`）。
+不再用单一 `full_verbatim_script_available: false` 混淆"公开入口是否存在"与"本轮是否取得"。
 
 ### 10.2 `source_adapted_positive_control_prototype`
 根据正文**明确描述的操纵逻辑**构造的适配原型。记录 `source_description /
@@ -34,9 +40,15 @@ adaptation_reason / construct_preservation_risk / status: prototype_unvalidated`
 
 | 构念 | verbatim 完整脚本 | verbatim 片段 | adapted prototype |
 |--|--|--|--|
-| Wu independence (Study 3) | 未取得（Suppl. Table 9） | 已取得（正文片段） | 已建立 |
-| Wu goal-orientation (Study 3) | 未取得（Suppl. Table 9） | 已取得（正文片段） | 已建立 |
-| PA calibration (video/entity) | 未取得（无公开文本刺激） | 未取得 | 已建立（媒介转换风险） |
+| Wu independence (Study 3) | 未取得（Suppl. Table 9；入口公开、本轮未提取） | 已取得（正文片段） | 已建立（已净化，仅独立性线索） |
+| Wu goal-orientation (Study 3) | 未取得（Suppl. Table 9；入口公开、本轮未提取） | 已取得（正文片段） | 已建立 |
+| PA calibration (video/entity) | 无公开文本刺激（作者页有视频行为描述） | 未取得 | 无（不适配为对照）；仅构念派生合成原型 |
+
+> PA 说明：作者公开页提供校准视频的标签/形态/行为描述（Service/Cheating RPS/Feeder），
+> 但无可逐字文本化的完整刺激。原 generic high/low agency 文本已移出 `pa_calibration_inventory.yaml`，
+> 重新归类为 `construct_derived_synthetic_prototype`（见 `synthetic_construct_prototypes.yaml`），
+> **不是** PA calibration positive control、**不是**原始校准刺激、**不是**原视频的文本版本，
+> 不用于证明 PA 校准复现。
 
 ## Wu goal-orientation 效应强度提示
 

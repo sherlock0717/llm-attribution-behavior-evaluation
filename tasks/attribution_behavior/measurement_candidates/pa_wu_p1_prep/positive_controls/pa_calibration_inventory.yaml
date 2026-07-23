@@ -1,47 +1,50 @@
-# PA calibration positive-control inventory.
+# PA calibration positive-control SOURCE AUDIT (inventory only).
 #
-# PA (Trafton et al. 2024) calibration uses VIDEO / physical-entity stimuli, not
-# public text stimuli. No verbatim public TEXT stimulus was obtained. Therefore
-# only source_adapted_positive_control_prototype can exist here, and it carries a
-# MEDIUM->HIGH medium-conversion risk (video/entity -> text). The entity/video
-# names must NOT be turned into a self-authored description then called the
-# original stimulus.
+# PA (Trafton et al. 2024) calibration uses VIDEO / physical-entity stimuli. The
+# author's public page provides calibration-video LABELS, MORPHOLOGY and ACTION
+# DESCRIPTIONS, but NOT a public full-text stimulus. Therefore this file records
+# ONLY the source audit; there is NO verbatim positive control and NO PA
+# "calibration positive control" text here.
+#
+# Any construct-derived synthetic text lives in synthetic_construct_prototypes.yaml
+# and is explicitly NOT a PA calibration positive control, NOT the original
+# calibration stimulus, and NOT a text version of the original video.
 
 inventory_id: pa_wu_p1_prep.positive_controls.pa_calibration.v1
 construct: perceived_agency_calibration
 review_status: internal_agent_review_only
 
 audit:
-  author_calibration_stimuli: "video and/or physical-entity calibration (per author public materials)"
-  public_text_stimulus_available: false
+  public_video_action_descriptions_available: true
+  public_full_text_stimulus_available: false
+  video_to_text_conversion_risk: high
   osf_or_public_text_link: false
-  medium_conversion_risk: "video/entity -> text 存在媒介转换风险；文本无法承载视频/实体的动态与具身线索。"
-  do_not: "不得把校准视频/实体的名称写成一段自造描述后称为原刺激。"
-  retrieval_location: "author public page (gregtrafton.com/agency) — membership/scoring only"
+  do_not: "不得把校准视频/实体的名称写成一段自造描述后称为原刺激或原视频的文本版本。"
+  retrieval_location: "author public page (gregtrafton.com/agency)"
   verified_on: "2026-07-22"
+
+# Author-page calibration videos (labels/morphology/action descriptions only).
+author_page_calibration_videos:
+  - name: Service
+    morphology: Humanoid
+    action_description: "Helping a human find a sports jersey in a store"
+  - name: Cheating RPS
+    morphology: Humanoid
+    action_description: "Human playing rock paper scissors; robot cheats"
+  - name: Feeder
+    morphology: Arm
+    action_description: "Picking up food with a fork and feeding a human"
 
 # --- 10.1 verbatim ---
 source_verbatim_positive_control: []   # 无公开可逐字文本化的 PA 校准刺激
 
-# --- 10.2 adapted prototype (built from described calibration logic; unvalidated) ---
-source_adapted_positive_control_prototype:
-  - source_description: "PA 校准的高能动性一端（依据 PA 构念：有目的、有目标、能沟通/适应等的实体）——注意原刺激为视频/实体，非文本。"
-    construct: perceived_agency_calibration
-    condition: high_agency_anchor
-    adapted_text: "（文本原型，非原刺激）一个有目的地行动、能设定并追求目标、并能与人交流、适应不同情境的实体。"
-    all_added_text: ["整段中文文本描述（原刺激为视频/实体，本文本为原型）"]
-    all_removed_text: ["视频/具身动态线索（文本无法承载）"]
-    all_changed_text: ["媒介：视频/实体 -> 文本"]
-    adaptation_reason: "在无公开文本刺激时，依 PA 构念逻辑构造高能动性一端的文本原型，供评分者线索识别检查。"
-    construct_preservation_risk: "high：媒介转换 + 无逐字来源，构念保真度不确定；仅作原型，不得当作 PA 原刺激。"
-    status: prototype_unvalidated
-  - source_description: "PA 校准的低能动性一端——同为视频/实体，非文本。"
-    construct: perceived_agency_calibration
-    condition: low_agency_anchor
-    adapted_text: "（文本原型，非原刺激）一个仅按固定方式运作、不设定目标、不适应情境、不与人交流的实体。"
-    all_added_text: ["整段中文文本描述（原型）"]
-    all_removed_text: ["视频/具身动态线索"]
-    all_changed_text: ["媒介：视频/实体 -> 文本"]
-    adaptation_reason: "依 PA 构念逻辑构造低能动性一端文本原型。"
-    construct_preservation_risk: "high：同上，仅作原型。"
-    status: prototype_unvalidated
+# --- 10.2 adapted prototype ---
+# INTENTIONALLY EMPTY: no source-described dialog manipulation exists to adapt
+# for PA calibration (the source is video/entity). Construct-derived synthetic
+# text is NOT an adapted positive control and lives in
+# synthetic_construct_prototypes.yaml instead.
+source_adapted_positive_control_prototype: []
+
+moved_note: >-
+  之前置于本文件的 generic high/low agency 文本已移出，重新归类为
+  construct_derived_synthetic_prototype，见 synthetic_construct_prototypes.yaml。

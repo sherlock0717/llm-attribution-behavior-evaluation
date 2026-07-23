@@ -17,17 +17,19 @@ sources:
     constructs_audited:
       - construct: perceived_machine_independence
         in_text_example_fragments_available: true     # 正文 EXPERIMENTAL MANIPULATIONS 举例片段
-        full_verbatim_script_available: false          # 完整脚本在 Supplementary Table 9
-        supplementary_location: "Supplementary Table 9 (Example dialog scripts by manipulation condition)"
-        supplementary_retrieved: false
+        public_supplementary_link_available: true      # 官方文章提供 Supplementary Data 入口
+        supplementary_retrieved_in_this_run: false     # 本轮尚未提取补充材料
+        full_script_obtained: false                    # 完整逐字脚本未取得
+        full_script_expected_location: "Supplementary Table 9"
         osf_or_prereg_link_in_article: false
         retrieval_location: "official OUP minimal HTML (article-minimal/8692819), body text only"
         verified_on: "2026-07-22"
       - construct: perceived_machine_goal_orientation
         in_text_example_fragments_available: true
-        full_verbatim_script_available: false
-        supplementary_location: "Supplementary Table 9"
-        supplementary_retrieved: false
+        public_supplementary_link_available: true
+        supplementary_retrieved_in_this_run: false
+        full_script_obtained: false
+        full_script_expected_location: "Supplementary Table 9"
         osf_or_prereg_link_in_article: false
         retrieval_location: "official OUP minimal HTML (article-minimal/8692819), body text only"
         verified_on: "2026-07-22"
@@ -42,11 +44,21 @@ sources:
       calibration_stimuli_public_text: not_available
     constructs_audited:
       - construct: perceived_agency_calibration
-        in_text_example_fragments_available: false
-        full_verbatim_script_available: false
-        public_text_stimulus_available: false          # 校准为视频/实体，非文本刺激
-        medium_conversion_risk: "从视频/实体转为文本存在媒介转换风险；不得把实体名称写成自造描述后称原刺激。"
-        retrieval_location: "author public page (gregtrafton.com/agency) — membership/scoring only, no text stimulus"
+        public_video_action_descriptions_available: true   # 作者公开页提供校准视频标签/形态/行为描述
+        public_full_text_stimulus_available: false          # 无可逐字文本化的完整刺激
+        video_to_text_conversion_risk: high
+        author_page_calibration_videos:
+          - name: Service
+            morphology: Humanoid
+            action_description: "Helping a human find a sports jersey in a store"
+          - name: Cheating RPS
+            morphology: Humanoid
+            action_description: "Human playing rock paper scissors; robot cheats"
+          - name: Feeder
+            morphology: Arm
+            action_description: "Picking up food with a fork and feeding a human"
+        medium_conversion_risk: "视频/实体 -> 文本存在媒介转换风险；不得把实体名称写成自造描述后称原刺激。"
+        retrieval_location: "author public page (gregtrafton.com/agency) — video labels/morphology/action descriptions + membership/scoring; no full-text stimulus"
         verified_on: "2026-07-22"
 
 data_availability_statement:

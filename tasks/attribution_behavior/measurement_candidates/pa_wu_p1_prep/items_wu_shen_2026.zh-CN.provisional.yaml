@@ -3,7 +3,9 @@
 #
 # internal provisional translation ONLY. NOT a validated Chinese scale, NOT an
 # expert-reviewed translation, NOT a human-validated measure.
-# Produced by internal_agent_dual_pass (see translation_protocol.yaml).
+# Produced by internal_agent_two_pass_translation (see translation_protocol.yaml).
+# The two passes are two internal renderings, NOT a blinded independent
+# re-translation (no isolation evidence is claimed).
 #
 # source_text_en is copied from the P0 verbatim file
 # ../pa_wu_p0/items_wu_shen_2026.yaml and MUST match it exactly. This file does
@@ -18,7 +20,7 @@ instrument_id: wu_shen_2026
 language: zh-CN
 status: internal_provisional_translation
 review_status: internal_agent_review_only
-protocol: pa_wu_p1_prep.internal_agent_dual_pass.v1
+protocol: pa_wu_p1_prep.internal_agent_two_pass_translation.v1
 
 # "machine" terminology decision (recorded for traceability):
 machine_term_decision:
@@ -173,6 +175,8 @@ items:
     source_text_en: "Consciousness (unconscious – conscious)."
     source_left_anchor_en: "The machine is unconscious"
     source_right_anchor_en: "The machine is conscious"
+    left_polarity: low
+    right_polarity: high
     translation_pass_a: "意识（无意识 — 有意识）。"
     translation_pass_b: "意识程度（没有意识 — 具有意识）。"
     reconciled_zh_cn: "意识（无意识 — 有意识）。"
@@ -192,13 +196,20 @@ items:
     source_text_en: "Thinking (cannot think – does think)."
     source_left_anchor_en: "The machine cannot think"
     source_right_anchor_en: "The machine does think"
+    left_polarity: low
+    right_polarity: high
     translation_pass_a: "思考（不能思考 — 会思考）。"
     translation_pass_b: "思维（无法思考 — 确实在思考）。"
     reconciled_zh_cn: "思考（不能思考 — 会思考）。"
     reconciled_left_anchor_zh_cn: "该机器不能思考"
     reconciled_right_anchor_zh_cn: "该机器会思考"
     back_translation_en: "Thinking (cannot think – does think). Left: the machine cannot think; Right: the machine does think."
-    reconciliation_notes: "左=cannot think(低)，右=does think(高)，方向保留；does think 用'会思考'表肯定。"
+    reconciliation_notes: >-
+      MS2 does think 返修复核：'会思考'(会=倾向/事实性肯定) vs '能够思考'(能力可能性) vs
+      '确实在思考'(此刻进行态)。原文 does think 是对'能思考'的强调性肯定（存在/事实），非能力
+      问句、非进行态。'能够思考'偏 capacity，'确实在思考'偏 ongoing，均偏离；取'会思考'最贴近
+      does think 的肯定语义。左=cannot think(低)，右=does think(高)，方向保留。
+      （详见 translation_decisions.yaml）
     construct_change_flag: none
     adaptation_status: none
     review_status: internal_agent_review_only
@@ -211,6 +222,8 @@ items:
     source_text_en: "Free will (no free will – does have free will)."
     source_left_anchor_en: "The machine has no free will"
     source_right_anchor_en: "The machine does have free will"
+    left_polarity: low
+    right_polarity: high
     translation_pass_a: "自由意志（没有自由意志 — 拥有自由意志）。"
     translation_pass_b: "自由意志（不具备自由意志 — 确实拥有自由意志）。"
     reconciled_zh_cn: "自由意志（没有自由意志 — 拥有自由意志）。"
@@ -232,6 +245,8 @@ items:
     source_text_en: "Desires (no desires – does have desires)."
     source_left_anchor_en: "The machine has no desires"
     source_right_anchor_en: "The machine does have desires"
+    left_polarity: low
+    right_polarity: high
     translation_pass_a: "欲望（没有欲望 — 拥有欲望）。"
     translation_pass_b: "欲求（不具有欲望 — 确实有欲望）。"
     reconciled_zh_cn: "欲望（没有欲望 — 拥有欲望）。"
@@ -251,6 +266,8 @@ items:
     source_text_en: "Self-awareness (not self-aware – self-aware)."
     source_left_anchor_en: "The machine is not self-aware"
     source_right_anchor_en: "The machine is self-aware"
+    left_polarity: low
+    right_polarity: high
     translation_pass_a: "自我意识（没有自我意识 — 有自我意识）。"
     translation_pass_b: "自我觉察（不具自我意识 — 具备自我意识）。"
     reconciled_zh_cn: "自我意识（没有自我意识 — 有自我意识）。"
@@ -270,6 +287,8 @@ items:
     source_text_en: "Intentionality (no intentionality – does have intentionality)."
     source_left_anchor_en: "The machine has no intentionality"
     source_right_anchor_en: "The machine does have intentionality"
+    left_polarity: low
+    right_polarity: high
     translation_pass_a: "意向性（没有意向性 — 拥有意向性）。"
     translation_pass_b: "意向性（不具意向性 — 确实具有意向性）。"
     reconciled_zh_cn: "意向性（没有意向性 — 拥有意向性）。"

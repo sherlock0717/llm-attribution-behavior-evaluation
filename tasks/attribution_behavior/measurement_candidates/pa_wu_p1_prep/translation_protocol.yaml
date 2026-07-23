@@ -1,17 +1,36 @@
-# internal_agent_dual_pass translation protocol for the PA-Wu P1 prep package.
+# internal_agent_two_pass_translation protocol for the PA-Wu P1 prep package.
 #
 # THIS IS NOT human dual-translation, NOT an expert committee review, and NOT a
 # target-population cognitive interview. It is an internal-agent procedure that
 # produces an INTERNAL PROVISIONAL TRANSLATION only.
+#
+# HONESTY / PROVENANCE NOTE (important):
+# The two Chinese renderings (translation_pass_a / translation_pass_b) come from
+# TWO internal-agent translation passes. We do NOT provide verifiable isolation
+# evidence (no pass_a_context_id, no pass_b_context_id, no source_input_hash, no
+# proof that pass B could not see pass A). Therefore we DO NOT claim these are
+# statistically or procedurally INDEPENDENT translations. "second translation
+# pass" means a second rendering, not a blinded independent re-translation.
 
-protocol_id: pa_wu_p1_prep.internal_agent_dual_pass.v1
+protocol_id: pa_wu_p1_prep.internal_agent_two_pass_translation.v1
 translator: internal_agent
 review_status: internal_agent_review_only
+
+provenance:
+  method: internal_agent_two_pass_translation
+  independence_claim: false
+  isolation_evidence_available: false
+  pass_a_context_id: null
+  pass_b_context_id: null
+  source_input_hash: null
+  note: >-
+    两套译文来自内部 Agent 两次翻译过程，但不声称统计或程序意义上的独立翻译。
 
 disclaimers:
   not_human_dual_translation: true
   not_expert_committee_review: true
   not_target_population_cognitive_interview: true
+  not_independent_re_translation: true
   produces_only: internal_provisional_translation
   validated_chinese_scale: false
   human_validated_measure: false
@@ -22,12 +41,12 @@ procedure:
     goal: "faithful literal rendering; preserve construct and scale direction"
     field: translation_pass_a
   - step: pass_b
-    name: "Pass B — independent re-translation"
-    goal: "re-translate each item in an independent context without reusing Pass A wording"
+    name: "Pass B — second translation pass"
+    goal: "a second rendering of each item (NOT a blinded independent re-translation)"
     field: translation_pass_b
   - step: reconciliation
-    name: "Reconciliation — item-by-item comparison of A vs B"
-    goal: "compare A/B per item; choose or merge into reconciled_zh_cn; record notes"
+    name: "Reconciliation — item-by-item comparison of the two passes"
+    goal: "compare pass A / pass B per item; choose or merge into reconciled_zh_cn; record notes"
     fields: [reconciled_zh_cn, reconciliation_notes]
   - step: back_translation
     name: "Back translation — reconciled_zh_cn back to English"
@@ -46,10 +65,16 @@ procedure:
       - ai_human_parallel_risk       # AI/human 平行风险
       - du_material_anchor_risk      # D/U 材料锚定风险
 
+# Two DISTINCT status contracts for the two layers (NOT one shared enum).
+literal_translation:
+  adaptation_status_allowed: [none]
+
+adaptation_candidates:
+  status_allowed: [candidate_unvalidated]
+
 layering_rules:
   reconciled_zh_cn_is_literal_only: true
   adaptations_go_to: adaptation_candidates.yaml
-  adaptation_status_allowed: [candidate_unvalidated]
   forbidden_in_reconciled_zh_cn:
     - add_information_for_du_not_in_source
     - rename_machine_to_generic_decider

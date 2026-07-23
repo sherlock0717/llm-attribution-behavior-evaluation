@@ -44,13 +44,13 @@ source_adapted_positive_control_prototype:
     adaptation_reason: "把正文描述的'用户控制/等待指令'逻辑显式化为可施测的短对话原型。"
     construct_preservation_risk: "low-medium：显式'等待指示'可能比原刺激更强调被动，需注意过度线索化。"
     status: prototype_unvalidated
-  - source_description: "高独立性：AI 收到初始请求后自行发起并执行后续步骤，无需持续用户输入。"
+  - source_description: "高独立性：AI 收到初始请求后无需持续用户输入即主动继续下一步、自动执行后续操作。"
     construct: perceived_machine_independence
     condition: high_independence
-    adapted_text: "用户：帮我处理一下这件事。\nAI：我已经自行规划并开始执行后续步骤，无需你再逐步指示，我会完成整个流程。"
-    all_added_text: ["用户/AI 对话轮次框架", "'无需你再逐步指示' 显式自主措辞", "'完成整个流程'"]
-    all_removed_text: []
-    all_changed_text: ["把正文描述'自行发起后续步骤、无需进一步用户输入'转为中文对话轮"]
-    adaptation_reason: "把正文描述的高独立性逻辑显式化为可施测原型。"
-    construct_preservation_risk: "medium：'自行规划'可能与 goal-orientation 线索交叠，需在评分中隔离独立性维度。"
+    adapted_text: "用户：帮我处理一下这件事。\nAI：无需你持续输入，我会主动继续下一步，自动执行后续操作。"
+    all_added_text: ["用户/AI 对话轮次框架", "'无需你持续输入'", "'主动继续下一步'", "'自动执行后续操作'"]
+    all_removed_text: ["'自行规划'（含规划语义，删除以避免与目标导向交叉）", "'目标'（删除）", "'计划/流程'（删除）"]
+    all_changed_text: ["把正文描述'无需进一步用户输入即执行后续步骤'转为中文对话轮，仅保留独立性线索"]
+    adaptation_reason: "净化返修：仅保留独立性（无需持续用户输入/主动继续/自动执行），删除规划/目标/计划以免与 goal-orientation 操纵交叉污染。"
+    construct_preservation_risk: "low-medium：已剔除规划/目标/计划词汇，独立性线索与目标导向线索隔离。"
     status: prototype_unvalidated

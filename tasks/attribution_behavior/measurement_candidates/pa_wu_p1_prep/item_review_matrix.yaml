@@ -1,0 +1,315 @@
+# Internal multi-view review matrix for ALL 32 items (PA13 + Wu19).
+#
+# This is an INTERNAL AGENT review only. It is NOT content validity, NOT
+# measurement invariance, and NOT expert judgment.
+#
+# Controlled enums:
+#   semantic_fidelity_status:      [faithful, minor_shift, notable_shift]
+#   chinese_comprehensibility_risk:[low, medium, high]
+#   construct_contamination_risk:  [low, medium, high]
+#   ai_human_parallel_risk:        [low, medium, high]
+#   du_material_anchor_risk:       [direct, partial, identity_prior, unsupported_extrapolation]
+
+matrix_id: pa_wu_p1_prep.item_review_matrix.v1
+review_status: internal_agent_review_only
+disclaimer: "internal agent review only; NOT content validity / measurement invariance / expert judgment."
+
+enums:
+  semantic_fidelity_status: [faithful, minor_shift, notable_shift]
+  chinese_comprehensibility_risk: [low, medium, high]
+  construct_contamination_risk: [low, medium, high]
+  ai_human_parallel_risk: [low, medium, high]
+  du_material_anchor_risk: [direct, partial, identity_prior, unsupported_extrapolation]
+
+items:
+  # ---------------- PA13 ----------------
+  - instrument_id: pa_2024
+    source_item_id: pa_acts_with_purpose
+    semantic_fidelity_status: faithful
+    chinese_comprehensibility_risk: low
+    construct_contamination_risk: low
+    ai_human_parallel_risk: low
+    du_material_anchor_risk: partial
+    review_notes: "'有目的地行动'忠实；注意不引申为 goal-orientation。"
+    review_status: internal_agent_review_only
+  - instrument_id: pa_2024
+    source_item_id: pa_has_goals
+    semantic_fidelity_status: faithful
+    chinese_comprehensibility_risk: low
+    construct_contamination_risk: medium
+    ai_human_parallel_risk: low
+    du_material_anchor_risk: partial
+    review_notes: "'有目标'与 Wu goal-orientation 措辞邻近，属 PA 不同工具，不合并。"
+    review_status: internal_agent_review_only
+  - instrument_id: pa_2024
+    source_item_id: pa_can_create_new_goals
+    semantic_fidelity_status: minor_shift
+    chinese_comprehensibility_risk: low
+    construct_contamination_risk: medium
+    ai_human_parallel_risk: low
+    du_material_anchor_risk: partial
+    review_notes: "create=创造/设立分歧；保留 can 能力型，未改单次事件。"
+    review_status: internal_agent_review_only
+  - instrument_id: pa_2024
+    source_item_id: pa_can_communicate
+    semantic_fidelity_status: faithful
+    chinese_comprehensibility_risk: low
+    construct_contamination_risk: low
+    ai_human_parallel_risk: low
+    du_material_anchor_risk: partial
+    review_notes: "'能够与人交流'忠实。"
+    review_status: internal_agent_review_only
+  - instrument_id: pa_2024
+    source_item_id: pa_treats_others_as_minded
+    semantic_fidelity_status: minor_shift
+    chinese_comprehensibility_risk: medium
+    construct_contamination_risk: medium
+    ai_human_parallel_risk: medium
+    du_material_anchor_risk: unsupported_extrapolation
+    review_notes: "返修后保留 as if'就好像……一样'的假设姿态；与 MSI 客观归因不同层。"
+    review_status: internal_agent_review_only
+  - instrument_id: pa_2024
+    source_item_id: pa_wanted_to_perform
+    semantic_fidelity_status: faithful
+    chinese_comprehensibility_risk: low
+    construct_contamination_risk: medium
+    ai_human_parallel_risk: medium
+    du_material_anchor_risk: identity_prior
+    review_notes: "wanted=想要(意愿)，不引申为 intentionality/意向性。"
+    review_status: internal_agent_review_only
+  - instrument_id: pa_2024
+    source_item_id: pa_can_show_emotions
+    semantic_fidelity_status: faithful
+    chinese_comprehensibility_risk: low
+    construct_contamination_risk: low
+    ai_human_parallel_risk: high
+    du_material_anchor_risk: unsupported_extrapolation
+    review_notes: "情绪表露对 AI/human 主语的先验差异大（human 天然更高）。"
+    review_status: internal_agent_review_only
+  - instrument_id: pa_2024
+    source_item_id: pa_can_change_behavior
+    semantic_fidelity_status: faithful
+    chinese_comprehensibility_risk: medium
+    construct_contamination_risk: low
+    ai_human_parallel_risk: medium
+    du_material_anchor_risk: partial
+    review_notes: "their/them 指代在中文取中性'自己'；主语变化留 adaptation。"
+    review_status: internal_agent_review_only
+  - instrument_id: pa_2024
+    source_item_id: pa_can_adapt
+    semantic_fidelity_status: faithful
+    chinese_comprehensibility_risk: low
+    construct_contamination_risk: low
+    ai_human_parallel_risk: medium
+    du_material_anchor_risk: partial
+    review_notes: "'能够适应不同情境'忠实；能力型保留。"
+    review_status: internal_agent_review_only
+  - instrument_id: pa_2024
+    source_item_id: pa_would_do_well_other_env
+    semantic_fidelity_status: faithful
+    chinese_comprehensibility_risk: low
+    construct_contamination_risk: low
+    ai_human_parallel_risk: medium
+    du_material_anchor_risk: unsupported_extrapolation
+    review_notes: "泛化/假设能力题，与当前材料几无直接证据。"
+    review_status: internal_agent_review_only
+  - instrument_id: pa_2024
+    source_item_id: pa_can_perform_many_tasks
+    semantic_fidelity_status: faithful
+    chinese_comprehensibility_risk: low
+    construct_contamination_risk: low
+    ai_human_parallel_risk: medium
+    du_material_anchor_risk: partial
+    review_notes: "'执行多种类型任务'忠实。"
+    review_status: internal_agent_review_only
+  - instrument_id: pa_2024
+    source_item_id: pa_actor_scenario
+    semantic_fidelity_status: faithful
+    chinese_comprehensibility_risk: medium
+    construct_contamination_risk: low
+    ai_human_parallel_risk: high
+    du_material_anchor_risk: unsupported_extrapolation
+    review_notes: "想象题完整保留；与当前 D/U 材料不匹配，但不得删。"
+    review_status: internal_agent_review_only
+  - instrument_id: pa_2024
+    source_item_id: pa_dinner_scenario
+    semantic_fidelity_status: faithful
+    chinese_comprehensibility_risk: medium
+    construct_contamination_risk: low
+    ai_human_parallel_risk: high
+    du_material_anchor_risk: unsupported_extrapolation
+    review_notes: "想象题完整保留；will do 中文以'会'处理，时态差异记 notes。"
+    review_status: internal_agent_review_only
+
+  # ---------------- Wu19 ----------------
+  - instrument_id: wu_shen_2026
+    source_item_id: IN1a
+    semantic_fidelity_status: faithful
+    chinese_comprehensibility_risk: low
+    construct_contamination_risk: low
+    ai_human_parallel_risk: medium
+    du_material_anchor_risk: partial
+    review_notes: "independently=独立地（非自主地），与 agency 区分。"
+    review_status: internal_agent_review_only
+  - instrument_id: wu_shen_2026
+    source_item_id: IN2a
+    semantic_fidelity_status: faithful
+    chinese_comprehensibility_risk: low
+    construct_contamination_risk: low
+    ai_human_parallel_risk: medium
+    du_material_anchor_risk: partial
+    review_notes: "external control=外部控制；human 主语适配存疑（见 adaptation）。"
+    review_status: internal_agent_review_only
+  - instrument_id: wu_shen_2026
+    source_item_id: IN3b
+    semantic_fidelity_status: minor_shift
+    chinese_comprehensibility_risk: medium
+    construct_contamination_risk: low
+    ai_human_parallel_risk: medium
+    du_material_anchor_risk: partial
+    review_notes: "resulted from itself rather than other entities 的因果对比需完整保留。"
+    review_status: internal_agent_review_only
+  - instrument_id: wu_shen_2026
+    source_item_id: IN4a
+    semantic_fidelity_status: faithful
+    chinese_comprehensibility_risk: low
+    construct_contamination_risk: low
+    ai_human_parallel_risk: medium
+    du_material_anchor_risk: partial
+    review_notes: "organized by itself=自行组织；without other influence=不受其他影响。"
+    review_status: internal_agent_review_only
+  - instrument_id: wu_shen_2026
+    source_item_id: GO1a
+    semantic_fidelity_status: minor_shift
+    chinese_comprehensibility_risk: medium
+    construct_contamination_risk: medium
+    ai_human_parallel_risk: low
+    du_material_anchor_risk: partial
+    review_notes: "purposefully vs merely behaving 对比是核心线索，必须保留。"
+    review_status: internal_agent_review_only
+  - instrument_id: wu_shen_2026
+    source_item_id: GO2a
+    semantic_fidelity_status: faithful
+    chinese_comprehensibility_risk: low
+    construct_contamination_risk: low
+    ai_human_parallel_risk: low
+    du_material_anchor_risk: partial
+    review_notes: "task-oriented=任务导向。"
+    review_status: internal_agent_review_only
+  - instrument_id: wu_shen_2026
+    source_item_id: GO3b
+    semantic_fidelity_status: faithful
+    chinese_comprehensibility_risk: low
+    construct_contamination_risk: medium
+    ai_human_parallel_risk: medium
+    du_material_anchor_risk: partial
+    review_notes: "goals behind actions；与 PA has goals 邻近但不同工具；human 可能天花板。"
+    review_status: internal_agent_review_only
+  - instrument_id: wu_shen_2026
+    source_item_id: GO4a
+    semantic_fidelity_status: faithful
+    chinese_comprehensibility_risk: low
+    construct_contamination_risk: low
+    ai_human_parallel_risk: low
+    du_material_anchor_risk: partial
+    review_notes: "part of a plan=计划的一部分。"
+    review_status: internal_agent_review_only
+  - instrument_id: wu_shen_2026
+    source_item_id: MS1
+    semantic_fidelity_status: faithful
+    chinese_comprehensibility_risk: low
+    construct_contamination_risk: low
+    ai_human_parallel_risk: high
+    du_material_anchor_risk: unsupported_extrapolation
+    review_notes: "consciousness=意识；左低右高方向保留。"
+    review_status: internal_agent_review_only
+  - instrument_id: wu_shen_2026
+    source_item_id: MS2
+    semantic_fidelity_status: minor_shift
+    chinese_comprehensibility_risk: medium
+    construct_contamination_risk: low
+    ai_human_parallel_risk: high
+    du_material_anchor_risk: unsupported_extrapolation
+    review_notes: "does think 取'会思考'（见 translation_decisions）；左低右高。"
+    review_status: internal_agent_review_only
+  - instrument_id: wu_shen_2026
+    source_item_id: MS3
+    semantic_fidelity_status: faithful
+    chinese_comprehensibility_risk: low
+    construct_contamination_risk: medium
+    ai_human_parallel_risk: high
+    du_material_anchor_risk: unsupported_extrapolation
+    review_notes: "free will 仅 MSI 单指标，不扩为总体 agency；左低右高。"
+    review_status: internal_agent_review_only
+  - instrument_id: wu_shen_2026
+    source_item_id: MS4
+    semantic_fidelity_status: faithful
+    chinese_comprehensibility_risk: low
+    construct_contamination_risk: low
+    ai_human_parallel_risk: high
+    du_material_anchor_risk: unsupported_extrapolation
+    review_notes: "desires=欲望；左低右高。"
+    review_status: internal_agent_review_only
+  - instrument_id: wu_shen_2026
+    source_item_id: MS5
+    semantic_fidelity_status: faithful
+    chinese_comprehensibility_risk: low
+    construct_contamination_risk: medium
+    ai_human_parallel_risk: high
+    du_material_anchor_risk: unsupported_extrapolation
+    review_notes: "self-awareness=自我意识（与 consciousness 区分）；左低右高。"
+    review_status: internal_agent_review_only
+  - instrument_id: wu_shen_2026
+    source_item_id: MS6
+    semantic_fidelity_status: faithful
+    chinese_comprehensibility_risk: low
+    construct_contamination_risk: medium
+    ai_human_parallel_risk: high
+    du_material_anchor_risk: unsupported_extrapolation
+    review_notes: "intentionality=意向性（与 goal/free will 区分）；左低右高。"
+    review_status: internal_agent_review_only
+  - instrument_id: wu_shen_2026
+    source_item_id: IC1
+    semantic_fidelity_status: faithful
+    chinese_comprehensibility_risk: medium
+    construct_contamination_risk: low
+    ai_human_parallel_risk: medium
+    du_material_anchor_risk: partial
+    review_notes: "agentic entity=能动主体；produce effects=产生效果；IC 平行译式。"
+    review_status: internal_agent_review_only
+  - instrument_id: wu_shen_2026
+    source_item_id: IC3
+    semantic_fidelity_status: faithful
+    chinese_comprehensibility_risk: medium
+    construct_contamination_risk: low
+    ai_human_parallel_risk: medium
+    du_material_anchor_risk: partial
+    review_notes: "achieve outcomes=达成结果；IC 平行译式。"
+    review_status: internal_agent_review_only
+  - instrument_id: wu_shen_2026
+    source_item_id: IC4
+    semantic_fidelity_status: faithful
+    chinese_comprehensibility_risk: medium
+    construct_contamination_risk: low
+    ai_human_parallel_risk: medium
+    du_material_anchor_risk: partial
+    review_notes: "bring about change=带来改变；IC 平行译式。"
+    review_status: internal_agent_review_only
+  - instrument_id: wu_shen_2026
+    source_item_id: IC7
+    semantic_fidelity_status: faithful
+    chinese_comprehensibility_risk: medium
+    construct_contamination_risk: low
+    ai_human_parallel_risk: medium
+    du_material_anchor_risk: partial
+    review_notes: "meaningful actions=有意义的行动；IC 平行译式。"
+    review_status: internal_agent_review_only
+  - instrument_id: wu_shen_2026
+    source_item_id: IC8
+    semantic_fidelity_status: minor_shift
+    chinese_comprehensibility_risk: medium
+    construct_contamination_risk: low
+    ai_human_parallel_risk: medium
+    du_material_anchor_risk: partial
+    review_notes: "make a difference=产生影响（'带来不同'记 notes）；IC 平行译式。"
+    review_status: internal_agent_review_only

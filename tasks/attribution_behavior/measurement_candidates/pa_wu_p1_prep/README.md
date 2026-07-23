@@ -25,7 +25,9 @@
 ## 边界声明（不越界）
 
 - 本轮**只建设与审查资产**：不运行真实模型、不执行 P1、不产生研究结果、不选择 M1/M2/M3。
-- 翻译由 **internal_agent_dual_pass**（内部 Agent 双次翻译）产生，**不等同于**人工双译、专家委员会审查或目标群体认知访谈。
+- 翻译由 **internal_agent_two_pass_translation**（内部 Agent 两次翻译）产生：两套译文来自
+  内部 Agent 两次翻译过程，**但不声称统计或程序意义上的独立翻译**（无法提供可核验的
+  pass_a/pass_b 上下文隔离证据）。**不等同于**人工双译、专家委员会审查或目标群体认知访谈。
 - `review_status` 一律为 `internal_agent_review_only`。
 - 不修改 P0 英文原题文件（`../pa_wu_p0/items_*.yaml`）。
 
@@ -41,14 +43,27 @@
 
 | 文件/目录 | 内容 |
 |--|--|
-| `translation_protocol.yaml` | internal_agent_dual_pass 程序与免责声明 |
+| `translation_protocol.yaml` | internal_agent_two_pass_translation 程序与免责声明；两层状态契约 |
 | `terminology_glossary.yaml` | 统一术语表（可追踪，非机械统一） |
 | `items_pa_2024.zh-CN.provisional.yaml` | PA13 暂定中文译本（分层字段） |
-| `items_wu_shen_2026.zh-CN.provisional.yaml` | Wu19 暂定中文译本（分层字段） |
-| `translation_decisions.yaml` | 逐项翻译分歧与协调决策记录 |
+| `items_wu_shen_2026.zh-CN.provisional.yaml` | Wu19 暂定中文译本（分层字段；MSI 含 left/right_polarity） |
+| `translation_decisions.yaml` | 逐项翻译分歧与协调决策记录（含 MS2 does think 决策） |
 | `adaptation_candidates.yaml` | 面向本项目的措辞适配候选（不写回正式译本） |
+| `item_review_matrix.yaml` | 全部 32 项的内部多视角风险矩阵（受控枚举） |
 | `positive_controls/` | 阳性对照来源审计（verbatim vs adapted-prototype 两级） |
+| `positive_controls/synthetic_construct_prototypes.yaml` | 构念派生合成原型（**非**阳性对照/原刺激） |
 | `../../../../tests/unit/measurement/test_pa_wu_p1_prep.py` | 轻量结构校验（无真实模型） |
+
+## 来源状态（补充材料与 PA 校准）
+
+- Wu 补充材料：官方文章**提供 Supplementary Data 入口**（`public_supplementary_link_available: true`），
+  但**本轮尚未提取完整 Table 9 脚本**（`supplementary_retrieved_in_this_run: false`、
+  `full_script_obtained: false`、`full_script_expected_location: Supplementary Table 9`）。
+- PA 校准：作者公开页已提供校准视频的标签/形态/行为描述（Service/Cheating RPS/Feeder），
+  记为 `public_video_action_descriptions_available: true`、`public_full_text_stimulus_available: false`、
+  `video_to_text_conversion_risk: high`。原 generic high/low agency 文本已移出，重归类为
+  `construct_derived_synthetic_prototype`（见 `synthetic_construct_prototypes.yaml`），
+  **不用于证明 PA 校准复现**。
 
 ## 翻译层级分离
 

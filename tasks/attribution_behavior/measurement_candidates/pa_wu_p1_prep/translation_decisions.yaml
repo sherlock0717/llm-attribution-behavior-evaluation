@@ -6,13 +6,16 @@
 
 decisions_id: pa_wu_p1_prep.translation_decisions.v1
 review_status: internal_agent_review_only
+method: internal_agent_two_pass_translation   # 两次内部翻译，不声称独立翻译
 
 pa_largest_divergences:
   - source_item_id: pa_treats_others_as_minded
     source_text_en: "treats others as if they had a mind"
-    divergence: "虚拟语气 as if they had a mind 的中文处理；'当作有心智的存在' vs '当作拥有心智的对象'。"
-    resolution: "取'当作有心智的存在'，保留 mind-attribution 含义，避免误读为客观拥有心智。"
-    residual_risk: "与 MSI 心理状态推断在语义上邻近，但属 PA 不同层，翻译已保留区分。"
+    divergence: "as if they had a mind 的假设/行为姿态处理。"
+    resolution: >-
+      语义漂移返修：改为'对待他人时，就好像他们拥有心智一样'，保留 as if 的'就好像……一样'，
+      不再直接断言他人确实具有心智；回译回到 treats others as if they had a mind。
+    residual_risk: "行为姿态(treats ... as if) 与 MSI 对心智的客观归因不同层，翻译已保留假设语气。"
   - source_item_id: pa_can_create_new_goals
     source_text_en: "can create new goals"
     divergence: "create=创造 vs 设立；能力型 can 的保留。"
@@ -40,6 +43,14 @@ wu_largest_divergences:
     divergence: "make a difference 的中文（产生影响 vs 带来不同）。"
     resolution: "取'产生影响'更自然，直译'带来不同'记入 notes。"
     residual_risk: "IC 系列高度平行，需保持统一译式，已统一。"
+  - source_item_id: MS2
+    source_text_en: "Thinking (cannot think – does think)."
+    divergence: "does think 的中文：'会思考' vs '能够思考' vs '确实在思考'。"
+    resolution: >-
+      does think 是对'能思考'的强调性肯定（存在/事实性），既非能力问句也非进行态。
+      '能够思考'=capacity（可能性），偏离；'确实在思考'=ongoing（此刻进行），偏离；
+      '会思考'=倾向/事实性肯定，最贴近 does think。最终取'会思考'。
+    residual_risk: "中文'会'兼有能力与倾向义，仍略含能力色彩，但在 MSI 语义差异语境下方向明确（低=不能思考/高=会思考）。"
 
 cross_tool_terminology_notes:
   - note: "PA 的 has goals / create new goals 与 Wu 的 goal-orientation 措辞相邻，但属不同工具、不同层，翻译刻意不统一措辞以免暗示合并。"
