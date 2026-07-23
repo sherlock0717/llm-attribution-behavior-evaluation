@@ -1,0 +1,71 @@
+# Wu Study 3 Supplementary Table 9 — stimulus audit.
+#
+# Section 5 builds a per-condition audit ONLY IF Table 9 was obtained. It was
+# NOT obtained this run (see wu_supplementary_retrieval.yaml: HTTP 403, license
+# scope unclear). Therefore the per-condition verbatim audit is DEFERRED and the
+# conditions below carry verbatim_text_available: false. Nothing here is
+# fabricated; only the in-text example fragments (already recorded in P1-prep)
+# are known, and they are NOT the full scripts.
+
+audit_id: pa_wu_p1_evidence.wu_table9_stimulus_audit.v1
+review_status: internal_agent_review_only
+table9_obtained_this_run: false
+deferred_reason: "Supplementary Table 9 not retrieved (403 + supplementary license scope unclear)."
+
+# Do NOT treat the original study manipulation as the current D/U manipulation.
+original_manipulation_is_not_du_manipulation: true
+
+conditions:
+  - condition_id: low_independence
+    verbatim_text_available: false
+    source_location: "Supplementary Table 9 (not retrieved this run)"
+    independence_cues: "from body text: passive / user-controlled / waits for explicit instruction"
+    goal_orientation_cues: unknown_pending_full_script
+    cross_construct_cues: unknown_pending_full_script
+    added_information: null
+    removed_information: null
+    comparison_to_current_prototype: "current prototype built from body-text description only; cannot be verified against full script"
+    prototype_should_be_replaced: pending_full_script
+    risk_notes: "不能仅凭正文片段判断完整脚本是否混入其他构念线索。"
+  - condition_id: high_independence
+    verbatim_text_available: false
+    source_location: "Supplementary Table 9 (not retrieved this run)"
+    independence_cues: "from body text: self-initiates follow-up steps without continued user input"
+    goal_orientation_cues: unknown_pending_full_script
+    cross_construct_cues: "RISK: body text 'self-initiates a series of steps' 可能与目标导向/计划线索交叠 — 需完整脚本核验"
+    added_information: null
+    removed_information: null
+    comparison_to_current_prototype: "current high-independence prototype已净化(去除规划/目标/计划)；与完整脚本一致性未核验"
+    prototype_should_be_replaced: pending_full_script
+    risk_notes: "high independence 与 goal-orientation 交叉污染风险最高，须以完整脚本判定。"
+  - condition_id: low_goal_orientation
+    verbatim_text_available: false
+    source_location: "Supplementary Table 9 (not retrieved this run)"
+    independence_cues: unknown_pending_full_script
+    goal_orientation_cues: "from body text: vague / general plan, no detailed steps (fragment: 'I will write something for him')"
+    cross_construct_cues: unknown_pending_full_script
+    added_information: null
+    removed_information: null
+    comparison_to_current_prototype: "prototype 基于正文片段；未核验"
+    prototype_should_be_replaced: pending_full_script
+    risk_notes: "原 goal-orientation 操纵效应较弱，不作金标准。"
+  - condition_id: high_goal_orientation
+    verbatim_text_available: false
+    source_location: "Supplementary Table 9 (not retrieved this run)"
+    independence_cues: unknown_pending_full_script
+    goal_orientation_cues: "from body text: explicit goal + concrete (a)(b)(c) action plan"
+    cross_construct_cues: unknown_pending_full_script
+    added_information: null
+    removed_information: null
+    comparison_to_current_prototype: "prototype 合并了两段正文片段；未核验"
+    prototype_should_be_replaced: pending_full_script
+    risk_notes: "高目标导向刺激是否同时改变独立性，须以完整脚本核验。"
+
+manipulation_check_or_note: unknown_pending_full_script
+
+summary_judgments:
+  independence_stimulus_contains_plan_goal_steps: unknown_pending_full_script
+  goal_orientation_stimulus_also_changes_independence: unknown_pending_full_script
+  body_fragment_matches_full_script: unknown_pending_full_script
+  current_prototype_should_be_replaced_by_full_verbatim: pending_full_script
+  original_stimulus_directly_usable_in_zh_or_du: false_needs_translation_and_adaptation

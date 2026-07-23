@@ -1,0 +1,171 @@
+# P1 candidate routes (R1/R2/R3) and the route-decision matrix.
+#
+# Research-only route comparison. No real model, no P1 execution. R3 is NOT the
+# default route. "execution package design" is still NOT running a real model.
+
+decision_id: pa_wu_p1_evidence.p1_route_decision.v1
+review_status: internal_agent_review_only
+
+# recommended_status controlled enum:
+#   ready_for_execution_package_design
+#   ready_for_mock_package_only
+#   needs_more_evidence
+#   reject_for_current_project
+recommended_status_enum:
+  - ready_for_execution_package_design
+  - ready_for_mock_package_only
+  - needs_more_evidence
+  - reject_for_current_project
+
+routes:
+  - route_id: R1
+    name: "English source-faithful, machine-only"
+    fidelity_class: source_faithful
+    description: >-
+      使用原始英文 PA13 与 Wu19；Wu 保持 machine 主语；不做 AI/human 平行比较。
+      可先检查评分稳定性与来源阳性对照识别。
+    is_adaptation: false
+    uses: [pa_wu_p0_english_items]
+    subject: machine
+    ai_human_parallel: false
+
+  - route_id: R2
+    name: "Provisional Chinese source-faithful, machine-only"
+    fidelity_class: source_faithful_translation
+    description: >-
+      使用 internal provisional Chinese translation；Wu 保持机器主语；不做 AI/human 平行；
+      额外承担翻译偏移风险。译本为暂定，未验证。
+    is_adaptation: false
+    uses: [pa_wu_p1_prep_provisional_zh]
+    subject: machine
+    ai_human_parallel: false
+    translation_validated: false     # 暂定译本，NOT a validated Chinese scale
+
+  - route_id: R3
+    name: "AI/human parallel adaptation"
+    fidelity_class: construct_adaptation      # NOT a direct reuse of the original scale
+    description: >-
+      使用 adaptation candidates；分 AI 与 human 版本；属构念适配，不是原量表直接复用；
+      需要单独的措辞等价性与测量不变性前置检验。
+    is_adaptation: true
+    uses: [pa_wu_p1_prep_adaptation_candidates]
+    subject: [ai, human]
+    ai_human_parallel: true
+    requires_prior_checks:
+      - wording_equivalence_check
+      - measurement_invariance_precheck
+    is_default_route: false          # MUST NOT default to R3
+
+# --- decision matrix (每项须带理由，不能只给高/中/低) ---
+matrix:
+  - route_id: R1
+    source_fidelity:
+      level: high
+      reason: "直接使用 P0 已核验英文原题，无翻译层。"
+    translation_risk:
+      level: none
+      reason: "英文原文，无翻译偏移。"
+    identity_equivalence_risk:
+      level: low
+      reason: "machine-only，无 AI/human 主语对照，不涉及身份等价问题。"
+    du_anchor_fit:
+      level: weak
+      reason: "多项 PA/Wu 题项 material_evidence_risk=unsupported_extrapolation/partial；与当前 D/U 材料锚定弱。"
+    positive_control_availability:
+      level: partial
+      reason: "仅有 Wu 正文逐字片段 + adapted prototype；完整 Table 9 未取得；PA 校准仅视频、不可作正式对照。"
+    scoring_contract_compatibility:
+      level: high
+      reason: "与 P0 引擎/评分契约完全兼容（PA13/8/5、IN4/GO4/MSI6/IC5，无禁止总分）。"
+    interpretability:
+      level: high
+      reason: "英文原题 + machine-only，结果最易解释为'工程可完成性 + 线索识别'。"
+    request_burden:
+      level: moderate
+      reason: "见 request_recount（F1/F2/F3 × repeats × orders）；无身份/翻译倍增。"
+    research_claim_scope:
+      level: narrow
+      reason: "只能支持 RQ1(工程可完成性) 与 RQ2(线索识别)，不涉 D/U、身份、翻译。"
+    blocking_evidence_gaps:
+      items: ["Wu 完整 Table 9 未取得（阳性对照仅片段级）"]
+      reason: "阳性对照识别检验的强度受限于片段级证据。"
+    recommended_status: ready_for_mock_package_only
+    recommended_status_reason: >-
+      R1 是最忠实、最可解释、契约兼容的路线；但正式执行前，阳性对照仍停留在片段级，
+      真实模型调用需单独授权。可先进入 mock/执行包设计，不等于运行真实模型。
+
+  - route_id: R2
+    source_fidelity:
+      level: medium_high
+      reason: "忠实翻译原题，但经过一层暂定中文转写。"
+    translation_risk:
+      level: medium
+      reason: "internal_agent_two_pass_translation，未经专家/目标群体审查；已知 GO1a/IN3b/IC8/MS2 等偏移点。"
+    identity_equivalence_risk:
+      level: low
+      reason: "machine-only，无身份对照。"
+    du_anchor_fit:
+      level: weak
+      reason: "与 R1 同源的锚定弱问题，叠加翻译层。"
+    positive_control_availability:
+      level: partial
+      reason: "同 R1，且中文阳性对照亦未验证。"
+    scoring_contract_compatibility:
+      level: high
+      reason: "成员/构念/量尺沿用 P0，契约兼容。"
+    interpretability:
+      level: medium
+      reason: "翻译偏移使结果需与英文版对照才能解释，单独解释力弱于 R1。"
+    request_burden:
+      level: moderate
+      reason: "与 R1 同量级（单语言 machine-only）。"
+    research_claim_scope:
+      level: narrow
+      reason: "仅工程可完成性/线索识别，且受翻译等价性未验证限制。"
+    blocking_evidence_gaps:
+      items: ["中文译本等价性未验证", "Wu 完整 Table 9 未取得"]
+      reason: "翻译等价性(RQ5)未前置，独立解释受限。"
+    recommended_status: needs_more_evidence
+    recommended_status_reason: >-
+      在 R1 未先建立英文基线、且中文等价性未验证前，R2 单独执行的可解释性不足；
+      建议 R1 之后再考虑，本轮不作为主路线。
+
+  - route_id: R3
+    source_fidelity:
+      level: low
+      reason: "属构念适配（主语改写为 AI/human），非原量表直接复用。"
+    translation_risk:
+      level: medium
+      reason: "基于暂定中文 + 适配改写，双重未验证。"
+    identity_equivalence_risk:
+      level: high
+      reason: "AI 与 human 主语的能动性先验不同（见 adaptation_candidates 的 identity_equivalence_risk）。"
+    du_anchor_fit:
+      level: unknown
+      reason: "身份 × D/U 交互未有任何证据；本轮不产出。"
+    positive_control_availability:
+      level: partial
+      reason: "阳性对照未针对适配版建立。"
+    scoring_contract_compatibility:
+      level: medium
+      reason: "评分契约可复用，但适配改变了题项主语，需重新确认成员/构念不被改动。"
+    interpretability:
+      level: low
+      reason: "身份 + 翻译 + 适配三重变量叠加，结果最难归因。"
+    request_burden:
+      level: high
+      reason: "AI 版 + human 版并行，请求量至少翻倍，另需等价性前置检验。"
+    research_claim_scope:
+      level: broad_but_unsupported
+      reason: "声称范围最大(RQ4 身份效应)，但缺乏措辞等价性与测量不变性前置证据。"
+    blocking_evidence_gaps:
+      items:
+        - "措辞等价性(wording equivalence)未检验"
+        - "测量不变性(measurement invariance)未前置"
+        - "中文译本等价性未验证"
+        - "Wu 完整 Table 9 未取得"
+      reason: "身份平行结论的前提条件全部缺失。"
+    recommended_status: needs_more_evidence
+    recommended_status_reason: >-
+      R3 变量最多、前置检验最缺，不得默认为最终路线；须在 R1(基线) 与等价性/不变性前置检验
+      之后才可考虑。当前证据不足。

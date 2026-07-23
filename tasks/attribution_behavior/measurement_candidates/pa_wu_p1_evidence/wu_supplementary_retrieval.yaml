@@ -1,0 +1,56 @@
+# Wu & Shen 2026 Supplementary Table 9 — retrieval log and source audit.
+#
+# HONEST STATUS: retrieval FAILED this run (the OUP article page and the
+# supplementary CDN endpoint returned HTTP 403 in this environment). A public
+# supplementary entry EXISTS (the article states "Supplementary material is
+# available at JCMC online"), but no direct download URL/filename is exposed and
+# the full verbatim Table 9 was NOT obtained. "Download failed this run" is NOT
+# the same as "the material does not exist".
+
+retrieval_id: pa_wu_p1_evidence.wu_supplementary_retrieval.v1
+review_status: internal_agent_review_only
+
+article_url: "https://academic.oup.com/jcmc/article/doi/10.1093/jcmc/zmag009/8692819"
+supplementary_entry_url: "https://academic.oup.com/jcmc/article/doi/10.1093/jcmc/zmag009/8692819#supplementary-data"
+download_url: null                 # no specific supplementary download URL/filename exposed to this run
+retrieved_on: "2026-07-23"
+file_name: null                    # not obtained
+file_type: null                    # not obtained
+sha256: null                       # not obtained (nothing downloaded)
+license_statement: "Whole-article Open Access CC BY 4.0. NO separate statement for supplementary material."
+license_scope: unclear_for_supplementary   # whether CC BY 4.0 extends to supplementary is NOT stated
+table_9_location: "Supplementary Table 9 (Example / pre-scripted dialogue scripts by manipulation condition), JCMC online"
+retrieval_status: failed_this_run
+
+# --- failure record (section 4, retrieval-failed branch) ---
+failure:
+  failure_type: access_forbidden
+  http_status: 403
+  attempted_urls:
+    - "https://academic.oup.com/jcmc/article/31/3/zmag009/supplementary-data"
+    - "https://academic.oup.com/jcmc/article/doi/10.1093/jcmc/zmag009/8692819"
+    - "https://oup.silverchair-cdn.com/oup/backfile/Content_public/Journal/jcmc/31/3/10.1093_jcmc_zmag009/1/zmag009_supplementary_data.zip"
+    - "https://doi.org/10.1093/jcmc/zmag009"   # redirects to the 403 article page
+  whether_public_link_exists: true    # article states supplementary is available at JCMC online
+  whether_author_request_is_needed: maybe
+  author_request_note: >-
+    数据可得性声明为"first author upon reasonable request"；补充材料托管于 JCMC online。
+    若机构订阅/开放渠道可达，应优先经正式 supplementary 入口获取；否则需向作者索取。
+
+# What IS confirmed from the article body (minimal HTML), fragment-level only:
+confirmed_from_body_text:
+  supplementary_tables_referenced: "Supplementary Table 1–14; Figures 1, 2A, 2B"
+  table_9_referenced_for: "Study 3 pre-scripted dialogue scripts by manipulation condition"
+  in_text_example_fragments_only: true
+  full_verbatim_table9_in_body: false
+
+# Because license scope for supplementary is UNCLEAR and nothing was downloaded:
+repository_action:
+  full_supplementary_file_committed: false
+  reason: "license scope unclear + retrieval failed; do NOT commit full supplementary file"
+  stored_here: [url, hashes_null_because_not_downloaded, file_metadata_null, short_excerpt_location, audit_conclusion]
+
+audit_conclusion: >-
+  本轮未取得 Supplementary Table 9 完整逐字脚本（403 + 许可范围不明）。公开入口存在但未暴露直链。
+  现有正文片段仅为举例，不能替代完整脚本。故 P1 的 Wu 阳性对照仍只能停留在
+  "正文逐字片段 + source-adapted prototype"，不得声称已获得原始完整刺激。
