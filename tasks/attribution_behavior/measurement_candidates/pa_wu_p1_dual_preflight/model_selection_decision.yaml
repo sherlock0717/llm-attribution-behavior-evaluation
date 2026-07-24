@@ -37,6 +37,12 @@ decisions:
     decided_by: null
     decided_at: null
     source_references: []
+    # 冻结时字段必须逐项绑定 official_evidence.yaml 中真实 source ID；仍 unresolved
+    # 的字段须有完整 supplemental_evidence。基线全空，故保持 unresolved。
+    evidence_binding:
+      official_evidence_package_hash: 97a9a625bba76636
+      field_source_ids: {}
+      supplemental_evidence: {}
 
   gpt-5.6-terra:
     freeze_status: unresolved
@@ -59,6 +65,10 @@ decisions:
     decided_by: null
     decided_at: null
     source_references: []
+    evidence_binding:
+      official_evidence_package_hash: 97a9a625bba76636
+      field_source_ids: {}
+      supplemental_evidence: {}
 
 # all_models_frozen 由两个子决策共同派生；本轮两者均 unresolved，故为 false。
 all_models_frozen: false

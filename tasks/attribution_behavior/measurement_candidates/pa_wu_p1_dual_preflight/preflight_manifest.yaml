@@ -68,6 +68,17 @@ contract_files:
   - authorization_gate.yaml
   - environment_acceptance.yaml
 
+# 受管资产扩展名（递归清单校验）。包内不允许未声明文件或未声明嵌套目录、符号链接。
+managed_asset_extensions:
+  - .md
+  - .yaml
+  - .py
+  - .json
+  - .txt
+
+# templates/ 下的受管模板资产逐项声明；本轮无模板文件。
+template_files: []
+
 reuses:
   r1_mock_package_hash: 7c83def4c93ad26f
   r1_mock_package: tasks/attribution_behavior/measurement_candidates/pa_wu_r1_mock

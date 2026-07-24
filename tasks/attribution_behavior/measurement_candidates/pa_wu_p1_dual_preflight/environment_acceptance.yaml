@@ -17,7 +17,8 @@ inherited_baseline_ci:
 #     run_id: <正整数>
 #     status: completed
 #     conclusion: success
-#     verified_head_sha: <40 位小写 hex>
+#     verified_head_sha: <40 位小写 hex>          # 仅审计记录
+#     validated_subject_hash: <当前 ci_subject_hash，须精确相等>
 #     jobs:
 #       "windows-latest / Python 3.12": success
 #       "ubuntu-latest / Python 3.12": success

@@ -51,6 +51,13 @@ DUAL_DECISION_PACKAGE_PATH = (
 )
 DUAL_DECISION_COMPAT_PATH = DUAL_DECISION_PACKAGE_PATH + "/parameter_compatibility.yaml"
 
+# GPT-5.6 Terra long-context pricing threshold (from official evidence).
+GPT_LONG_CONTEXT_INPUT_THRESHOLD = 272_000
+GPT_LONG_CONTEXT_INPUT_MULTIPLIER = 2.0
+GPT_LONG_CONTEXT_OUTPUT_MULTIPLIER = 1.5
+GPT_EXPLICIT_CACHE_WRITE_MULTIPLIER = 1.25
+_LONG_CONTEXT_APPLICABILITY = frozenset({"not_applicable", "applies"})
+
 ITEM_BLOCK_P0_BUNDLE = (
     "pa_wu_p0/items_pa_2024.yaml",
     "pa_wu_p0/items_wu_shen_2026.yaml",
@@ -114,6 +121,36 @@ PROMPT_SEGMENTS = (
     "item_block",
 )
 
+# --- prompt structural exclusivity -------------------------------------------
+PROMPT_TOP_LEVEL_KEYS = frozenset(
+    {"prompt_freeze_id", "constraints", "segments", "template_reference_allowed_roots", "notes"}
+)
+PROMPT_CONSTRAINT_KEYS = frozenset(
+    {
+        "request_hidden_reasoning",
+        "request_structured_final_scores_only",
+        "item_wording_source",
+        "scenario_model_rewrite_allowed",
+        "identity_presented",
+        "change_requires_new_run_version",
+        "block_on_prompt_hash_mismatch",
+        "single_shared_prompt",
+        "per_model_semantic_prompt_forbidden",
+    }
+)
+PROMPT_SEGMENT_KEYS = frozenset(
+    {"content", "template_reference", "sha256", "frozen", "owner", "change_requires_new_run_version"}
+)
+ITEM_SEGMENT_KEYS = frozenset(
+    {"content", "template_reference", "source_bundle", "sha256", "frozen", "owner",
+     "change_requires_new_run_version"}
+)
+# forbidden per-model prompt keys anywhere in the prompt contract.
+_PROMPT_FORBIDDEN_KEYS = frozenset(
+    {"model_prompts", "per_model_prompts", "adapters", "provider_overrides", "provider_override"}
+    | set(EXPECTED_MODEL_IDS)
+)
+
 # --- model freeze field typing ------------------------------------------------
 _MODEL_STRING_FIELDS = (
     "exact_model_version_or_snapshot",
@@ -132,6 +169,53 @@ _MODEL_TRUE_FIELDS = (
     "regional_availability_reviewed",
     "terms_of_use_reviewed",
 )
+
+# --- model decision evidence binding -----------------------------------------
+# Exact key set for each frozen/unresolved decision (structural exactness).
+_DECISION_EXACT_KEYS = frozenset(
+    {
+        "freeze_status",
+        "provider",
+        "model_id",
+        "role",
+        "exact_model_version_or_snapshot",
+        "endpoint_type",
+        "access_method",
+        "context_window_requirement",
+        "structured_output_support",
+        "deterministic_seed_support",
+        "temperature_support",
+        "response_id_available",
+        "provider_retention_policy_reviewed",
+        "pricing_snapshot_date",
+        "pricing_source_recorded",
+        "regional_availability_reviewed",
+        "terms_of_use_reviewed",
+        "decided_by",
+        "decided_at",
+        "source_references",
+        "evidence_binding",
+    }
+)
+# Fields that are unresolved / requires_interface_check in the decision package
+# and therefore need complete supplemental_evidence before they can be frozen.
+_SUPPLEMENTAL_REQUIRED_FIELDS = (
+    "exact_model_version_or_snapshot",
+    "deterministic_seed_support",
+    "response_id_available",
+)
+_SUPPLEMENTAL_ITEM_KEYS = frozenset(
+    {"evidence_id", "field", "model_id", "status", "value", "reviewed_by", "reviewed_at",
+     "reference", "claim_scope"}
+)
+# Map decision field name -> the field name used in official evidence supports_fields.
+_DECISION_FIELD_TO_EVIDENCE_FIELD = {
+    "context_window_requirement": "context_window",
+    "access_method": "documented_access_method",
+    "endpoint_type": "endpoint_type",
+    "structured_output_support": "structured_output_support",
+    "temperature_support": "temperature_support",
+}
 
 # --- provider adapter ---------------------------------------------------------
 # Canonical adapter payload contributes ONLY the semantic mapping fields, never
@@ -229,6 +313,12 @@ _STOP_DUAL_CONDITIONS = (
     "one_model_systematic_schema_failure",
 )
 _STOP_ACTIONS = frozenset({"hard_stop", "stop_and_review"})
+# threshold_stop conditions classified as rate (0<t<=1) vs absolute (positive finite).
+_STOP_THRESHOLD_RATE_CONDS = frozenset(
+    {"schema_failure_rate", "provider_error_rate", "missing_item_rate", "duplicate_response_rate"}
+)
+_STOP_THRESHOLD_ABS_CONDS = frozenset({"cost_estimation_error"})
+_STOP_THRESHOLD_CONDS = _STOP_THRESHOLD_RATE_CONDS | _STOP_THRESHOLD_ABS_CONDS
 _STOP_DUAL_POLICY_KEYS = (
     "any_model_hard_stop_stops_all",
     "no_fallback_substitution",
@@ -450,6 +540,11 @@ def check_manifest() -> dict[str, Any]:
         raise DualPreflightError("manifest files list does not match required files")
     if set(m.get("contract_files", [])) != set(CONTRACT_FILES):
         raise DualPreflightError("manifest contract_files mismatch")
+    exts = m.get("managed_asset_extensions")
+    if not isinstance(exts, list) or set(exts) != {".md", ".yaml", ".py", ".json", ".txt"}:
+        raise DualPreflightError("manifest managed_asset_extensions mismatch")
+    if "template_files" not in m or not isinstance(m.get("template_files"), list):
+        raise DualPreflightError("manifest template_files must be a list")
     sp = m.get("source_packages", {})
     single = sp.get("single_model_preflight", {})
     dual = sp.get("dual_model_decision", {})
@@ -552,6 +647,63 @@ def verify_dual_decision_source() -> bool:
 
 
 # --------------------------------------------------------------------------
+# Official evidence + parameter compatibility loading (from merged decision pkg)
+# --------------------------------------------------------------------------
+
+
+def load_official_evidence() -> dict[str, Any]:
+    path = _dual_decision_dir() / "official_evidence.yaml"
+    if not path.is_file():
+        raise DualPreflightError("official_evidence.yaml missing in decision package")
+    with path.open(encoding="utf-8") as fh:
+        data = yaml.safe_load(fh)
+    if not isinstance(data, dict):
+        raise DualPreflightError("official_evidence.yaml is not a mapping")
+    return data
+
+
+def load_parameter_compatibility() -> dict[str, Any]:
+    path = _dual_decision_dir() / "parameter_compatibility.yaml"
+    if not path.is_file():
+        raise DualPreflightError("parameter_compatibility.yaml missing in decision package")
+    with path.open(encoding="utf-8") as fh:
+        data = yaml.safe_load(fh)
+    if not isinstance(data, dict):
+        raise DualPreflightError("parameter_compatibility.yaml is not a mapping")
+    return data
+
+
+def _index_sources(evidence: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    out: dict[str, dict[str, Any]] = {}
+    for s in evidence.get("sources", []):
+        if isinstance(s, dict) and _nonplaceholder_str(s.get("source_id")):
+            out[str(s["source_id"])] = s
+    return out
+
+
+def _index_model_evidence(evidence: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    out: dict[str, dict[str, Any]] = {}
+    for m in evidence.get("models", []):
+        if isinstance(m, dict) and _nonplaceholder_str(m.get("model_id")):
+            out[str(m["model_id"])] = m
+    return out
+
+
+def _source_supports_field(src: dict[str, Any], field: str) -> bool:
+    supported = src.get("supports_fields", [])
+    if not isinstance(supported, list):
+        return False
+    # allow "endpoint_type.<sub>" prefix matching for the endpoint_type family.
+    for sf in supported:
+        s = str(sf)
+        if s == field:
+            return True
+        if field == "endpoint_type" and s.startswith("endpoint_type."):
+            return True
+    return False
+
+
+# --------------------------------------------------------------------------
 # Dual-model decision (selection vs freeze separation) + field typing
 # --------------------------------------------------------------------------
 
@@ -572,12 +724,38 @@ def _check_selected_models(models: Any) -> None:
         raise DualPreflightError(f"selected_models must equal {set(EXPECTED_MODELS)}")
 
 
-def _decision_frozen(dec: dict[str, Any], model_id: str) -> bool:
-    """A single model's decision is frozen only when freeze_status == frozen AND
-    every field is correctly typed. human_selected is never auto-promoted."""
-    if not isinstance(dec, dict):
+def _supplemental_ok(item: Any, field: str, model_id: str) -> bool:
+    if not isinstance(item, dict) or set(item) != _SUPPLEMENTAL_ITEM_KEYS:
         return False
-    if _has_role_forbidden(dec):
+    if str(item.get("field")) != field:
+        return False
+    if str(item.get("model_id")) != model_id:
+        return False
+    if str(item.get("status")) != "reviewed":
+        return False
+    if not _nonempty(item.get("value")):
+        return False
+    if not _nonplaceholder_str(item.get("reviewed_by")):
+        return False
+    if not _is_date(item.get("reviewed_at")):
+        return False
+    if not _nonplaceholder_str(item.get("reference")):
+        return False
+    if not _nonplaceholder_str(item.get("claim_scope")):
+        return False
+    return True
+
+
+def _decision_frozen(
+    dec: dict[str, Any],
+    model_id: str,
+    sources: dict[str, dict[str, Any]],
+    model_evidence: dict[str, Any],
+) -> bool:
+    """A single model's decision is frozen only when freeze_status == frozen AND
+    every field is correctly typed AND every field is bound to real official
+    evidence (or complete supplemental evidence for unresolved fields)."""
+    if not isinstance(dec, dict) or set(dec) != _DECISION_EXACT_KEYS:
         return False
     if str(dec.get("freeze_status")) != "frozen":
         return False
@@ -587,21 +765,89 @@ def _decision_frozen(dec: dict[str, Any], model_id: str) -> bool:
         return False
     if str(dec.get("role")) != "co_primary":
         return False
-    # context window: positive integer.
-    if not _positive_int(dec.get("context_window_requirement")):
+    provider = PROVIDER_OF[model_id]
+
+    # ---- evidence_binding structure ----
+    eb = dec.get("evidence_binding")
+    if not isinstance(eb, dict):
         return False
-    # string fields: real non-placeholder strings.
-    for f in _MODEL_STRING_FIELDS:
-        if not _nonplaceholder_str(dec.get(f)):
-            return False
-    # bool fields: actual booleans (not "true"/"false"/"documented" strings).
-    for f in _MODEL_BOOL_FIELDS:
-        if not isinstance(dec.get(f), bool):
-            return False
+    if str(eb.get("official_evidence_package_hash")) != DUAL_DECISION_PACKAGE_HASH:
+        return False
+    fsi = eb.get("field_source_ids")
+    supplemental = eb.get("supplemental_evidence")
+    if not isinstance(fsi, dict) or not isinstance(supplemental, dict):
+        return False
+
+    def _binding_sources(field: str) -> list[str] | None:
+        raw = fsi.get(field)
+        if not isinstance(raw, list) or not raw:
+            return None
+        ids = [str(x) for x in raw]
+        if len(ids) != len(set(ids)):  # no duplicates
+            return None
+        ev_field = _DECISION_FIELD_TO_EVIDENCE_FIELD.get(field, field)
+        for sid in ids:
+            src = sources.get(sid)
+            if src is None:  # source must actually exist
+                return None
+            if str(src.get("provider")) != provider:  # provider must match
+                return None
+            if not _source_supports_field(src, ev_field):  # field must be supported
+                return None
+        return ids
+
+    # context window: positive int not exceeding official context_window.
+    ctx = dec.get("context_window_requirement")
+    if not _positive_int(ctx):
+        return False
+    official_ctx = model_evidence.get("context_window")
+    if not _positive_int(official_ctx) or ctx > official_ctx:
+        return False
+    if _binding_sources("context_window_requirement") is None:
+        return False
+
+    # endpoint_type must be one confirmed in official evidence.
+    endpoint = dec.get("endpoint_type")
+    official_endpoints = {str(e) for e in model_evidence.get("endpoint_type", [])}
+    if str(endpoint) not in official_endpoints:
+        return False
+    if _binding_sources("endpoint_type") is None:
+        return False
+
+    # access_method bound.
+    if not _nonplaceholder_str(dec.get("access_method")):
+        return False
+    if _binding_sources("access_method") is None:
+        return False
+
+    # structured_output_support must match confirmed evidence and be bool.
+    if not isinstance(dec.get("structured_output_support"), bool):
+        return False
+    official_sos = str(model_evidence.get("structured_output_support"))
+    fe_sos = model_evidence.get("field_evidence", {}).get("structured_output_support", {})
+    confirmed_sos = str(fe_sos.get("status")) == "confirmed_official_documentation"
+    if dec["structured_output_support"] != (confirmed_sos and official_sos == "documented"):
+        return False
+    if _binding_sources("structured_output_support") is None:
+        return False
+
+    # temperature_support / response_id_available bool.
+    if not isinstance(dec.get("temperature_support"), bool):
+        return False
+    if _binding_sources("temperature_support") is None:
+        return False
+    if not isinstance(dec.get("response_id_available"), bool):
+        return False
+
+    # deterministic_seed_support bool.
+    if not isinstance(dec.get("deterministic_seed_support"), bool):
+        return False
+
     for f in _MODEL_TRUE_FIELDS:
         if dec.get(f) is not True:
             return False
-    # pricing_snapshot_date parseable by date.fromisoformat.
+
+    # pricing_snapshot_date ISO date; bound to a source.
     ps = dec.get("pricing_snapshot_date")
     if not isinstance(ps, str):
         return False
@@ -609,17 +855,54 @@ def _decision_frozen(dec: dict[str, Any], model_id: str) -> bool:
         date.fromisoformat(ps.strip())
     except (ValueError, AttributeError):
         return False
-    # decided_by non-placeholder; decided_at ISO date/datetime.
+
+    # pricing_source_recorded must reference a REAL source id, not an arbitrary URL.
+    psr = dec.get("pricing_source_recorded")
+    if not _nonplaceholder_str(psr) or psr not in sources:
+        return False
+    if str(sources[psr].get("provider")) != provider:
+        return False
+
+    # decided_by / decided_at.
     if not _nonplaceholder_str(dec.get("decided_by")):
         return False
     if not _is_date(dec.get("decided_at")):
         return False
-    if not _unique_nonempty_str_list(dec.get("source_references")):
+
+    # source_references must be REAL source ids (not example URLs), no dupes.
+    refs = dec.get("source_references")
+    if not _unique_nonempty_str_list(refs):
         return False
+    for r in refs:
+        if r not in sources or str(sources[r].get("provider")) != provider:
+            return False
+
+    # fields still unresolved / requires_interface_check in the decision package
+    # can only be frozen with complete supplemental evidence.
+    unresolved = set(map(str, model_evidence.get("unresolved_fields", [])))
+    for field in _SUPPLEMENTAL_REQUIRED_FIELDS:
+        needs_supp = field in unresolved
+        if field == "exact_model_version_or_snapshot":
+            needs_supp = "exact_snapshot_available" in unresolved or "exact_snapshot_identifier" in unresolved
+        elif field == "deterministic_seed_support":
+            needs_supp = "seed_support" in unresolved
+        elif field == "response_id_available":
+            needs_supp = "response_id_support" in unresolved
+        if needs_supp:
+            item = supplemental.get(field)
+            if not _supplemental_ok(item, field, model_id):
+                return False
     return True
 
 
-def check_model_selection(model_sel: dict[str, Any]) -> dict[str, bool]:
+def check_model_selection(
+    model_sel: dict[str, Any],
+    evidence: dict[str, Any] | None = None,
+) -> dict[str, bool]:
+    if evidence is None:
+        evidence = load_official_evidence()
+    sources = _index_sources(evidence)
+    model_ev = _index_model_evidence(evidence)
     if str(model_sel.get("selection_status")) != "human_selected":
         raise DualPreflightError("selection_status must be human_selected")
     if "selected_model" in model_sel:
@@ -640,7 +923,7 @@ def check_model_selection(model_sel: dict[str, Any]) -> dict[str, bool]:
         fs = str(dec.get("freeze_status"))
         if fs not in ("unresolved", "frozen"):
             raise DualPreflightError(f"{mid}: illegal freeze_status {fs!r}")
-        per_model_frozen[mid] = _decision_frozen(dec, mid)
+        per_model_frozen[mid] = _decision_frozen(dec, mid, sources, model_ev.get(mid, {}))
     declared_all = model_sel.get("all_models_frozen")
     derived_all = all(per_model_frozen.values())
     if bool(declared_all) != bool(derived_all):
@@ -794,8 +1077,9 @@ def _segment_ok(name: str, seg: dict[str, Any]) -> bool:
         return False
 
     if name == "item_block":
-        # item_block binds the COMPLETE, fixed-order P0 source bundle. No inline
-        # content, no single template_reference substitution allowed.
+        # item_block key set exact; binds COMPLETE fixed-order P0 bundle.
+        if set(seg) != ITEM_SEGMENT_KEYS:
+            return False
         if _nonempty(seg.get("content")) or _nonempty(seg.get("template_reference")):
             return False
         bundle = seg.get("source_bundle")
@@ -807,27 +1091,43 @@ def _segment_ok(name: str, seg: dict[str, Any]) -> bool:
             return False
         return actual == sha
 
-    # Non-item segments: exactly one of content / template_reference.
+    # Non-item segments: exact key set; exactly one of content / template_reference.
+    if set(seg) != PROMPT_SEGMENT_KEYS:
+        return False
     content = seg.get("content")
     tref = seg.get("template_reference")
-    has_content = _nonempty(content)
-    has_tref = _nonempty(tref)
-    if has_content == has_tref:
+    # inline content, if present, MUST be a non-placeholder string (reject bool,
+    # number, list, mapping). template_reference must be a non-placeholder string.
+    has_content = content is not None
+    has_tref = tref is not None
+    if has_content == has_tref:  # strictly one of the two
         return False
-    try:
-        if has_content:
-            actual = hashlib.sha256(str(content).encode("utf-8")).hexdigest()
-        else:
-            actual = template_content_hash(str(tref))
-    except DualPreflightError:
-        return False
+    if has_content:
+        if not _nonplaceholder_str(content):
+            return False
+        actual = hashlib.sha256(content.encode("utf-8")).hexdigest()
+    else:
+        if not _nonplaceholder_str(tref):
+            return False
+        try:
+            actual = template_content_hash(tref)
+        except DualPreflightError:
+            return False
     return actual == sha
 
 
 def check_prompt(prompt: dict[str, Any]) -> bool:
+    # top-level key set exact; no per-model prompt keys anywhere.
+    if set(prompt) != PROMPT_TOP_LEVEL_KEYS:
+        extra = set(prompt) - PROMPT_TOP_LEVEL_KEYS
+        raise DualPreflightError(f"prompt top-level keys invalid (extra={sorted(extra)})")
+    if set(prompt) & _PROMPT_FORBIDDEN_KEYS:
+        raise DualPreflightError("prompt must not carry per-model / adapter keys")
     c = prompt.get("constraints", {})
-    if not isinstance(c, dict):
-        raise DualPreflightError("prompt constraints must be a mapping")
+    if not isinstance(c, dict) or set(c) != PROMPT_CONSTRAINT_KEYS:
+        raise DualPreflightError("prompt constraints key set invalid")
+    if set(c) & _PROMPT_FORBIDDEN_KEYS:
+        raise DualPreflightError("constraints must not carry per-model / override keys")
     if c.get("request_hidden_reasoning") is not False:
         raise DualPreflightError("prompt must set request_hidden_reasoning=false")
     if c.get("request_structured_final_scores_only") is not True:
@@ -845,6 +1145,8 @@ def check_prompt(prompt: dict[str, Any]) -> bool:
     segments = prompt.get("segments", {})
     if not isinstance(segments, dict) or set(segments) != set(PROMPT_SEGMENTS):
         raise DualPreflightError("prompt segments must be exactly the six segments")
+    if set(segments) & _PROMPT_FORBIDDEN_KEYS:
+        raise DualPreflightError("segments must not carry per-model keys")
     item = segments["item_block"]
     if list(item.get("source_bundle", [])) != list(ITEM_BLOCK_P0_BUNDLE):
         raise DualPreflightError("item_block must bind the fixed-order P0 bundle")
@@ -948,22 +1250,76 @@ def _pricing_inputs_ok(pi: Any) -> bool:
     return True
 
 
-def _recompute_cost(pi: dict[str, Any], out_tokens: int) -> float:
+def _official_prices(mid: str, model_evidence: dict[str, Any]) -> dict[str, float] | None:
+    """Confirmed cached/uncached/output prices for a model from official evidence."""
+    out: dict[str, float] = {}
+    for key, ev_key in (
+        ("cached", "cached_input_price"),
+        ("uncached", "uncached_input_price"),
+        ("output", "output_price"),
+    ):
+        val = model_evidence.get(ev_key)
+        if not _nonneg_number(val):
+            return None
+        out[key] = float(val)
+    return out
+
+
+def _recompute_cost(
+    pi: dict[str, Any],
+    out_tokens: int,
+    input_mult: float = 1.0,
+    output_mult: float = 1.0,
+    cache_write_mult: float = 1.0,
+) -> float:
     unc = pi["estimated_uncached_input_tokens"]
     cac = pi["estimated_cached_input_tokens"]
     return (
-        (unc / 1_000_000) * pi["uncached_input_price_per_million"]
-        + (cac / 1_000_000) * pi["cached_input_price_per_million"]
-        + (out_tokens / 1_000_000) * pi["output_price_per_million"]
+        (unc / 1_000_000) * pi["uncached_input_price_per_million"] * input_mult * cache_write_mult
+        + (cac / 1_000_000) * pi["cached_input_price_per_million"] * input_mult
+        + (out_tokens / 1_000_000) * pi["output_price_per_million"] * output_mult
     )
 
 
-def _budget_model_ok(mid: str, bm: dict[str, Any]) -> bool:
+def _pricing_policy_ok(mid: str, bm: dict[str, Any]) -> tuple[bool, float, float, float]:
+    """Validate pricing_policy and return (ok, input_mult, output_mult, cache_write_mult)."""
+    pp = bm.get("pricing_policy")
+    if not isinstance(pp, dict):
+        return (False, 1.0, 1.0, 1.0)
+    base_src = pp.get("base_price_source_ids")
+    if not isinstance(base_src, list) or not base_src:
+        return (False, 1.0, 1.0, 1.0)
+    applic = str(pp.get("long_context_pricing_applicability"))
+    max_unc = pp.get("maximum_uncached_input_tokens_per_request")
+    cache_write = pp.get("explicit_cache_write_used")
+    cache_write_mult = 1.0
+    if mid == "deepseek-v4-pro":
+        # DeepSeek: fixed not_applicable, never applies OpenAI multipliers.
+        if applic != "not_applicable":
+            return (False, 1.0, 1.0, 1.0)
+        return (True, 1.0, 1.0, 1.0)
+    # gpt-5.6-terra
+    if applic not in _LONG_CONTEXT_APPLICABILITY:
+        return (False, 1.0, 1.0, 1.0)  # unresolved etc. -> cannot approve
+    if isinstance(cache_write, bool) and cache_write:
+        cache_write_mult = GPT_EXPLICIT_CACHE_WRITE_MULTIPLIER
+    if applic == "not_applicable":
+        # must prove max uncached input per request <= 272000.
+        if not _positive_int(max_unc) or max_unc > GPT_LONG_CONTEXT_INPUT_THRESHOLD:
+            return (False, 1.0, 1.0, 1.0)
+        return (True, 1.0, 1.0, cache_write_mult)
+    # applies -> long-context multipliers.
+    return (True, GPT_LONG_CONTEXT_INPUT_MULTIPLIER, GPT_LONG_CONTEXT_OUTPUT_MULTIPLIER, cache_write_mult)
+
+
+def _budget_model_ok(mid: str, bm: dict[str, Any], official: dict[str, float] | None) -> bool:
     if not isinstance(bm, dict):
         return False
     if bm.get("budget_approved") is not True:
         return False
     if str(bm.get("currency")) != "USD" or str(bm.get("pricing_unit")) != "per_million_tokens":
+        return False
+    if official is None:
         return False
     # pricing evidence reference: package path + provider-locked non-empty source_ids.
     ref = bm.get("pricing_evidence_reference", {})
@@ -985,21 +1341,32 @@ def _budget_model_ok(mid: str, bm: dict[str, Any]) -> bool:
         return False
     if not _is_date(bm.get("pricing_snapshot_date")):
         return False
-    # token counts non-negative ints; total input relation consistent.
+    # pricing_inputs prices MUST equal confirmed official prices exactly.
     pi = bm.get("pricing_inputs")
     if not _pricing_inputs_ok(pi):
         return False
+    if abs(pi["cached_input_price_per_million"] - official["cached"]) > _COST_TOLERANCE:
+        return False
+    if abs(pi["uncached_input_price_per_million"] - official["uncached"]) > _COST_TOLERANCE:
+        return False
+    if abs(pi["output_price_per_million"] - official["output"]) > _COST_TOLERANCE:
+        return False
+    # pricing_policy + long-context multipliers.
+    policy_ok, in_mult, out_mult, cw_mult = _pricing_policy_ok(mid, bm)
+    if not policy_ok:
+        return False
+    # token counts positive ints; total input relation consistent.
     for f in ("estimated_input_tokens", "estimated_output_tokens", "planned_request_count"):
         if not _positive_int(bm.get(f)):
             return False
     total_in = pi["estimated_cached_input_tokens"] + pi["estimated_uncached_input_tokens"]
     if total_in != bm["estimated_input_tokens"]:
         return False
-    # prices non-negative finite; recompute cost within tolerance.
+    # recompute cost with applicable multipliers.
     est = bm.get("estimated_cost")
     if not _nonneg_number(est):
         return False
-    recomputed = _recompute_cost(pi, bm["estimated_output_tokens"])
+    recomputed = _recompute_cost(pi, bm["estimated_output_tokens"], in_mult, out_mult, cw_mult)
     if abs(recomputed - est) > _COST_TOLERANCE:
         return False
     # budget hard/soft limits.
@@ -1050,7 +1417,14 @@ def _aggregate_budget_ok(agg: dict[str, Any], models: dict[str, Any]) -> bool:
     return True
 
 
-def check_budget(budget: dict[str, Any], sampling_models: dict[str, Any]) -> dict[str, bool]:
+def check_budget(
+    budget: dict[str, Any],
+    sampling_models: dict[str, Any],
+    evidence: dict[str, Any] | None = None,
+) -> dict[str, bool]:
+    if evidence is None:
+        evidence = load_official_evidence()
+    model_ev = _index_model_evidence(evidence)
     models = budget.get("models", {})
     if not isinstance(models, dict) or set(models) != set(EXPECTED_MODEL_IDS):
         raise DualPreflightError("budget models keys must equal the two models")
@@ -1065,22 +1439,24 @@ def check_budget(budget: dict[str, Any], sampling_models: dict[str, Any]) -> dic
     cl = ds.get("concurrency_limit")
     if cl is not None and (not _positive_number(cl) or cl > DEEPSEEK_CONCURRENCY):
         raise DualPreflightError("deepseek concurrency_limit must not exceed 500")
-    per_model = {mid: _budget_model_ok(mid, models[mid]) for mid in EXPECTED_MODEL_IDS}
+    per_model: dict[str, bool] = {}
+    for mid in EXPECTED_MODEL_IDS:
+        official = _official_prices(mid, model_ev.get(mid, {}))
+        per_model[mid] = _budget_model_ok(mid, models[mid], official)
+        # As soon as a single model is budget_approved=true, immediately cross-check
+        # its sampling alignment (do NOT wait for the other model / aggregate).
+        if models[mid].get("budget_approved") is True and per_model[mid]:
+            sm = sampling_models.get(mid, {})
+            if models[mid]["planned_request_count"] != sm.get("planned_request_count"):
+                raise DualPreflightError(f"{mid}: budget request count != sampling")
+            if sm.get("concurrency") is not None and models[mid].get("concurrency_limit") is not None:
+                if sm["concurrency"] > models[mid]["concurrency_limit"]:
+                    raise DualPreflightError(f"{mid}: sampling concurrency > concurrency_limit")
     agg = budget.get("aggregate", {})
     agg_ok = all(per_model.values()) and _aggregate_budget_ok(agg, models)
     declared = budget.get("all_model_budgets_approved")
     if bool(declared) != agg_ok:
         raise DualPreflightError("all_model_budgets_approved != derived")
-    if agg_ok:
-        # per-model request count must match sampling.
-        for mid in EXPECTED_MODEL_IDS:
-            sm = sampling_models.get(mid, {})
-            if models[mid]["planned_request_count"] != sm.get("planned_request_count"):
-                raise DualPreflightError(f"{mid}: budget request count != sampling")
-            # sampling concurrency must not exceed this model's rate-limit concurrency.
-            if sm.get("concurrency") is not None and models[mid].get("concurrency_limit") is not None:
-                if sm["concurrency"] > models[mid]["concurrency_limit"]:
-                    raise DualPreflightError(f"{mid}: sampling concurrency > concurrency_limit")
     return per_model
 
 
@@ -1130,6 +1506,14 @@ def check_retry(retry: dict[str, Any]) -> dict[str, bool]:
     return per_model
 
 
+def compute_logging_contract_hash(logging_c: dict[str, Any]) -> str:
+    """64-char SHA-256 over the canonical logging payload EXCLUDING the stored
+    hash and the frozen flag (avoids self-reference)."""
+    payload = {k: v for k, v in logging_c.items() if k not in ("logging_contract_hash", "frozen")}
+    blob = json.dumps(payload, sort_keys=True, ensure_ascii=False, default=str)
+    return hashlib.sha256(blob.encode("utf-8")).hexdigest()
+
+
 def check_logging_frozen(logging_c: dict[str, Any]) -> bool:
     rules = logging_c.get("rules", {})
     if not isinstance(rules, dict) or set(rules) != set(_LOGGING_RULES):
@@ -1149,11 +1533,15 @@ def check_logging_frozen(logging_c: dict[str, Any]) -> bool:
         raise DualPreflightError("logging missing dual-model provenance fields")
     if logging_c.get("frozen") is not True:
         return False
-    # when frozen: owner / hash / version fields complete.
-    for f in ("frozen_by", "logging_contract_hash", "logging_contract_version"):
+    # when frozen: owner / version non-placeholder.
+    for f in ("frozen_by", "logging_contract_version"):
         if not _nonplaceholder_str(logging_c.get(f)):
             return False
-    return True
+    # logging_contract_hash MUST be a 64-char SHA-256 == recomputed canonical hash.
+    stored = logging_c.get("logging_contract_hash")
+    if not isinstance(stored, str) or not _SHA256_RE.match(stored):
+        return False
+    return stored == compute_logging_contract_hash(logging_c)
 
 
 def check_privacy_completed(logging_c: dict[str, Any]) -> bool:
@@ -1174,13 +1562,17 @@ def check_stop_frozen(stop: dict[str, Any]) -> bool:
     if len(conds) != len(set(conds)):
         raise DualPreflightError("stop conditions must be unique")
     cond_set = set(conds)
-    if not set(_STOP_BASE_CONDITIONS).issubset(cond_set):
-        raise DualPreflightError("stop_conditions missing original conditions")
-    if not set(_STOP_DUAL_CONDITIONS).issubset(cond_set):
-        raise DualPreflightError("stop_conditions missing dual-model conditions")
+    # immediate condition set must be EXACTLY base + dual (not just a subset).
+    if cond_set != set(_STOP_BASE_CONDITIONS) | set(_STOP_DUAL_CONDITIONS):
+        raise DualPreflightError("immediate_stop condition set must equal base+dual exactly")
     threshold = stop.get("threshold_stop", [])
     if not isinstance(threshold, list):
         raise DualPreflightError("stop threshold_stop must be a list")
+    tconds = [str(e.get("condition")) for e in threshold if isinstance(e, dict)]
+    if len(tconds) != len(set(tconds)):
+        raise DualPreflightError("threshold conditions must be unique")
+    if set(tconds) != _STOP_THRESHOLD_CONDS:
+        raise DualPreflightError("threshold_stop condition set must be exact")
     for e in immediate + threshold:
         if isinstance(e, dict) and str(e.get("action")) not in _STOP_ACTIONS:
             raise DualPreflightError(f"illegal stop action: {e.get('action')!r}")
@@ -1190,32 +1582,40 @@ def check_stop_frozen(stop: dict[str, Any]) -> bool:
     for key in _STOP_DUAL_POLICY_KEYS:
         if policy.get(key) is not True:
             raise DualPreflightError(f"dual_model_stop_policy.{key} must be true")
+    # frozen state strictly derived from ALL conditions being resolved with valid values.
     if stop.get("frozen") is not True:
         return False
-    # frozen requires every threshold resolved with a valid threshold value.
     for e in threshold:
         if not isinstance(e, dict):
             return False
         if str(e.get("threshold_status")) != "resolved":
             return False
-        if not _finite_number(e.get("threshold")):
+        cond = str(e.get("condition"))
+        t = e.get("threshold")
+        if cond in _STOP_THRESHOLD_RATE_CONDS:
+            if not _rate_ok(t):  # 0 < t <= 1
+                return False
+        elif cond in _STOP_THRESHOLD_ABS_CONDS:
+            if not _positive_number(t):
+                return False
+        else:
             return False
     return True
 
 
-def check_environment_reviewed(env: dict[str, Any]) -> bool:
+def check_environment_reviewed(env: dict[str, Any], expected_subject_hash: str) -> bool:
     """environment_review_completed is strictly derived from whether branch_ci is a
-    complete, valid structured CI evidence mapping. Inherited baseline CI can NOT
-    make the gate pass."""
+    complete, valid structured CI evidence mapping whose validated_subject_hash
+    equals the current ci_subject_hash. Inherited baseline CI can NOT pass."""
     ci = env.get("branch_ci")
-    ci_ok = _branch_ci_ok(ci)
+    ci_ok = _branch_ci_ok(ci, expected_subject_hash)
     declared = env.get("environment_review_completed")
     if bool(declared) != ci_ok:
         raise DualPreflightError("environment_review_completed != branch_ci evidence")
     return ci_ok
 
 
-def _branch_ci_ok(ci: Any) -> bool:
+def _branch_ci_ok(ci: Any, expected_subject_hash: str) -> bool:
     if not isinstance(ci, dict):
         return False
     if str(ci.get("workflow")) != "CI":
@@ -1237,6 +1637,12 @@ def _branch_ci_ok(ci: Any) -> bool:
     for job in _CI_REQUIRED_JOBS:
         if str(jobs.get(job)) != "success":
             return False
+    # validated_subject_hash must equal the CURRENT ci_subject_hash: any contract /
+    # validator / template change invalidates old CI evidence; merely rewriting the
+    # branch_ci record does not (subject hash excludes branch_ci + authorization).
+    vsh = ci.get("validated_subject_hash")
+    if not isinstance(vsh, str) or vsh != expected_subject_hash:
+        return False
     return True
 
 
@@ -1313,14 +1719,87 @@ def compute_aggregate_contract_hash(contracts: dict[str, dict[str, Any]]) -> str
     return _hash16(payload)
 
 
+def _template_files(manifest: dict[str, Any]) -> list[str]:
+    tf = manifest.get("template_files", [])
+    if not isinstance(tf, list):
+        raise DualPreflightError("manifest template_files must be a list")
+    return [str(x) for x in tf]
+
+
+def _managed_asset_payload(manifest: dict[str, Any]) -> list[dict[str, str]]:
+    """Fixed-order canonical payload of every managed asset (relative_path + raw
+    UTF-8 content): README, manifest, all contract files, validator, all
+    template_files. Order is deterministic (README, manifest, sorted contracts,
+    validator, sorted template_files)."""
+    ordered: list[str] = ["README.md", "preflight_manifest.yaml"]
+    ordered += sorted(CONTRACT_FILES)
+    ordered.append("validate_dual_preflight.py")
+    ordered += sorted(_template_files(manifest))
+    payload: list[dict[str, str]] = []
+    for rel in ordered:
+        p = PACKAGE_DIR / rel
+        if not p.is_file():
+            raise DualPreflightError(f"managed asset missing: {rel}")
+        payload.append({"path": rel, "content": p.read_text(encoding="utf-8")})
+    return payload
+
+
 def compute_package_hash(contracts: dict[str, dict[str, Any]], manifest: dict[str, Any]) -> str:
+    """Package hash covers README, manifest, ALL contract files, validator, and
+    ALL template_files, each as relative_path + raw UTF-8 content in fixed order."""
+    payload = {"managed_assets": _managed_asset_payload(manifest)}
+    return _hash16(payload)
+
+
+# --------------------------------------------------------------------------
+# Stable CI subject hash (excludes CI evidence + authorization to avoid self-ref)
+# --------------------------------------------------------------------------
+
+_MANIFEST_STRUCTURAL_KEYS = (
+    "manifest_id",
+    "route_id",
+    "package_status",
+    "selected_model_ids",
+    "role_policy",
+    "all_or_nothing_execution",
+    "source_packages",
+    "migration_declarations",
+    "files",
+    "contract_files",
+    "managed_asset_extensions",
+    "template_files",
+)
+
+
+def compute_ci_subject_hash(
+    contracts: dict[str, dict[str, Any]], manifest: dict[str, Any]
+) -> str:
+    """Stable subject hash over everything that CI actually validates, EXCLUDING
+    environment_acceptance.branch_ci / environment_review_completed and all
+    authorization status fields. Recording CI evidence therefore does not change
+    the subject hash (no self-reference); any contract / validator / template
+    change does change it and invalidates prior CI evidence."""
     validator_path = PACKAGE_DIR / "validate_dual_preflight.py"
     if not validator_path.is_file():
-        raise DualPreflightError("validator source missing for package hash")
+        raise DualPreflightError("validator source missing for ci subject hash")
+    manifest_structural = {k: manifest.get(k) for k in _MANIFEST_STRUCTURAL_KEYS}
     payload = {
-        "manifest": manifest,
-        "contracts": {n: contracts[n] for n in sorted(contracts)},
+        "manifest_structural": manifest_structural,
+        "route": contracts["route_freeze.yaml"],
+        "model_selection": contracts["model_selection_decision.yaml"],
+        "provider_adapter": contracts["provider_adapter_contract.yaml"],
+        "prompt": contracts["prompt_freeze_contract.yaml"],
+        "sampling": contracts["sampling_and_repeat_contract.yaml"],
+        "budget": contracts["budget_and_rate_limit_contract.yaml"],
+        "retry": contracts["retry_and_recovery_contract.yaml"],
+        "logging": contracts["provenance_and_logging_contract.yaml"],
+        "stop": contracts["stop_conditions.yaml"],
         "validator_source": validator_path.read_text(encoding="utf-8"),
+        "template_assets": [
+            {"path": rel, "content": (PACKAGE_DIR / rel).read_text(encoding="utf-8")}
+            for rel in sorted(_template_files(manifest))
+            if (PACKAGE_DIR / rel).is_file()
+        ],
     }
     return _hash16(payload)
 
@@ -1408,18 +1887,16 @@ def scan_python_source(path: Path) -> None:
                         out.append(elt.value)
         return out
 
-    def _open_mode(node: ast.Call, is_builtin_open: bool) -> str:
-        """Extract the mode arg. builtins.open(file, mode) -> args[1];
-        Path.open(mode) -> args[0]; both also accept mode= keyword."""
+    def _open_mode_node(node: ast.Call, mode_index: int) -> tuple[bool, Any]:
+        """Return (present, mode_ast_node) for open-style calls. mode_index is the
+        positional index of the mode argument (1 for builtins/io.open, 0 for
+        Path.open). mode= keyword takes precedence."""
         for kw in node.keywords:
-            if kw.arg == "mode" and isinstance(kw.value, ast.Constant):
-                return str(kw.value.value)
-        idx = 1 if is_builtin_open else 0
-        if len(node.args) > idx:
-            a = node.args[idx]
-            if isinstance(a, ast.Constant) and isinstance(a.value, str):
-                return a.value
-        return ""
+            if kw.arg == "mode":
+                return (True, kw.value)
+        if len(node.args) > mode_index:
+            return (True, node.args[mode_index])
+        return (False, None)
 
     importlib_aliases: set[str] = set()
     import_module_aliases: set[str] = {"__import__"}
@@ -1469,14 +1946,26 @@ def scan_python_source(path: Path) -> None:
         # write / mutate helpers anywhere.
         if short in _WRITE_FUNC_NAMES:
             raise DualPreflightError(f"file write/mutate call {name!r} in {path.name}")
-        # open()/Path.open() with a write mode.
-        if name == "open" or name.endswith(".open"):
-            mode = _open_mode(node, is_builtin_open=(name == "open"))
-            if any(w in mode for w in _WRITE_OPEN_MODES):
-                raise DualPreflightError(f"write-mode open {mode!r} in {path.name}")
+        # getattr(obj, "<write method>") is forbidden (dynamic write dispatch).
+        if short == "getattr":
+            for a in args:
+                if a in _WRITE_FUNC_NAMES:
+                    raise DualPreflightError(f"getattr write dispatch {a!r} in {path.name}")
+        # open-style calls: only explicit constant r / rb / rt allowed; a missing
+        # mode means default 'r' (ok); a variable / non-static mode fails.
+        is_open = name in ("open", "io.open") or name.endswith(".open")
+        if is_open:
+            mode_index = 0 if name.endswith(".open") and name not in ("io.open",) else 1
+            present, mode_node = _open_mode_node(node, mode_index)
+            if present:
+                if not (isinstance(mode_node, ast.Constant) and isinstance(mode_node.value, str)):
+                    raise DualPreflightError(f"non-static open mode in {path.name}")
+                if mode_node.value not in ("r", "rb", "rt"):
+                    raise DualPreflightError(f"non-read open mode {mode_node.value!r} in {path.name}")
+            # missing mode -> default 'r' (allowed).
         if name.startswith("subprocess.") or short in ("run", "Popen", "call", "check_output"):
             raise DualPreflightError(f"subprocess/shell execution {name!r} in {path.name}")
-        if name in ("open", "Path") or name.endswith(".open"):
+        if name in ("open", "io.open", "Path") or name.endswith(".open"):
             for a in args:
                 if any(frag in a for frag in FORBIDDEN_PATH_FRAGMENTS):
                     raise DualPreflightError(f"forbidden R2/R3 path access {a!r} in {path.name}")
@@ -1485,8 +1974,9 @@ def scan_python_source(path: Path) -> None:
 
 
 def check_package_python_scan() -> None:
-    """Scan EVERY python file in the package, not just this validator."""
-    for py in sorted(PACKAGE_DIR.glob("*.py")):
+    """Recursively scan EVERY python file in the package (rglob), not just this
+    validator and not only the top level."""
+    for py in sorted(PACKAGE_DIR.rglob("*.py")):
         scan_python_source(py)
 
 
@@ -1497,6 +1987,73 @@ def check_validator_self_scan() -> None:
 def check_original_preflight_untouched() -> None:
     if not (_single_preflight_dir() / "validate_preflight.py").is_file():
         raise DualPreflightError("original single-model preflight must remain present")
+
+
+# --------------------------------------------------------------------------
+# Recursive managed asset inventory
+# --------------------------------------------------------------------------
+
+# only these nested directories may exist (declared in manifest).
+_ALLOWED_NESTED_DIRS = frozenset({"templates"})
+
+
+def check_managed_assets(manifest: dict[str, Any]) -> None:
+    """Recursively verify the package asset inventory:
+    - manifest.files is an ordered, no-duplicate list equal to the top-level files;
+    - actual top-level files exactly equal manifest.files;
+    - only declared nested directories (e.g. templates) may exist;
+    - every asset under templates is listed in template_files;
+    - no undeclared files, no undeclared nested dirs, no symlinks."""
+    files = manifest.get("files", [])
+    if not isinstance(files, list):
+        raise DualPreflightError("manifest.files must be a list")
+    if list(files) != list(REQUIRED_FILES):
+        raise DualPreflightError("manifest.files must equal REQUIRED_FILES in fixed order")
+    if len(files) != len(set(files)):
+        raise DualPreflightError("manifest.files must have no duplicates")
+
+    template_files = set(_template_files(manifest))
+
+    # walk the package tree.
+    actual_top_files: set[str] = set()
+    actual_nested_dirs: set[str] = set()
+    actual_template_assets: set[str] = set()
+    for p in sorted(PACKAGE_DIR.rglob("*")):
+        if p.is_symlink():
+            raise DualPreflightError(f"symlink not allowed: {p.name}")
+        rel = p.relative_to(PACKAGE_DIR).as_posix()
+        # ignore pycache artefacts.
+        if "__pycache__" in rel.split("/"):
+            continue
+        if p.is_dir():
+            top = rel.split("/")[0]
+            if "/" not in rel:  # a top-level directory
+                if top not in _ALLOWED_NESTED_DIRS:
+                    raise DualPreflightError(f"undeclared nested directory: {rel}")
+                actual_nested_dirs.add(top)
+            continue
+        # a file.
+        if "/" not in rel:
+            actual_top_files.add(rel)
+        else:
+            top = rel.split("/")[0]
+            if top not in _ALLOWED_NESTED_DIRS:
+                raise DualPreflightError(f"undeclared nested file: {rel}")
+            actual_template_assets.add(rel)
+
+    if actual_top_files != set(REQUIRED_FILES):
+        extra = actual_top_files - set(REQUIRED_FILES)
+        missing = set(REQUIRED_FILES) - actual_top_files
+        raise DualPreflightError(
+            f"top-level files mismatch (extra={sorted(extra)}, missing={sorted(missing)})"
+        )
+    # every actual template asset must be declared, and every declared present.
+    if actual_template_assets != template_files:
+        undeclared = actual_template_assets - template_files
+        missing = template_files - actual_template_assets
+        raise DualPreflightError(
+            f"template_files mismatch (undeclared={sorted(undeclared)}, missing={sorted(missing)})"
+        )
 
 
 # --------------------------------------------------------------------------
@@ -1549,9 +2106,13 @@ def build_report() -> dict[str, Any]:
     check_package_python_scan()
     check_original_preflight_untouched()
     manifest = check_manifest()
+    check_managed_assets(manifest)
 
     contracts = {n: _load_yaml(n) for n in CONTRACT_FILES}
     check_route_boundary(contracts["route_freeze.yaml"])
+
+    evidence = load_official_evidence()
+    load_parameter_compatibility()  # structural presence check (read-only)
 
     # source verifications
     mock_hash = verify_r1_mock()
@@ -1560,19 +2121,21 @@ def build_report() -> dict[str, Any]:
     decision_ok = verify_dual_decision_source()
     source_ok = mock_ok and single_ok and decision_ok
 
-    per_model_frozen = check_model_selection(contracts["model_selection_decision.yaml"])
+    per_model_frozen = check_model_selection(contracts["model_selection_decision.yaml"], evidence)
     per_adapter_frozen = check_provider_adapters(contracts["provider_adapter_contract.yaml"])
     prompt_frozen = check_prompt(contracts["prompt_freeze_contract.yaml"])
     per_sampling_frozen = check_sampling(contracts["sampling_and_repeat_contract.yaml"])
     per_budget_ok = check_budget(
         contracts["budget_and_rate_limit_contract.yaml"],
         contracts["sampling_and_repeat_contract.yaml"]["models"],
+        evidence,
     )
     per_retry_frozen = check_retry(contracts["retry_and_recovery_contract.yaml"])
     logging_frozen = check_logging_frozen(contracts["provenance_and_logging_contract.yaml"])
     privacy_completed = check_privacy_completed(contracts["provenance_and_logging_contract.yaml"])
     stop_frozen = check_stop_frozen(contracts["stop_conditions.yaml"])
-    env_reviewed = check_environment_reviewed(contracts["environment_acceptance.yaml"])
+    ci_subject_hash = compute_ci_subject_hash(contracts, manifest)
+    env_reviewed = check_environment_reviewed(contracts["environment_acceptance.yaml"], ci_subject_hash)
 
     auth = contracts["authorization_gate.yaml"]
     check_required_gates_exact(auth)
@@ -1621,6 +2184,7 @@ def build_report() -> dict[str, Any]:
         "provider_adapter_hashes": compute_provider_adapter_hashes(contracts),
         "shared_contract_hash": compute_shared_contract_hash(contracts),
         "aggregate_contract_hash": compute_aggregate_contract_hash(contracts),
+        "ci_subject_hash": ci_subject_hash,
         "package_hash": compute_package_hash(contracts, manifest),
         "resolved_gates": resolved_gates,
         "blocking_gates": blocking_gates,

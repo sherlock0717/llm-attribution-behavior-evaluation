@@ -22,6 +22,12 @@ models:
       output_price_per_million: null
       estimated_cached_input_tokens: null
       estimated_uncached_input_tokens: null
+    # 定价策略：DeepSeek 长上下文倍率固定 not_applicable，不套用 OpenAI 倍率。
+    pricing_policy:
+      base_price_source_ids: []
+      maximum_uncached_input_tokens_per_request: null
+      long_context_pricing_applicability: not_applicable
+      explicit_cache_write_used: null
     estimated_input_tokens: null
     estimated_output_tokens: null
     planned_request_count: null
@@ -49,6 +55,13 @@ models:
       output_price_per_million: null
       estimated_cached_input_tokens: null
       estimated_uncached_input_tokens: null
+    # 定价策略：GPT 长上下文倍率 applicability 需人工核定（unresolved 时不得批准预算）；
+    # not_applicable 须证明单请求未缓存输入 <= 272000。基线 unresolved。
+    pricing_policy:
+      base_price_source_ids: []
+      maximum_uncached_input_tokens_per_request: null
+      long_context_pricing_applicability: unresolved
+      explicit_cache_write_used: null
     estimated_input_tokens: null
     estimated_output_tokens: null
     planned_request_count: null

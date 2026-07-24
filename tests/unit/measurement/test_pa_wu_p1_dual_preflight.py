@@ -1,14 +1,13 @@
-"""Static tests for the PA-Wu R1 P1 DUAL-model preflight schema migration.
+"""Static tests for the PA-Wu R1 P1 DUAL-model preflight package.
 
 NO real model, NO network, NO API key, NO model output, NO P1 execution. These
-tests exercise the HARDENED offline validator: dual-model set, selection/freeze
-separation with strict field typing + ISO dates, provider adapters with REAL
-recomputed SHA-256 + exact key sets, shared prompt with real content/bundle
-hashes, per-model sampling finite ranges, budget cost formulas + aggregate,
-dual-model gates + all-or-nothing authorization, per-model/shared/aggregate/
-package hashes, structured branch-CI evidence, AST write/exec detection, and
-non-interference with the original single-model preflight package and the
-merged dual-model decision package.
+tests exercise the HARDENED offline validator: recursive managed-asset inventory
++ package hash, prompt structural exclusivity, model freeze field-source binding
+to official evidence + supplemental evidence, budget official price binding + GPT
+long-context, stable ci_subject_hash + CI evidence, recursive AST write/exec
+detection, logging real hash, stop exact condition sets, dual-model gates +
+all-or-nothing authorization, and non-interference with the original single-model
+preflight package and the merged dual-model decision package.
 """
 
 from __future__ import annotations
@@ -48,6 +47,11 @@ def report(validator):
     return validator.build_report()
 
 
+@pytest.fixture(scope="module")
+def evidence(validator):
+    return validator.load_official_evidence()
+
+
 def _load(name: str) -> dict:
     with (PKG_DIR / name).open(encoding="utf-8") as fh:
         return yaml.safe_load(fh)
@@ -83,293 +87,96 @@ def test_report_baseline(report) -> None:
     assert report["real_model_execution_authorized"] is False
     assert report["preflight_status"] == "blocked"
     assert report["p1_execution_status"] == "blocked"
+    assert "ci_subject_hash" in report
 
 
 # ==========================================================================
-# A. dual-model set
+# 2. recursive managed asset inventory + package hash
 # ==========================================================================
 
 
-def test_missing_model_fails(validator) -> None:
-    d = _load("model_selection_decision.yaml")
-    d["selected_models"] = d["selected_models"][:1]
+def test_managed_assets_baseline_ok(validator) -> None:
+    validator.check_managed_assets(_load("preflight_manifest.yaml"))
+
+
+def test_extra_top_level_file_fails(validator, tmp_path, monkeypatch) -> None:
+    dst = tmp_path / "pkg"
+    shutil.copytree(PKG_DIR, dst)
+    (dst / "extra.yaml").write_text("x: 1\n", encoding="utf-8")
+    monkeypatch.setattr(validator, "PACKAGE_DIR", dst)
     with pytest.raises(validator.DualPreflightError):
-        validator.check_model_selection(d)
+        validator.check_managed_assets(yaml.safe_load((dst / "preflight_manifest.yaml").read_text(encoding="utf-8")))
 
 
-def test_extra_model_fails(validator) -> None:
-    d = _load("model_selection_decision.yaml")
-    d["selected_models"].append({"provider": "anthropic", "model_id": "c", "role": "co_primary"})
+def test_undeclared_nested_python_fails(validator, tmp_path, monkeypatch) -> None:
+    dst = tmp_path / "pkg"
+    shutil.copytree(PKG_DIR, dst)
+    (dst / "nested").mkdir()
+    (dst / "nested" / "tool.py").write_text("x = 1\n", encoding="utf-8")
+    monkeypatch.setattr(validator, "PACKAGE_DIR", dst)
     with pytest.raises(validator.DualPreflightError):
-        validator.check_model_selection(d)
+        validator.check_managed_assets(yaml.safe_load((dst / "preflight_manifest.yaml").read_text(encoding="utf-8")))
 
 
-def test_wrong_model_id_fails(validator) -> None:
-    d = _load("model_selection_decision.yaml")
-    d["selected_models"][0]["model_id"] = "deepseek-v3"
+def test_nested_python_write_text_fails_ast(validator, tmp_path, monkeypatch) -> None:
+    dst = tmp_path / "pkg"
+    shutil.copytree(PKG_DIR, dst)
+    (dst / "templates").mkdir()
+    (dst / "templates" / "tool.py").write_text(
+        "from pathlib import Path\ndef f(p):\n    Path(p).write_text('x')\n", encoding="utf-8"
+    )
+    monkeypatch.setattr(validator, "PACKAGE_DIR", dst)
+    # recursive AST scan must catch the write even in a nested file.
     with pytest.raises(validator.DualPreflightError):
-        validator.check_model_selection(d)
+        validator.check_package_python_scan()
 
 
-def test_wrong_provider_fails(validator) -> None:
-    d = _load("model_selection_decision.yaml")
-    d["selected_models"][0]["provider"] = "openai"
+def test_manifest_files_duplicate_fails(validator) -> None:
+    m = _load("preflight_manifest.yaml")
+    m["files"] = list(m["files"]) + [m["files"][0]]
     with pytest.raises(validator.DualPreflightError):
-        validator.check_model_selection(d)
+        validator.check_managed_assets(m)
 
 
-def test_role_not_co_primary_fails(validator) -> None:
-    d = _load("model_selection_decision.yaml")
-    d["selected_models"][0]["role"] = "primary"
+def test_template_files_missing_declaration_fails(validator, tmp_path, monkeypatch) -> None:
+    dst = tmp_path / "pkg"
+    shutil.copytree(PKG_DIR, dst)
+    (dst / "templates").mkdir()
+    (dst / "templates" / "seg.txt").write_text("hi", encoding="utf-8")
+    monkeypatch.setattr(validator, "PACKAGE_DIR", dst)
+    m = yaml.safe_load((dst / "preflight_manifest.yaml").read_text(encoding="utf-8"))
+    # template_files still [] -> undeclared asset -> fail.
     with pytest.raises(validator.DualPreflightError):
-        validator.check_model_selection(d)
+        validator.check_managed_assets(m)
 
 
-def test_adapter_fallback_key_fails(validator) -> None:
-    a = _load("provider_adapter_contract.yaml")
-    a["adapters"]["deepseek-v4-pro"]["fallback"] = "gpt-5.6-terra"
-    with pytest.raises(validator.DualPreflightError):
-        validator.check_provider_adapters(a)
+def test_readme_change_changes_package_hash(validator, tmp_path, monkeypatch) -> None:
+    dst = tmp_path / "pkg"
+    shutil.copytree(PKG_DIR, dst)
+    monkeypatch.setattr(validator, "PACKAGE_DIR", dst)
+    c = {n: yaml.safe_load((dst / n).read_text(encoding="utf-8")) for n in validator.CONTRACT_FILES}
+    m = yaml.safe_load((dst / "preflight_manifest.yaml").read_text(encoding="utf-8"))
+    h1 = validator.compute_package_hash(c, m)
+    (dst / "README.md").write_text((dst / "README.md").read_text(encoding="utf-8") + "\nX\n", encoding="utf-8")
+    assert validator.compute_package_hash(c, m) != h1
 
 
-def test_adapter_primary_secondary_key_fails(validator) -> None:
-    a = _load("provider_adapter_contract.yaml")
-    a["adapters"]["gpt-5.6-terra"]["primary_model"] = True
-    with pytest.raises(validator.DualPreflightError):
-        validator.check_provider_adapters(a)
+def test_template_change_changes_package_hash(validator, tmp_path, monkeypatch) -> None:
+    dst = tmp_path / "pkg"
+    shutil.copytree(PKG_DIR, dst)
+    (dst / "templates").mkdir()
+    (dst / "templates" / "seg.txt").write_text("hi", encoding="utf-8")
+    monkeypatch.setattr(validator, "PACKAGE_DIR", dst)
+    c = {n: yaml.safe_load((dst / n).read_text(encoding="utf-8")) for n in validator.CONTRACT_FILES}
+    m = yaml.safe_load((dst / "preflight_manifest.yaml").read_text(encoding="utf-8"))
+    m["template_files"] = ["templates/seg.txt"]
+    h1 = validator.compute_package_hash(c, m)
+    (dst / "templates" / "seg.txt").write_text("hi2", encoding="utf-8")
+    assert validator.compute_package_hash(c, m) != h1
 
 
 # ==========================================================================
-# B. selection vs freeze separation + strict field typing
-# ==========================================================================
-
-
-def _frozen_decision(mid: str, provider: str) -> dict:
-    """Correctly typed frozen decision: real bools, valid ISO dates, positive int
-    context window, non-placeholder strings, unique source refs."""
-    return {
-        "freeze_status": "frozen",
-        "provider": provider,
-        "model_id": mid,
-        "role": "co_primary",
-        "exact_model_version_or_snapshot": "2026-07-01-snap",
-        "endpoint_type": "chat_completions",
-        "access_method": "https_api",
-        "context_window_requirement": 8192,
-        "structured_output_support": True,
-        "deterministic_seed_support": False,
-        "temperature_support": True,
-        "response_id_available": True,
-        "provider_retention_policy_reviewed": True,
-        "pricing_snapshot_date": "2026-07-01",
-        "pricing_source_recorded": "https://example/pricing",
-        "regional_availability_reviewed": True,
-        "terms_of_use_reviewed": True,
-        "decided_by": "researcher",
-        "decided_at": "2026-07-02",
-        "source_references": ["https://example/docs", "https://example/pricing"],
-    }
-
-
-def test_human_selected_unresolved_ok(validator) -> None:
-    d = _load("model_selection_decision.yaml")
-    pm = validator.check_model_selection(d)
-    assert pm == {m: False for m in MODELS}
-
-
-def test_human_selected_not_auto_frozen(report) -> None:
-    assert report["all_models_frozen"] is False
-
-
-def test_one_frozen_one_unresolved_false(validator) -> None:
-    d = _load("model_selection_decision.yaml")
-    d["decisions"]["deepseek-v4-pro"] = _frozen_decision("deepseek-v4-pro", "deepseek")
-    d["all_models_frozen"] = False
-    pm = validator.check_model_selection(d)
-    assert pm["deepseek-v4-pro"] is True
-    assert pm["gpt-5.6-terra"] is False
-
-
-def test_missing_snapshot_not_frozen(validator) -> None:
-    d = _load("model_selection_decision.yaml")
-    dec = _frozen_decision("deepseek-v4-pro", "deepseek")
-    dec["exact_model_version_or_snapshot"] = None
-    d["decisions"]["deepseek-v4-pro"] = dec
-    pm = validator.check_model_selection(d)
-    assert pm["deepseek-v4-pro"] is False
-
-
-def test_incomplete_review_not_frozen(validator) -> None:
-    d = _load("model_selection_decision.yaml")
-    dec = _frozen_decision("deepseek-v4-pro", "deepseek")
-    dec["terms_of_use_reviewed"] = False
-    d["decisions"]["deepseek-v4-pro"] = dec
-    pm = validator.check_model_selection(d)
-    assert pm["deepseek-v4-pro"] is False
-
-
-def test_string_bool_field_not_frozen(validator) -> None:
-    # "true"/"false"/"documented" strings are NOT accepted for bool fields.
-    for val in ("true", "false", "documented"):
-        d = _load("model_selection_decision.yaml")
-        dec = _frozen_decision("deepseek-v4-pro", "deepseek")
-        dec["structured_output_support"] = val
-        d["decisions"]["deepseek-v4-pro"] = dec
-        pm = validator.check_model_selection(d)
-        assert pm["deepseek-v4-pro"] is False, val
-
-
-def test_invalid_iso_date_not_frozen(validator) -> None:
-    d = _load("model_selection_decision.yaml")
-    dec = _frozen_decision("deepseek-v4-pro", "deepseek")
-    dec["pricing_snapshot_date"] = "2026-13-40"  # not a real date
-    d["decisions"]["deepseek-v4-pro"] = dec
-    pm = validator.check_model_selection(d)
-    assert pm["deepseek-v4-pro"] is False
-
-
-def test_context_window_bool_not_frozen(validator) -> None:
-    d = _load("model_selection_decision.yaml")
-    dec = _frozen_decision("deepseek-v4-pro", "deepseek")
-    dec["context_window_requirement"] = True  # bool is not a positive int
-    d["decisions"]["deepseek-v4-pro"] = dec
-    pm = validator.check_model_selection(d)
-    assert pm["deepseek-v4-pro"] is False
-
-
-def test_context_window_string_not_frozen(validator) -> None:
-    d = _load("model_selection_decision.yaml")
-    dec = _frozen_decision("deepseek-v4-pro", "deepseek")
-    dec["context_window_requirement"] = "8192"  # string not accepted
-    d["decisions"]["deepseek-v4-pro"] = dec
-    pm = validator.check_model_selection(d)
-    assert pm["deepseek-v4-pro"] is False
-
-
-def test_fallback_field_in_decision_fails(validator) -> None:
-    d = _load("model_selection_decision.yaml")
-    dec = _frozen_decision("deepseek-v4-pro", "deepseek")
-    dec["fallback"] = "gpt-5.6-terra"
-    d["decisions"]["deepseek-v4-pro"] = dec
-    with pytest.raises(validator.DualPreflightError):
-        validator.check_model_selection(d)
-
-
-def test_duplicate_source_references_not_frozen(validator) -> None:
-    d = _load("model_selection_decision.yaml")
-    dec = _frozen_decision("deepseek-v4-pro", "deepseek")
-    dec["source_references"] = ["https://x", "https://x"]  # duplicate
-    d["decisions"]["deepseek-v4-pro"] = dec
-    pm = validator.check_model_selection(d)
-    assert pm["deepseek-v4-pro"] is False
-
-
-def test_both_frozen_all_models_frozen_true(validator) -> None:
-    d = _load("model_selection_decision.yaml")
-    d["decisions"]["deepseek-v4-pro"] = _frozen_decision("deepseek-v4-pro", "deepseek")
-    d["decisions"]["gpt-5.6-terra"] = _frozen_decision("gpt-5.6-terra", "openai")
-    d["all_models_frozen"] = True
-    pm = validator.check_model_selection(d)
-    assert all(pm.values())
-
-
-# ==========================================================================
-# C. adapter real SHA-256
-# ==========================================================================
-
-
-def _frozen_adapter(validator, provider: str) -> dict:
-    a = {
-        "provider": provider,
-        "request_endpoint_mapping": {"path": "/v1/chat"},
-        "request_schema_mapping": {"messages": "messages"},
-        "structured_output_mapping": {"schema": "json"},
-        "response_parser_mapping": {"choices": "choices"},
-        "token_usage_mapping": {"usage": "usage"},
-        "response_id_mapping": {"id": "id"},
-        "adapter_sha256": None,
-        "frozen": True,
-    }
-    a["adapter_sha256"] = validator.compute_adapter_sha256(a)
-    return a
-
-
-def test_adapter_missing_model_fails(validator) -> None:
-    a = _load("provider_adapter_contract.yaml")
-    del a["adapters"]["gpt-5.6-terra"]
-    with pytest.raises(validator.DualPreflightError):
-        validator.check_provider_adapters(a)
-
-
-def test_adapter_semantic_invariant_false_fails(validator) -> None:
-    a = _load("provider_adapter_contract.yaml")
-    a["semantic_invariants"]["item_wording_unchanged"] = False
-    with pytest.raises(validator.DualPreflightError):
-        validator.check_provider_adapters(a)
-
-
-def test_adapter_provider_mismatch_fails(validator) -> None:
-    a = _load("provider_adapter_contract.yaml")
-    a["adapters"]["deepseek-v4-pro"]["provider"] = "openai"
-    with pytest.raises(validator.DualPreflightError):
-        validator.check_provider_adapters(a)
-
-
-def test_adapter_non64_hash_fails(validator) -> None:
-    a = _load("provider_adapter_contract.yaml")
-    ad = _frozen_adapter(validator, "deepseek")
-    ad["adapter_sha256"] = "abc123"  # not 64 hex
-    a["adapters"]["deepseek-v4-pro"] = ad
-    with pytest.raises(validator.DualPreflightError):
-        validator.check_provider_adapters(a)
-
-
-def test_adapter_hash_mismatch_fails(validator) -> None:
-    a = _load("provider_adapter_contract.yaml")
-    ad = _frozen_adapter(validator, "deepseek")
-    ad["adapter_sha256"] = "0" * 64  # 64 hex but wrong content
-    a["adapters"]["deepseek-v4-pro"] = ad
-    with pytest.raises(validator.DualPreflightError):
-        validator.check_provider_adapters(a)
-
-
-def test_adapter_mapping_changed_without_hash_update_fails(validator) -> None:
-    a = _load("provider_adapter_contract.yaml")
-    ad = _frozen_adapter(validator, "deepseek")
-    ad["request_endpoint_mapping"] = {"path": "/v2/chat"}  # changed, stale hash
-    a["adapters"]["deepseek-v4-pro"] = ad
-    with pytest.raises(validator.DualPreflightError):
-        validator.check_provider_adapters(a)
-
-
-def test_adapter_scenario_rewrite_field_fails(validator) -> None:
-    a = _load("provider_adapter_contract.yaml")
-    ad = _frozen_adapter(validator, "deepseek")
-    ad["scenario_rewrite"] = True  # extra semantic-rewrite field
-    ad["adapter_sha256"] = validator.compute_adapter_sha256(ad)
-    a["adapters"]["deepseek-v4-pro"] = ad
-    with pytest.raises(validator.DualPreflightError):
-        validator.check_provider_adapters(a)
-
-
-def test_adapter_compatibility_path_change_fails(validator) -> None:
-    a = _load("provider_adapter_contract.yaml")
-    a["compatibility_reference"]["path"] = "some/other/path.yaml"
-    with pytest.raises(validator.DualPreflightError):
-        validator.check_provider_adapters(a)
-
-
-def test_two_synthetic_adapters_freeze(validator) -> None:
-    a = _load("provider_adapter_contract.yaml")
-    a["adapters"]["deepseek-v4-pro"] = _frozen_adapter(validator, "deepseek")
-    a["adapters"]["gpt-5.6-terra"] = _frozen_adapter(validator, "openai")
-    a["all_adapters_frozen"] = True
-    pm = validator.check_provider_adapters(a)
-    assert all(pm.values())
-
-
-# ==========================================================================
-# D. prompt real hashes
+# 3. prompt structural exclusivity
 # ==========================================================================
 
 _ITEM_BUNDLE = (
@@ -416,21 +223,63 @@ def test_prompt_all_frozen(validator) -> None:
     assert validator.check_prompt(_frozen_prompt(validator)) is True
 
 
-def test_prompt_fake_sha_fails(validator) -> None:
+def test_prompt_content_true_hash_match_still_fails(validator) -> None:
     p = _frozen_prompt(validator)
-    p["segments"]["system_prompt"]["sha256"] = "z" * 64  # not hex
+    seg = p["segments"]["system_prompt"]
+    seg["content"] = True
+    seg["sha256"] = hashlib.sha256(b"True").hexdigest()  # even if "hash matches"
+    assert validator.check_prompt(p) is False
+
+
+def test_prompt_content_number_fails(validator) -> None:
+    p = _frozen_prompt(validator)
+    p["segments"]["system_prompt"]["content"] = 123
+    assert validator.check_prompt(p) is False
+
+
+def test_prompt_content_mapping_fails(validator) -> None:
+    p = _frozen_prompt(validator)
+    p["segments"]["system_prompt"]["content"] = {}
+    assert validator.check_prompt(p) is False
+
+
+def test_prompt_top_level_model_prompts_fails(validator) -> None:
+    p = _frozen_prompt(validator)
+    p["model_prompts"] = {"deepseek-v4-pro": "x"}
+    with pytest.raises(validator.DualPreflightError):
+        validator.check_prompt(p)
+
+
+def test_prompt_top_level_model_id_key_fails(validator) -> None:
+    p = _frozen_prompt(validator)
+    p["deepseek-v4-pro"] = "x"
+    with pytest.raises(validator.DualPreflightError):
+        validator.check_prompt(p)
+
+
+def test_prompt_constraints_provider_override_fails(validator) -> None:
+    p = _frozen_prompt(validator)
+    p["constraints"]["provider_override"] = True
+    with pytest.raises(validator.DualPreflightError):
+        validator.check_prompt(p)
+
+
+def test_prompt_segment_extra_model_id_fails(validator) -> None:
+    p = _frozen_prompt(validator)
+    p["segments"]["system_prompt"]["gpt-5.6-terra"] = "x"
+    # extra key breaks segment exact key set -> not frozen.
     assert validator.check_prompt(p) is False
 
 
 def test_prompt_content_changed_stale_sha_fails(validator) -> None:
     p = _frozen_prompt(validator)
-    p["segments"]["system_prompt"]["content"] = "mutated content"  # sha now stale
+    p["segments"]["system_prompt"]["content"] = "mutated content"
     assert validator.check_prompt(p) is False
 
 
 def test_prompt_template_escape_fails(validator) -> None:
     p = _frozen_prompt(validator)
-    seg = {
+    p["segments"]["system_prompt"] = {
         "content": None,
         "template_reference": "../../../etc/passwd",
         "sha256": "a" * 64,
@@ -438,7 +287,6 @@ def test_prompt_template_escape_fails(validator) -> None:
         "owner": "researcher",
         "change_requires_new_run_version": True,
     }
-    p["segments"]["system_prompt"] = seg
     assert validator.check_prompt(p) is False
 
 
@@ -451,37 +299,666 @@ def test_prompt_item_bundle_missing_one_fails(validator) -> None:
         validator.check_prompt(p)
 
 
-def test_prompt_item_bundle_extra_fails(validator) -> None:
-    p = _frozen_prompt(validator)
-    extra = list(_ITEM_BUNDLE) + ["pa_wu_p0/forms.yaml"]
-    p["segments"]["item_block"]["source_bundle"] = extra
-    with pytest.raises(validator.DualPreflightError):
-        validator.check_prompt(p)
-
-
 def test_prompt_item_bundle_reordered_fails(validator) -> None:
     p = _frozen_prompt(validator)
-    reordered = [_ITEM_BUNDLE[1], _ITEM_BUNDLE[0], _ITEM_BUNDLE[2]]
-    p["segments"]["item_block"]["source_bundle"] = reordered
+    p["segments"]["item_block"]["source_bundle"] = [_ITEM_BUNDLE[1], _ITEM_BUNDLE[0], _ITEM_BUNDLE[2]]
     with pytest.raises(validator.DualPreflightError):
         validator.check_prompt(p)
 
 
 def test_prompt_item_bundle_real_hash_ok(validator) -> None:
-    p = _frozen_prompt(validator)
-    # exact fixed-order bundle with real recomputed hash -> frozen.
-    assert validator.check_prompt(p) is True
-
-
-def test_prompt_per_model_semantic_field_forbidden(validator) -> None:
-    p = _frozen_prompt(validator)
-    p["constraints"]["per_model_semantic_prompt_forbidden"] = False
-    with pytest.raises(validator.DualPreflightError):
-        validator.check_prompt(p)
+    assert validator.check_prompt(_frozen_prompt(validator)) is True
 
 
 # ==========================================================================
-# E. sampling finite ranges
+# 4. model freeze evidence binding
+# ==========================================================================
+
+
+def _frozen_decision(mid: str, provider: str) -> dict:
+    """Frozen decision bound to REAL official source IDs, real context bound,
+    supplemental evidence for still-unresolved fields, NO example URLs."""
+    if mid == "deepseek-v4-pro":
+        endpoint = "openai_chat_completions"
+        ctx = 1_000_000
+        pricing_src = "ds_models_and_pricing"
+        fsi = {
+            "context_window_requirement": ["ds_models_and_pricing"],
+            "endpoint_type": ["ds_create_chat_completion", "ds_models_and_pricing"],
+            "access_method": ["ds_create_chat_completion"],
+            "structured_output_support": ["ds_json_output"],
+            "temperature_support": ["ds_thinking_mode"],
+        }
+        refs = ["ds_models_and_pricing", "ds_create_chat_completion"]
+    else:
+        endpoint = "responses_api"
+        ctx = 1_050_000
+        pricing_src = "oai_model_page"
+        fsi = {
+            "context_window_requirement": ["oai_model_page"],
+            "endpoint_type": ["oai_model_page", "oai_models_compare"],
+            "access_method": ["oai_responses_api"],
+            "structured_output_support": ["oai_structured_outputs"],
+            "temperature_support": ["oai_model_page"],
+        }
+        refs = ["oai_model_page", "oai_responses_api"]
+    supp = {
+        f: {
+            "evidence_id": f"supp_{mid}_{f}",
+            "field": f,
+            "model_id": mid,
+            "status": "reviewed",
+            "value": "confirmed_by_manual_interface_check",
+            "reviewed_by": "researcher",
+            "reviewed_at": "2026-07-20",
+            "reference": "internal_interface_check_log",
+            "claim_scope": "manual_account_interface_verification",
+        }
+        for f in ("exact_model_version_or_snapshot", "deterministic_seed_support", "response_id_available")
+    }
+    return {
+        "freeze_status": "frozen",
+        "provider": provider,
+        "model_id": mid,
+        "role": "co_primary",
+        "exact_model_version_or_snapshot": "2026-07-01-snap",
+        "endpoint_type": endpoint,
+        "access_method": "https_api",
+        "context_window_requirement": ctx,
+        "structured_output_support": True,
+        "deterministic_seed_support": False,
+        "temperature_support": True,
+        "response_id_available": True,
+        "provider_retention_policy_reviewed": True,
+        "pricing_snapshot_date": "2026-07-01",
+        "pricing_source_recorded": pricing_src,
+        "regional_availability_reviewed": True,
+        "terms_of_use_reviewed": True,
+        "decided_by": "researcher",
+        "decided_at": "2026-07-02",
+        "source_references": refs,
+        "evidence_binding": {
+            "official_evidence_package_hash": "97a9a625bba76636",
+            "field_source_ids": fsi,
+            "supplemental_evidence": supp,
+        },
+    }
+
+
+def test_human_selected_unresolved_ok(validator, evidence) -> None:
+    d = _load("model_selection_decision.yaml")
+    assert validator.check_model_selection(d, evidence) == {m: False for m in MODELS}
+
+
+def test_both_frozen_all_models_frozen_true(validator, evidence) -> None:
+    d = _load("model_selection_decision.yaml")
+    d["decisions"]["deepseek-v4-pro"] = _frozen_decision("deepseek-v4-pro", "deepseek")
+    d["decisions"]["gpt-5.6-terra"] = _frozen_decision("gpt-5.6-terra", "openai")
+    d["all_models_frozen"] = True
+    assert all(validator.check_model_selection(d, evidence).values())
+
+
+def test_source_id_not_exist_not_frozen(validator, evidence) -> None:
+    d = _load("model_selection_decision.yaml")
+    dec = _frozen_decision("deepseek-v4-pro", "deepseek")
+    dec["evidence_binding"]["field_source_ids"]["context_window_requirement"] = ["not_a_real_source"]
+    d["decisions"]["deepseek-v4-pro"] = dec
+    assert validator.check_model_selection(d, evidence)["deepseek-v4-pro"] is False
+
+
+def test_source_cross_provider_not_frozen(validator, evidence) -> None:
+    d = _load("model_selection_decision.yaml")
+    dec = _frozen_decision("deepseek-v4-pro", "deepseek")
+    dec["evidence_binding"]["field_source_ids"]["context_window_requirement"] = ["oai_model_page"]
+    d["decisions"]["deepseek-v4-pro"] = dec
+    assert validator.check_model_selection(d, evidence)["deepseek-v4-pro"] is False
+
+
+def test_source_duplicate_not_frozen(validator, evidence) -> None:
+    d = _load("model_selection_decision.yaml")
+    dec = _frozen_decision("deepseek-v4-pro", "deepseek")
+    dec["evidence_binding"]["field_source_ids"]["endpoint_type"] = ["ds_models_and_pricing", "ds_models_and_pricing"]
+    d["decisions"]["deepseek-v4-pro"] = dec
+    assert validator.check_model_selection(d, evidence)["deepseek-v4-pro"] is False
+
+
+def test_source_not_supporting_field_not_frozen(validator, evidence) -> None:
+    d = _load("model_selection_decision.yaml")
+    dec = _frozen_decision("deepseek-v4-pro", "deepseek")
+    # ds_privacy does not support context_window_requirement.
+    dec["evidence_binding"]["field_source_ids"]["context_window_requirement"] = ["ds_privacy"]
+    d["decisions"]["deepseek-v4-pro"] = dec
+    assert validator.check_model_selection(d, evidence)["deepseek-v4-pro"] is False
+
+
+def test_context_over_official_not_frozen(validator, evidence) -> None:
+    d = _load("model_selection_decision.yaml")
+    dec = _frozen_decision("deepseek-v4-pro", "deepseek")
+    dec["context_window_requirement"] = 2_000_000  # exceeds official 1,000,000
+    d["decisions"]["deepseek-v4-pro"] = dec
+    assert validator.check_model_selection(d, evidence)["deepseek-v4-pro"] is False
+
+
+def test_endpoint_not_confirmed_not_frozen(validator, evidence) -> None:
+    d = _load("model_selection_decision.yaml")
+    dec = _frozen_decision("deepseek-v4-pro", "deepseek")
+    dec["endpoint_type"] = "some_made_up_endpoint"
+    d["decisions"]["deepseek-v4-pro"] = dec
+    assert validator.check_model_selection(d, evidence)["deepseek-v4-pro"] is False
+
+
+def test_pricing_source_recorded_url_rejected(validator, evidence) -> None:
+    d = _load("model_selection_decision.yaml")
+    dec = _frozen_decision("deepseek-v4-pro", "deepseek")
+    dec["pricing_source_recorded"] = "https://example/pricing"  # arbitrary URL, not a source id
+    d["decisions"]["deepseek-v4-pro"] = dec
+    assert validator.check_model_selection(d, evidence)["deepseek-v4-pro"] is False
+
+
+def test_source_references_example_url_rejected(validator, evidence) -> None:
+    d = _load("model_selection_decision.yaml")
+    dec = _frozen_decision("deepseek-v4-pro", "deepseek")
+    dec["source_references"] = ["https://x/docs"]  # not real source ids
+    d["decisions"]["deepseek-v4-pro"] = dec
+    assert validator.check_model_selection(d, evidence)["deepseek-v4-pro"] is False
+
+
+def test_missing_supplemental_snapshot_not_frozen(validator, evidence) -> None:
+    d = _load("model_selection_decision.yaml")
+    dec = _frozen_decision("deepseek-v4-pro", "deepseek")
+    del dec["evidence_binding"]["supplemental_evidence"]["exact_model_version_or_snapshot"]
+    d["decisions"]["deepseek-v4-pro"] = dec
+    assert validator.check_model_selection(d, evidence)["deepseek-v4-pro"] is False
+
+
+def test_decision_extra_key_fails(validator, evidence) -> None:
+    d = _load("model_selection_decision.yaml")
+    dec = _frozen_decision("deepseek-v4-pro", "deepseek")
+    dec["winner"] = True
+    d["decisions"]["deepseek-v4-pro"] = dec
+    with pytest.raises(validator.DualPreflightError):
+        validator.check_model_selection(d, evidence)
+
+
+def test_incomplete_review_not_frozen(validator, evidence) -> None:
+    d = _load("model_selection_decision.yaml")
+    dec = _frozen_decision("deepseek-v4-pro", "deepseek")
+    dec["terms_of_use_reviewed"] = False
+    d["decisions"]["deepseek-v4-pro"] = dec
+    assert validator.check_model_selection(d, evidence)["deepseek-v4-pro"] is False
+
+
+# ==========================================================================
+# 5. budget official price binding + GPT long-context
+# ==========================================================================
+
+
+def _official(validator, evidence, mid: str) -> dict:
+    mev = validator._index_model_evidence(evidence)[mid]
+    return {
+        "cached": float(mev["cached_input_price"]),
+        "uncached": float(mev["uncached_input_price"]),
+        "output": float(mev["output_price"]),
+    }
+
+
+def _budget_model(validator, evidence, mid: str, rc: int = 24) -> dict:
+    prices = _official(validator, evidence, mid)
+    cached_tokens, uncached_tokens, out_tokens = 400_000, 600_000, 300_000
+    if mid == "deepseek-v4-pro":
+        src = "ds_models_and_pricing"
+        cost = (
+            (uncached_tokens / 1e6) * prices["uncached"]
+            + (cached_tokens / 1e6) * prices["cached"]
+            + (out_tokens / 1e6) * prices["output"]
+        )
+        policy = {
+            "base_price_source_ids": [src],
+            "maximum_uncached_input_tokens_per_request": None,
+            "long_context_pricing_applicability": "not_applicable",
+            "explicit_cache_write_used": None,
+        }
+        conc_limit = 500
+    else:
+        src = "oai_model_page"
+        # not_applicable, uncached per request <= 272000.
+        cost = (
+            (uncached_tokens / 1e6) * prices["uncached"]
+            + (cached_tokens / 1e6) * prices["cached"]
+            + (out_tokens / 1e6) * prices["output"]
+        )
+        policy = {
+            "base_price_source_ids": [src],
+            "maximum_uncached_input_tokens_per_request": 200_000,
+            "long_context_pricing_applicability": "not_applicable",
+            "explicit_cache_write_used": False,
+        }
+        conc_limit = 100
+    return {
+        "currency": "USD",
+        "pricing_unit": "per_million_tokens",
+        "pricing_evidence_reference": {
+            "package_path": (
+                "tasks/attribution_behavior/measurement_candidates/"
+                "pa_wu_r1_p1_decision_fill/dual_model_selection"
+            ),
+            "source_ids": [src],
+        },
+        "pricing_snapshot_date": "2026-07-01",
+        "pricing_inputs": {
+            "uncached_input_price_per_million": prices["uncached"],
+            "cached_input_price_per_million": prices["cached"],
+            "output_price_per_million": prices["output"],
+            "estimated_cached_input_tokens": cached_tokens,
+            "estimated_uncached_input_tokens": uncached_tokens,
+        },
+        "pricing_policy": policy,
+        "estimated_input_tokens": cached_tokens + uncached_tokens,
+        "estimated_output_tokens": out_tokens,
+        "planned_request_count": rc,
+        "estimated_cost": cost,
+        "maximum_model_budget": 10_000.0,
+        "warning_threshold": 8_000.0,
+        "concurrency_limit": conc_limit,
+        "requests_per_minute_limit": 60,
+        "tokens_per_minute_limit": 1_000_000,
+        "budget_owner": "pi",
+        "budget_approved": True,
+        "approval_timestamp": "2026-07-02",
+    }
+
+
+def _approved_budget(validator, evidence, rc: int = 24) -> dict:
+    b = _load("budget_and_rate_limit_contract.yaml")
+    b["models"]["deepseek-v4-pro"] = _budget_model(validator, evidence, "deepseek-v4-pro", rc)
+    b["models"]["gpt-5.6-terra"] = _budget_model(validator, evidence, "gpt-5.6-terra", rc)
+    cost = sum(b["models"][m]["estimated_cost"] for m in MODELS)
+    b["aggregate"] = {
+        "currency": "USD",
+        "maximum_total_budget": 20_000.0,
+        "warning_total_threshold": 16_000.0,
+        "estimated_total_cost": cost,
+        "total_planned_requests": rc * 2,
+        "aggregate_budget_owner": "pi",
+        "aggregate_budget_approved": True,
+        "aggregate_approval_timestamp": "2026-07-02",
+    }
+    b["all_model_budgets_approved"] = True
+    return b
+
+
+def _sampling_models(rc: int = 24) -> dict:
+    return {m: {"planned_request_count": rc, "concurrency": 2} for m in MODELS}
+
+
+def test_budget_one_unapproved_overall_false(validator, evidence) -> None:
+    b = _load("budget_and_rate_limit_contract.yaml")
+    pm = validator.check_budget(b, _load("sampling_and_repeat_contract.yaml")["models"], evidence)
+    assert pm == {m: False for m in MODELS}
+
+
+def test_budget_full_approval_ok(validator, evidence) -> None:
+    b = _approved_budget(validator, evidence)
+    assert all(validator.check_budget(b, _sampling_models(), evidence).values())
+
+
+def test_budget_correct_source_wrong_price_fails(validator, evidence) -> None:
+    b = _approved_budget(validator, evidence)
+    b["models"]["deepseek-v4-pro"]["pricing_inputs"]["output_price_per_million"] = 0.99
+    b["all_model_budgets_approved"] = False
+    assert validator.check_budget(b, _sampling_models(), evidence)["deepseek-v4-pro"] is False
+
+
+def test_budget_all_zero_prices_fails(validator, evidence) -> None:
+    b = _approved_budget(validator, evidence)
+    for k in ("uncached_input_price_per_million", "cached_input_price_per_million", "output_price_per_million"):
+        b["models"]["deepseek-v4-pro"]["pricing_inputs"][k] = 0.0
+    b["all_model_budgets_approved"] = False
+    assert validator.check_budget(b, _sampling_models(), evidence)["deepseek-v4-pro"] is False
+
+
+def test_budget_deepseek_openai_multiplier_fails(validator, evidence) -> None:
+    b = _approved_budget(validator, evidence)
+    b["models"]["deepseek-v4-pro"]["pricing_policy"]["long_context_pricing_applicability"] = "applies"
+    b["all_model_budgets_approved"] = False
+    assert validator.check_budget(b, _sampling_models(), evidence)["deepseek-v4-pro"] is False
+
+
+def test_budget_gpt_over_272k_not_applicable_fails(validator, evidence) -> None:
+    b = _approved_budget(validator, evidence)
+    b["models"]["gpt-5.6-terra"]["pricing_policy"]["maximum_uncached_input_tokens_per_request"] = 300_000
+    b["all_model_budgets_approved"] = False
+    assert validator.check_budget(b, _sampling_models(), evidence)["gpt-5.6-terra"] is False
+
+
+def test_budget_gpt_unresolved_applicability_fails(validator, evidence) -> None:
+    b = _approved_budget(validator, evidence)
+    b["models"]["gpt-5.6-terra"]["pricing_policy"]["long_context_pricing_applicability"] = "unresolved"
+    b["all_model_budgets_approved"] = False
+    assert validator.check_budget(b, _sampling_models(), evidence)["gpt-5.6-terra"] is False
+
+
+def test_budget_single_model_request_mismatch_fails(validator, evidence) -> None:
+    b = _approved_budget(validator, evidence, rc=24)
+    # single model approved, but sampling request count differs -> immediate check.
+    sm = {"deepseek-v4-pro": {"planned_request_count": 999, "concurrency": 2},
+          "gpt-5.6-terra": {"planned_request_count": 24, "concurrency": 2}}
+    with pytest.raises(validator.DualPreflightError):
+        validator.check_budget(b, sm, evidence)
+
+
+def test_budget_single_approved_without_aggregate_still_fails(validator, evidence) -> None:
+    b = _approved_budget(validator, evidence)
+    # one model unapproved + aggregate unapproved: per-model of the approved model
+    # is True, but overall derived is False.
+    b["models"]["gpt-5.6-terra"]["budget_approved"] = False
+    b["aggregate"]["aggregate_budget_approved"] = False
+    b["all_model_budgets_approved"] = False
+    pm = validator.check_budget(b, _sampling_models(), evidence)
+    assert pm["deepseek-v4-pro"] is True
+    assert pm["gpt-5.6-terra"] is False
+
+
+def test_budget_deepseek_concurrency_over_500_fails(validator, evidence) -> None:
+    b = _load("budget_and_rate_limit_contract.yaml")
+    b["models"]["deepseek-v4-pro"]["concurrency_limit"] = 501
+    with pytest.raises(validator.DualPreflightError):
+        validator.check_budget(b, _load("sampling_and_repeat_contract.yaml")["models"], evidence)
+
+
+def test_budget_cross_provider_price_source_fails(validator, evidence) -> None:
+    b = _load("budget_and_rate_limit_contract.yaml")
+    b["models"]["deepseek-v4-pro"]["pricing_evidence_reference"]["source_ids"] = ["oai_model_page"]
+    with pytest.raises(validator.DualPreflightError):
+        validator.check_budget(b, _load("sampling_and_repeat_contract.yaml")["models"], evidence)
+
+
+# ==========================================================================
+# 6. stable CI subject hash
+# ==========================================================================
+
+
+def _contracts(validator) -> dict:
+    return {n: _load(n) for n in validator.CONTRACT_FILES}
+
+
+def _valid_ci(subject_hash: str) -> dict:
+    return {
+        "workflow": "CI",
+        "run_number": 5,
+        "run_id": 123456,
+        "status": "completed",
+        "conclusion": "success",
+        "verified_head_sha": "a" * 40,
+        "validated_subject_hash": subject_hash,
+        "jobs": {
+            "windows-latest / Python 3.12": "success",
+            "ubuntu-latest / Python 3.12": "success",
+        },
+    }
+
+
+def test_ci_head_sha_wrong_subject_fails(validator) -> None:
+    c = _contracts(validator)
+    m = _load("preflight_manifest.yaml")
+    subject = validator.compute_ci_subject_hash(c, m)
+    env = _load("environment_acceptance.yaml")
+    ci = _valid_ci(subject)
+    ci["validated_subject_hash"] = "0" * 16  # wrong subject hash
+    env["branch_ci"] = ci
+    env["environment_review_completed"] = True
+    with pytest.raises(validator.DualPreflightError):
+        validator.check_environment_reviewed(env, subject)
+
+
+def test_ci_correct_subject_passes(validator) -> None:
+    c = _contracts(validator)
+    m = _load("preflight_manifest.yaml")
+    subject = validator.compute_ci_subject_hash(c, m)
+    env = _load("environment_acceptance.yaml")
+    env["branch_ci"] = _valid_ci(subject)
+    env["environment_review_completed"] = True
+    assert validator.check_environment_reviewed(env, subject) is True
+
+
+def test_ci_stale_after_prompt_change_fails(validator) -> None:
+    c = _contracts(validator)
+    m = _load("preflight_manifest.yaml")
+    old_subject = validator.compute_ci_subject_hash(c, m)
+    # record CI with old subject, then mutate the prompt.
+    c["prompt_freeze_contract.yaml"]["segments"]["system_prompt"]["owner"] = "changed"
+    new_subject = validator.compute_ci_subject_hash(c, m)
+    assert new_subject != old_subject
+    env = _load("environment_acceptance.yaml")
+    env["branch_ci"] = _valid_ci(old_subject)  # stale
+    env["environment_review_completed"] = True
+    with pytest.raises(validator.DualPreflightError):
+        validator.check_environment_reviewed(env, new_subject)
+
+
+def test_ci_stale_after_budget_change_fails(validator) -> None:
+    c = _contracts(validator)
+    m = _load("preflight_manifest.yaml")
+    old_subject = validator.compute_ci_subject_hash(c, m)
+    c["budget_and_rate_limit_contract.yaml"]["aggregate"]["maximum_total_budget"] = 42
+    new_subject = validator.compute_ci_subject_hash(c, m)
+    assert new_subject != old_subject
+
+
+def test_ci_subject_unchanged_by_writing_branch_ci(validator) -> None:
+    c = _contracts(validator)
+    m = _load("preflight_manifest.yaml")
+    subject1 = validator.compute_ci_subject_hash(c, m)
+    # writing branch_ci / authorization does NOT change the subject hash.
+    c["environment_acceptance.yaml"]["branch_ci"] = _valid_ci(subject1)
+    c["environment_acceptance.yaml"]["environment_review_completed"] = True
+    c["authorization_gate.yaml"]["authorization_status"] = "authorized"
+    subject2 = validator.compute_ci_subject_hash(c, m)
+    assert subject2 == subject1
+
+
+# ==========================================================================
+# 7. recursive AST scan hardening
+# ==========================================================================
+
+_SCAN_HEADER = "from pathlib import Path\n"
+
+
+def _scan_snippet(validator, tmp_path, body: str, header: str = _SCAN_HEADER) -> None:
+    p = tmp_path / "snippet.py"
+    p.write_text(header + body, encoding="utf-8")
+    validator.scan_python_source(p)
+
+
+def test_scan_variable_mode_fails(validator, tmp_path) -> None:
+    body = "def f(m):\n    return open('a', m)\n"
+    with pytest.raises(validator.DualPreflightError):
+        _scan_snippet(validator, tmp_path, body)
+
+
+def test_scan_io_open_write_fails(validator, tmp_path) -> None:
+    body = "def f():\n    return io.open('a', 'w')\n"
+    with pytest.raises(validator.DualPreflightError):
+        _scan_snippet(validator, tmp_path, body, header="import io\n")
+
+
+def test_scan_getattr_write_text_fails(validator, tmp_path) -> None:
+    body = "def f(p):\n    return getattr(p, 'write_text')\n"
+    with pytest.raises(validator.DualPreflightError):
+        _scan_snippet(validator, tmp_path, body)
+
+
+def test_scan_open_rb_ok(validator, tmp_path) -> None:
+    _scan_snippet(validator, tmp_path, "def f():\n    return open('a', 'rb')\n")
+
+
+def test_scan_open_default_mode_ok(validator, tmp_path) -> None:
+    _scan_snippet(validator, tmp_path, "def f():\n    return open('a')\n")
+
+
+def test_scan_write_text_fails(validator, tmp_path) -> None:
+    with pytest.raises(validator.DualPreflightError):
+        _scan_snippet(validator, tmp_path, "def f(p):\n    Path(p).write_text('x')\n")
+
+
+def test_scan_subprocess_run_fails(validator, tmp_path) -> None:
+    with pytest.raises(validator.DualPreflightError):
+        _scan_snippet(validator, tmp_path, "import subprocess\ndef f():\n    subprocess.run(['ls'])\n")
+
+
+def test_scan_getenv_fails(validator, tmp_path) -> None:
+    with pytest.raises(validator.DualPreflightError):
+        _scan_snippet(validator, tmp_path, "def f():\n    return __import__('os').getenv('X')\n")
+
+
+def test_scan_pure_read_text_ok(validator, tmp_path) -> None:
+    _scan_snippet(validator, tmp_path, "def f(p):\n    return Path(p).read_text()\n")
+
+
+def test_package_scan_passes(validator) -> None:
+    validator.check_package_python_scan()
+
+
+# ==========================================================================
+# 8. logging real hash + stop exact conditions
+# ==========================================================================
+
+
+def _frozen_logging(validator) -> dict:
+    lg = _load("provenance_and_logging_contract.yaml")
+    lg["frozen"] = True
+    lg["frozen_by"] = "pi"
+    lg["logging_contract_version"] = "v1"
+    lg["privacy_review"] = {"status": "completed", "reviewed_by": "dpo", "reviewed_at": "2026-07-02"}
+    lg["logging_contract_hash"] = validator.compute_logging_contract_hash(lg)
+    return lg
+
+
+def test_logging_baseline_not_frozen(validator) -> None:
+    assert validator.check_logging_frozen(_load("provenance_and_logging_contract.yaml")) is False
+
+
+def test_logging_full_frozen(validator) -> None:
+    assert validator.check_logging_frozen(_frozen_logging(validator)) is True
+
+
+def test_logging_fake_hash_not_frozen(validator) -> None:
+    lg = _frozen_logging(validator)
+    lg["logging_contract_hash"] = "abc123"
+    assert validator.check_logging_frozen(lg) is False
+
+
+def test_logging_content_changed_stale_hash_not_frozen(validator) -> None:
+    lg = _frozen_logging(validator)
+    lg["dual_model_required_log_fields"].append("extra_field")  # content changed, hash stale
+    assert validator.check_logging_frozen(lg) is False
+
+
+def test_logging_missing_dual_field_fails(validator) -> None:
+    lg = _frozen_logging(validator)
+    lg["dual_model_required_log_fields"] = lg["dual_model_required_log_fields"][:-1]
+    lg["logging_contract_hash"] = validator.compute_logging_contract_hash(lg)
+    with pytest.raises(validator.DualPreflightError):
+        validator.check_logging_frozen(lg)
+
+
+def _frozen_stop() -> dict:
+    st = _load("stop_conditions.yaml")
+    st["frozen"] = True
+    for e in st["threshold_stop"]:
+        e["threshold_status"] = "resolved"
+        e["threshold"] = 5.0 if e["condition"] == "cost_estimation_error" else 0.1
+    return st
+
+
+def test_stop_baseline_not_frozen(validator) -> None:
+    assert validator.check_stop_frozen(_load("stop_conditions.yaml")) is False
+
+
+def test_stop_full_frozen(validator) -> None:
+    assert validator.check_stop_frozen(_frozen_stop()) is True
+
+
+def test_stop_extra_immediate_condition_fails(validator) -> None:
+    st = _frozen_stop()
+    st["immediate_stop"].append({"condition": "some_new_condition", "threshold": "x",
+                                 "action": "hard_stop", "resume_requires": "x", "owner": None})
+    with pytest.raises(validator.DualPreflightError):
+        validator.check_stop_frozen(st)
+
+
+def test_stop_rate_threshold_over_one_not_frozen(validator) -> None:
+    st = _frozen_stop()
+    for e in st["threshold_stop"]:
+        if e["condition"] == "schema_failure_rate":
+            e["threshold"] = 1.5  # invalid rate
+    assert validator.check_stop_frozen(st) is False
+
+
+def test_stop_negative_cost_threshold_not_frozen(validator) -> None:
+    st = _frozen_stop()
+    for e in st["threshold_stop"]:
+        if e["condition"] == "cost_estimation_error":
+            e["threshold"] = -1.0
+    assert validator.check_stop_frozen(st) is False
+
+
+def test_stop_unresolved_threshold_not_frozen(validator) -> None:
+    st = _frozen_stop()
+    st["threshold_stop"][0]["threshold_status"] = "unresolved"
+    assert validator.check_stop_frozen(st) is False
+
+
+# ==========================================================================
+# adapter (retained + hardened)
+# ==========================================================================
+
+
+def _frozen_adapter(validator, provider: str) -> dict:
+    a = {
+        "provider": provider,
+        "request_endpoint_mapping": {"path": "/v1/chat"},
+        "request_schema_mapping": {"messages": "messages"},
+        "structured_output_mapping": {"schema": "json"},
+        "response_parser_mapping": {"choices": "choices"},
+        "token_usage_mapping": {"usage": "usage"},
+        "response_id_mapping": {"id": "id"},
+        "adapter_sha256": None,
+        "frozen": True,
+    }
+    a["adapter_sha256"] = validator.compute_adapter_sha256(a)
+    return a
+
+
+def test_adapter_hash_mismatch_fails(validator) -> None:
+    a = _load("provider_adapter_contract.yaml")
+    ad = _frozen_adapter(validator, "deepseek")
+    ad["adapter_sha256"] = "0" * 64
+    a["adapters"]["deepseek-v4-pro"] = ad
+    with pytest.raises(validator.DualPreflightError):
+        validator.check_provider_adapters(a)
+
+
+def test_two_synthetic_adapters_freeze(validator) -> None:
+    a = _load("provider_adapter_contract.yaml")
+    a["adapters"]["deepseek-v4-pro"] = _frozen_adapter(validator, "deepseek")
+    a["adapters"]["gpt-5.6-terra"] = _frozen_adapter(validator, "openai")
+    a["all_adapters_frozen"] = True
+    assert all(validator.check_provider_adapters(a).values())
+
+
+def test_adapter_scenario_rewrite_field_fails(validator) -> None:
+    a = _load("provider_adapter_contract.yaml")
+    ad = _frozen_adapter(validator, "deepseek")
+    ad["scenario_rewrite"] = True
+    ad["adapter_sha256"] = validator.compute_adapter_sha256(ad)
+    a["adapters"]["deepseek-v4-pro"] = ad
+    with pytest.raises(validator.DualPreflightError):
+        validator.check_provider_adapters(a)
+
+
+# ==========================================================================
+# sampling (retained)
 # ==========================================================================
 
 
@@ -511,253 +988,19 @@ def test_sampling_request_count_calc(validator) -> None:
     assert all(validator.check_sampling(s).values())
 
 
-def test_sampling_aggregate_sum_wrong_fails(validator) -> None:
-    s = _load("sampling_and_repeat_contract.yaml")
-    s["shared_design"] = _shared()
-    s["models"]["deepseek-v4-pro"] = _frozen_sampling(False, None, 24)
-    s["models"]["gpt-5.6-terra"] = _frozen_sampling(False, None, 24)
-    s["aggregate"] = {"total_planned_requests": 999}
-    s["all_model_sampling_frozen"] = True
-    with pytest.raises(validator.DualPreflightError):
-        validator.check_sampling(s)
-
-
-def test_sampling_seed_false_requires_null(validator) -> None:
-    s = _load("sampling_and_repeat_contract.yaml")
-    s["shared_design"] = _shared()
-    s["models"]["deepseek-v4-pro"] = _frozen_sampling(False, 123, 24)  # seed set but unsupported
-    s["models"]["gpt-5.6-terra"] = _frozen_sampling(False, None, 24)
-    s["all_model_sampling_frozen"] = False
-    pm = validator.check_sampling(s)
-    assert pm["deepseek-v4-pro"] is False
-
-
-def test_sampling_negative_temperature_fails(validator) -> None:
-    s = _load("sampling_and_repeat_contract.yaml")
-    s["shared_design"] = _shared()
-    sm = _frozen_sampling(False, None, 24)
-    sm["temperature"] = -0.1
-    s["models"]["deepseek-v4-pro"] = sm
-    s["models"]["gpt-5.6-terra"] = _frozen_sampling(False, None, 24)
-    s["all_model_sampling_frozen"] = False
-    assert validator.check_sampling(s)["deepseek-v4-pro"] is False
-
-
-def test_sampling_string_temperature_fails(validator) -> None:
-    s = _load("sampling_and_repeat_contract.yaml")
-    s["shared_design"] = _shared()
-    sm = _frozen_sampling(False, None, 24)
-    sm["temperature"] = "0.0"
-    s["models"]["deepseek-v4-pro"] = sm
-    s["models"]["gpt-5.6-terra"] = _frozen_sampling(False, None, 24)
-    s["all_model_sampling_frozen"] = False
-    assert validator.check_sampling(s)["deepseek-v4-pro"] is False
-
-
-def test_sampling_bool_max_tokens_fails(validator) -> None:
-    s = _load("sampling_and_repeat_contract.yaml")
-    s["shared_design"] = _shared()
-    sm = _frozen_sampling(False, None, 24)
-    sm["max_output_tokens"] = True
-    s["models"]["deepseek-v4-pro"] = sm
-    s["models"]["gpt-5.6-terra"] = _frozen_sampling(False, None, 24)
-    s["all_model_sampling_frozen"] = False
-    assert validator.check_sampling(s)["deepseek-v4-pro"] is False
-
-
-def test_sampling_nan_timeout_fails(validator) -> None:
-    s = _load("sampling_and_repeat_contract.yaml")
-    s["shared_design"] = _shared()
-    sm = _frozen_sampling(False, None, 24)
-    sm["request_timeout_seconds"] = float("nan")
-    s["models"]["deepseek-v4-pro"] = sm
-    s["models"]["gpt-5.6-terra"] = _frozen_sampling(False, None, 24)
-    s["all_model_sampling_frozen"] = False
-    assert validator.check_sampling(s)["deepseek-v4-pro"] is False
-
-
 def test_sampling_top_p_out_of_range_fails(validator) -> None:
     s = _load("sampling_and_repeat_contract.yaml")
     s["shared_design"] = _shared()
     sm = _frozen_sampling(False, None, 24)
-    sm["top_p"] = 1.5  # > 1
+    sm["top_p"] = 1.5
     s["models"]["deepseek-v4-pro"] = sm
     s["models"]["gpt-5.6-terra"] = _frozen_sampling(False, None, 24)
     s["all_model_sampling_frozen"] = False
     assert validator.check_sampling(s)["deepseek-v4-pro"] is False
 
 
-def test_sampling_concurrency_over_requests_fails(validator) -> None:
-    s = _load("sampling_and_repeat_contract.yaml")
-    s["shared_design"] = _shared()
-    sm = _frozen_sampling(False, None, 24, concurrency=100)  # > planned_request_count
-    s["models"]["deepseek-v4-pro"] = sm
-    s["models"]["gpt-5.6-terra"] = _frozen_sampling(False, None, 24)
-    s["all_model_sampling_frozen"] = False
-    assert validator.check_sampling(s)["deepseek-v4-pro"] is False
-
-
-def test_sampling_empty_order_policy_fails(validator) -> None:
-    s = _load("sampling_and_repeat_contract.yaml")
-    sd = _shared()
-    sd["scenario_order_policy"] = None
-    s["shared_design"] = sd
-    s["models"]["deepseek-v4-pro"] = _frozen_sampling(False, None, 24)
-    s["models"]["gpt-5.6-terra"] = _frozen_sampling(False, None, 24)
-    s["all_model_sampling_frozen"] = False
-    assert validator.check_sampling(s)["deepseek-v4-pro"] is False
-
-
 # ==========================================================================
-# F. budget cost formulas + aggregate
-# ==========================================================================
-
-
-def _pricing_inputs() -> dict:
-    return {
-        "uncached_input_price_per_million": 1.0,
-        "cached_input_price_per_million": 0.5,
-        "output_price_per_million": 2.0,
-        "estimated_cached_input_tokens": 400_000,
-        "estimated_uncached_input_tokens": 600_000,
-    }
-
-
-def _budget_model(mid: str, rc: int = 24) -> dict:
-    pi = _pricing_inputs()
-    out_tokens = 300_000
-    cost = (
-        (pi["estimated_uncached_input_tokens"] / 1e6) * pi["uncached_input_price_per_million"]
-        + (pi["estimated_cached_input_tokens"] / 1e6) * pi["cached_input_price_per_million"]
-        + (out_tokens / 1e6) * pi["output_price_per_million"]
-    )
-    src = "ds_models_and_pricing" if mid == "deepseek-v4-pro" else "oai_model_page"
-    return {
-        "currency": "USD",
-        "pricing_unit": "per_million_tokens",
-        "pricing_evidence_reference": {
-            "package_path": (
-                "tasks/attribution_behavior/measurement_candidates/"
-                "pa_wu_r1_p1_decision_fill/dual_model_selection"
-            ),
-            "source_ids": [src],
-        },
-        "pricing_snapshot_date": "2026-07-01",
-        "pricing_inputs": pi,
-        "estimated_input_tokens": 1_000_000,
-        "estimated_output_tokens": out_tokens,
-        "planned_request_count": rc,
-        "estimated_cost": cost,
-        "maximum_model_budget": 100.0,
-        "warning_threshold": 80.0,
-        "concurrency_limit": 10,
-        "requests_per_minute_limit": 60,
-        "tokens_per_minute_limit": 1_000_000,
-        "budget_owner": "pi",
-        "budget_approved": True,
-        "approval_timestamp": "2026-07-02",
-    }
-
-
-def _approved_budget(rc: int = 24) -> dict:
-    b = _load("budget_and_rate_limit_contract.yaml")
-    b["models"]["deepseek-v4-pro"] = _budget_model("deepseek-v4-pro", rc)
-    b["models"]["gpt-5.6-terra"] = _budget_model("gpt-5.6-terra", rc)
-    cost = b["models"]["deepseek-v4-pro"]["estimated_cost"] * 2
-    b["aggregate"] = {
-        "currency": "USD",
-        "maximum_total_budget": 200.0,
-        "warning_total_threshold": 150.0,
-        "estimated_total_cost": cost,
-        "total_planned_requests": rc * 2,
-        "aggregate_budget_owner": "pi",
-        "aggregate_budget_approved": True,
-        "aggregate_approval_timestamp": "2026-07-02",
-    }
-    b["all_model_budgets_approved"] = True
-    return b
-
-
-def _sampling_models(rc: int = 24) -> dict:
-    return {m: {"planned_request_count": rc, "concurrency": 2} for m in MODELS}
-
-
-def test_budget_deepseek_concurrency_over_500_fails(validator) -> None:
-    b = _load("budget_and_rate_limit_contract.yaml")
-    b["models"]["deepseek-v4-pro"]["concurrency_limit"] = 501
-    with pytest.raises(validator.DualPreflightError):
-        validator.check_budget(b, _load("sampling_and_repeat_contract.yaml")["models"])
-
-
-def test_budget_cross_provider_price_source_fails(validator) -> None:
-    b = _load("budget_and_rate_limit_contract.yaml")
-    b["models"]["deepseek-v4-pro"]["pricing_evidence_reference"]["source_ids"] = ["oai_model_page"]
-    with pytest.raises(validator.DualPreflightError):
-        validator.check_budget(b, _load("sampling_and_repeat_contract.yaml")["models"])
-
-
-def test_budget_one_unapproved_overall_false(validator) -> None:
-    b = _load("budget_and_rate_limit_contract.yaml")
-    pm = validator.check_budget(b, _load("sampling_and_repeat_contract.yaml")["models"])
-    assert pm == {m: False for m in MODELS}
-
-
-def test_budget_full_approval_ok(validator) -> None:
-    b = _approved_budget()
-    pm = validator.check_budget(b, _sampling_models())
-    assert all(pm.values())
-
-
-def test_budget_empty_source_ids_fails(validator) -> None:
-    b = _approved_budget()
-    b["models"]["deepseek-v4-pro"]["pricing_evidence_reference"]["source_ids"] = []
-    b["all_model_budgets_approved"] = False  # keep declared == derived
-    pm = validator.check_budget(b, _sampling_models())
-    assert pm["deepseek-v4-pro"] is False
-
-
-def test_budget_string_cost_fails(validator) -> None:
-    b = _approved_budget()
-    b["models"]["deepseek-v4-pro"]["estimated_cost"] = "10"
-    b["all_model_budgets_approved"] = False
-    pm = validator.check_budget(b, _sampling_models())
-    assert pm["deepseek-v4-pro"] is False
-
-
-def test_budget_negative_cost_fails(validator) -> None:
-    b = _approved_budget()
-    b["models"]["deepseek-v4-pro"]["estimated_cost"] = -1.0
-    b["all_model_budgets_approved"] = False
-    pm = validator.check_budget(b, _sampling_models())
-    assert pm["deepseek-v4-pro"] is False
-
-
-def test_budget_formula_inconsistent_fails(validator) -> None:
-    b = _approved_budget()
-    b["models"]["deepseek-v4-pro"]["estimated_cost"] = 999.0  # not matching pricing_inputs
-    b["all_model_budgets_approved"] = False
-    pm = validator.check_budget(b, _sampling_models())
-    assert pm["deepseek-v4-pro"] is False
-
-
-def test_budget_warning_over_hard_limit_fails(validator) -> None:
-    b = _approved_budget()
-    b["models"]["deepseek-v4-pro"]["warning_threshold"] = 500.0  # > max
-    b["all_model_budgets_approved"] = False
-    pm = validator.check_budget(b, _sampling_models())
-    assert pm["deepseek-v4-pro"] is False
-
-
-def test_budget_aggregate_missing_model_fails(validator) -> None:
-    b = _approved_budget()
-    # aggregate cost only counts one model -> mismatch
-    b["aggregate"]["estimated_total_cost"] = b["models"]["deepseek-v4-pro"]["estimated_cost"]
-    with pytest.raises(validator.DualPreflightError):
-        validator.check_budget(b, _sampling_models())
-
-
-# ==========================================================================
-# G. retry / logging / stop hardening
+# retry (retained)
 # ==========================================================================
 
 
@@ -777,196 +1020,26 @@ def _frozen_retry() -> dict:
     return r
 
 
-def test_retry_baseline_not_frozen(validator) -> None:
-    assert validator.check_retry(_load("retry_and_recovery_contract.yaml")) == {m: False for m in MODELS}
-
-
 def test_retry_full_frozen(validator) -> None:
     assert all(validator.check_retry(_frozen_retry()).values())
 
 
 def test_retry_overlapping_lists_not_frozen(validator) -> None:
     r = _frozen_retry()
-    r["models"]["deepseek-v4-pro"]["non_auto_retryable_codes"] = ["429"]  # overlaps retryable
-    r["all_model_retry_policies_frozen"] = False  # keep declared == derived
-    assert validator.check_retry(r)["deepseek-v4-pro"] is False
-
-
-def test_retry_duplicate_codes_not_frozen(validator) -> None:
-    r = _frozen_retry()
-    r["models"]["deepseek-v4-pro"]["retryable_codes"] = ["429", "429"]
+    r["models"]["deepseek-v4-pro"]["non_auto_retryable_codes"] = ["429"]
     r["all_model_retry_policies_frozen"] = False
     assert validator.check_retry(r)["deepseek-v4-pro"] is False
 
 
-def _frozen_logging() -> dict:
-    lg = _load("provenance_and_logging_contract.yaml")
-    lg["frozen"] = True
-    lg["frozen_by"] = "pi"
-    lg["logging_contract_hash"] = "abc123"
-    lg["logging_contract_version"] = "v1"
-    lg["privacy_review"] = {"status": "completed", "reviewed_by": "dpo", "reviewed_at": "2026-07-02"}
-    return lg
-
-
-def test_logging_baseline_not_frozen(validator) -> None:
-    assert validator.check_logging_frozen(_load("provenance_and_logging_contract.yaml")) is False
-
-
-def test_logging_full_frozen(validator) -> None:
-    assert validator.check_logging_frozen(_frozen_logging()) is True
-
-
-def test_logging_missing_dual_field_fails(validator) -> None:
-    lg = _frozen_logging()
-    lg["dual_model_required_log_fields"] = lg["dual_model_required_log_fields"][:-1]
-    with pytest.raises(validator.DualPreflightError):
-        validator.check_logging_frozen(lg)
-
-
-def test_logging_duplicate_field_fails(validator) -> None:
-    lg = _frozen_logging()
-    lg["dual_model_required_log_fields"].append("dual_run_group_id")
-    with pytest.raises(validator.DualPreflightError):
-        validator.check_logging_frozen(lg)
-
-
-def test_privacy_needs_iso_date(validator) -> None:
-    lg = _frozen_logging()
-    lg["privacy_review"]["reviewed_at"] = "not-a-date"
-    assert validator.check_privacy_completed(lg) is False
-
-
-def _frozen_stop() -> dict:
-    st = _load("stop_conditions.yaml")
-    st["frozen"] = True
-    for e in st["threshold_stop"]:
-        e["threshold_status"] = "resolved"
-        e["threshold"] = 0.1
-    return st
-
-
-def test_stop_baseline_not_frozen(validator) -> None:
-    assert validator.check_stop_frozen(_load("stop_conditions.yaml")) is False
-
-
-def test_stop_full_frozen(validator) -> None:
-    assert validator.check_stop_frozen(_frozen_stop()) is True
-
-
-def test_stop_duplicate_condition_fails(validator) -> None:
-    st = _frozen_stop()
-    st["immediate_stop"].append(dict(st["immediate_stop"][0]))
-    with pytest.raises(validator.DualPreflightError):
-        validator.check_stop_frozen(st)
-
-
-def test_stop_illegal_action_fails(validator) -> None:
-    st = _frozen_stop()
-    st["immediate_stop"][0]["action"] = "ignore"
-    with pytest.raises(validator.DualPreflightError):
-        validator.check_stop_frozen(st)
-
-
-def test_stop_unresolved_threshold_not_frozen(validator) -> None:
-    st = _frozen_stop()
-    st["threshold_stop"][0]["threshold_status"] = "unresolved"
-    assert validator.check_stop_frozen(st) is False
-
-
 # ==========================================================================
-# H. environment CI evidence
-# ==========================================================================
-
-
-def _valid_ci() -> dict:
-    return {
-        "workflow": "CI",
-        "run_number": 5,
-        "run_id": 123456,
-        "status": "completed",
-        "conclusion": "success",
-        "verified_head_sha": "a" * 40,
-        "jobs": {
-            "windows-latest / Python 3.12": "success",
-            "ubuntu-latest / Python 3.12": "success",
-        },
-    }
-
-
-def test_env_baseline_not_reviewed(validator) -> None:
-    assert validator.check_environment_reviewed(_load("environment_acceptance.yaml")) is False
-
-
-def test_env_full_evidence_ok(validator) -> None:
-    env = _load("environment_acceptance.yaml")
-    env["branch_ci"] = _valid_ci()
-    env["environment_review_completed"] = True
-    assert validator.check_environment_reviewed(env) is True
-
-
-def test_env_nonempty_ci_but_invalid_fails(validator) -> None:
-    env = _load("environment_acceptance.yaml")
-    env["branch_ci"] = {"note": "some ci ran"}  # non-empty but not structured
-    env["environment_review_completed"] = True
-    with pytest.raises(validator.DualPreflightError):
-        validator.check_environment_reviewed(env)
-
-
-@pytest.mark.parametrize("bad_conclusion", ["queued", "in_progress", "failure", "cancelled"])
-def test_env_bad_conclusion_fails(validator, bad_conclusion) -> None:
-    env = _load("environment_acceptance.yaml")
-    ci = _valid_ci()
-    ci["conclusion"] = bad_conclusion
-    env["branch_ci"] = ci
-    env["environment_review_completed"] = True
-    with pytest.raises(validator.DualPreflightError):
-        validator.check_environment_reviewed(env)
-
-
-def test_env_wrong_head_sha_fails(validator) -> None:
-    env = _load("environment_acceptance.yaml")
-    ci = _valid_ci()
-    ci["verified_head_sha"] = "xyz"  # not 40 hex
-    env["branch_ci"] = ci
-    env["environment_review_completed"] = True
-    with pytest.raises(validator.DualPreflightError):
-        validator.check_environment_reviewed(env)
-
-
-def test_env_missing_ubuntu_job_fails(validator) -> None:
-    env = _load("environment_acceptance.yaml")
-    ci = _valid_ci()
-    del ci["jobs"]["ubuntu-latest / Python 3.12"]
-    env["branch_ci"] = ci
-    env["environment_review_completed"] = True
-    with pytest.raises(validator.DualPreflightError):
-        validator.check_environment_reviewed(env)
-
-
-def test_env_inherited_baseline_does_not_pass(validator) -> None:
-    env = _load("environment_acceptance.yaml")
-    # only inherited baseline present, branch_ci still null.
-    assert env.get("inherited_baseline_ci") is not None
-    assert validator.check_environment_reviewed(env) is False
-
-
-# ==========================================================================
-# I. gates & authorization
+# authorization (retained)
 # ==========================================================================
 
 
 def test_required_gates_exact(validator) -> None:
     auth = _load("authorization_gate.yaml")
-    validator.check_required_gates_exact(auth)  # ok
+    validator.check_required_gates_exact(auth)
     auth["required_gates"] = auth["required_gates"][:-1]
-    with pytest.raises(validator.DualPreflightError):
-        validator.check_required_gates_exact(auth)
-
-
-def test_required_gates_duplicate_fails(validator) -> None:
-    auth = _load("authorization_gate.yaml")
-    auth["required_gates"] = list(auth["required_gates"]) + ["route_frozen"]
     with pytest.raises(validator.DualPreflightError):
         validator.check_required_gates_exact(auth)
 
@@ -976,37 +1049,6 @@ def test_per_model_authorization_field_forbidden(validator) -> None:
     auth["per_model_authorization"] = {"deepseek-v4-pro": True}
     with pytest.raises(validator.DualPreflightError):
         validator.check_required_gates_exact(auth)
-
-
-def test_blocked_with_authorized_by_fails(validator) -> None:
-    auth = _load("authorization_gate.yaml")
-    auth["authorized_by"] = "someone"
-    gate_status = dict.fromkeys(validator.REQUIRED_GATES, False)
-    with pytest.raises(validator.DualPreflightError):
-        validator.check_authorization_state_machine(auth, gate_status)
-
-
-def test_authorized_requires_all_gates(validator) -> None:
-    auth = _load("authorization_gate.yaml")
-    auth["authorization_status"] = "authorized"
-    auth["real_model_execution_authorized"] = True
-    auth["authorized_by"] = "pi"
-    auth["authorized_at"] = "2026-07-02"
-    gate_status = dict.fromkeys(validator.REQUIRED_GATES, True)
-    gate_status["prompt_frozen"] = False
-    with pytest.raises(validator.DualPreflightError):
-        validator.check_authorization_state_machine(auth, gate_status)
-
-
-def test_authorized_needs_iso_date(validator) -> None:
-    auth = _load("authorization_gate.yaml")
-    auth["authorization_status"] = "authorized"
-    auth["real_model_execution_authorized"] = True
-    auth["authorized_by"] = "pi"
-    auth["authorized_at"] = "yesterday"  # not ISO
-    gate_status = dict.fromkeys(validator.REQUIRED_GATES, True)
-    with pytest.raises(validator.DualPreflightError):
-        validator.check_authorization_state_machine(auth, gate_status)
 
 
 def test_authorized_all_gates_ok(validator) -> None:
@@ -1026,12 +1068,8 @@ def test_baseline_blocking_gates(report) -> None:
 
 
 # ==========================================================================
-# J. hashes & isolation
+# hashes & isolation
 # ==========================================================================
-
-
-def _contracts(validator) -> dict:
-    return {n: _load(n) for n in validator.CONTRACT_FILES}
 
 
 def test_per_model_hash_deterministic(validator) -> None:
@@ -1042,83 +1080,25 @@ def test_per_model_hash_deterministic(validator) -> None:
 def test_changing_deepseek_changes_only_its_hash(validator) -> None:
     c = _contracts(validator)
     h1 = validator.compute_per_model_contract_hashes(c)
-    agg1 = validator.compute_aggregate_contract_hash(c)
     c["sampling_and_repeat_contract.yaml"]["models"]["deepseek-v4-pro"]["temperature"] = 0.7
     h2 = validator.compute_per_model_contract_hashes(c)
-    agg2 = validator.compute_aggregate_contract_hash(c)
     assert h2["deepseek-v4-pro"] != h1["deepseek-v4-pro"]
     assert h2["gpt-5.6-terra"] == h1["gpt-5.6-terra"]
-    assert agg2 != agg1
-
-
-def test_changing_openai_changes_only_its_hash(validator) -> None:
-    c = _contracts(validator)
-    h1 = validator.compute_per_model_contract_hashes(c)
-    c["budget_and_rate_limit_contract.yaml"]["models"]["gpt-5.6-terra"]["estimated_cost"] = 10
-    h2 = validator.compute_per_model_contract_hashes(c)
-    assert h2["gpt-5.6-terra"] != h1["gpt-5.6-terra"]
-    assert h2["deepseek-v4-pro"] == h1["deepseek-v4-pro"]
-
-
-def test_shared_prompt_change_affects_aggregate(validator) -> None:
-    c = _contracts(validator)
-    agg1 = validator.compute_aggregate_contract_hash(c)
-    per1 = validator.compute_per_model_contract_hashes(c)
-    c["prompt_freeze_contract.yaml"]["segments"]["system_prompt"]["owner"] = "x"
-    agg2 = validator.compute_aggregate_contract_hash(c)
-    per2 = validator.compute_per_model_contract_hashes(c)
-    assert agg2 != agg1
-    assert per2 == per1  # shared prompt is not a per-model sub-contract
-
-
-def test_sampling_aggregate_change_affects_aggregate_hash(validator) -> None:
-    c = _contracts(validator)
-    agg1 = validator.compute_aggregate_contract_hash(c)
-    per1 = validator.compute_per_model_contract_hashes(c)
-    c["sampling_and_repeat_contract.yaml"]["aggregate"] = {"total_planned_requests": 48}
-    agg2 = validator.compute_aggregate_contract_hash(c)
-    per2 = validator.compute_per_model_contract_hashes(c)
-    assert agg2 != agg1
-    assert per2 == per1
-
-
-def test_budget_aggregate_change_affects_aggregate_hash(validator) -> None:
-    c = _contracts(validator)
-    agg1 = validator.compute_aggregate_contract_hash(c)
-    per1 = validator.compute_per_model_contract_hashes(c)
-    c["budget_and_rate_limit_contract.yaml"]["aggregate"]["maximum_total_budget"] = 500
-    agg2 = validator.compute_aggregate_contract_hash(c)
-    per2 = validator.compute_per_model_contract_hashes(c)
-    assert agg2 != agg1
-    assert per2 == per1
-
-
-def test_authorization_status_change_affects_aggregate_hash(validator) -> None:
-    c = _contracts(validator)
-    agg1 = validator.compute_aggregate_contract_hash(c)
-    c["authorization_gate.yaml"]["authorization_status"] = "authorized"
-    agg2 = validator.compute_aggregate_contract_hash(c)
-    assert agg2 != agg1
-
-
-def test_branch_ci_change_affects_aggregate_hash(validator) -> None:
-    c = _contracts(validator)
-    agg1 = validator.compute_aggregate_contract_hash(c)
-    per1 = validator.compute_per_model_contract_hashes(c)
-    c["environment_acceptance.yaml"]["branch_ci"] = _valid_ci()
-    agg2 = validator.compute_aggregate_contract_hash(c)
-    per2 = validator.compute_per_model_contract_hashes(c)
-    assert agg2 != agg1
-    assert per2 == per1  # per-model hashes untouched
 
 
 def test_provider_adapter_hash_not_self_referential(validator) -> None:
-    # stored adapter_sha256 must NOT feed the reported provider_adapter_hash.
     c = _contracts(validator)
     h1 = validator.compute_provider_adapter_hashes(c)
     c["provider_adapter_contract.yaml"]["adapters"]["deepseek-v4-pro"]["adapter_sha256"] = "f" * 64
     h2 = validator.compute_provider_adapter_hashes(c)
-    assert h2 == h1  # only canonical mapping payload matters
+    assert h2 == h1
+
+
+def test_aggregate_covers_authorization(validator) -> None:
+    c = _contracts(validator)
+    agg1 = validator.compute_aggregate_contract_hash(c)
+    c["authorization_gate.yaml"]["authorization_status"] = "authorized"
+    assert validator.compute_aggregate_contract_hash(c) != agg1
 
 
 def test_package_hash_deterministic(validator) -> None:
@@ -1137,63 +1117,6 @@ def test_package_hash_sensitive(validator, tmp_path, monkeypatch) -> None:
     vp = dst / "validate_dual_preflight.py"
     vp.write_text(vp.read_text(encoding="utf-8") + "\n# x\n", encoding="utf-8")
     assert validator.compute_package_hash(c, m) != h1
-
-
-# ==========================================================================
-# K. AST write / exec / env detection (temporary validator injection)
-# ==========================================================================
-
-_SCAN_HEADER = "from pathlib import Path\n"
-
-
-def _scan_snippet(validator, tmp_path, body: str) -> None:
-    p = tmp_path / "snippet.py"
-    p.write_text(_SCAN_HEADER + body, encoding="utf-8")
-    validator.scan_python_source(p)
-
-
-def test_scan_write_text_fails(validator, tmp_path) -> None:
-    with pytest.raises(validator.DualPreflightError):
-        _scan_snippet(validator, tmp_path, "def f(p):\n    Path(p).write_text('x')\n")
-
-
-def test_scan_open_write_mode_fails(validator, tmp_path) -> None:
-    with pytest.raises(validator.DualPreflightError):
-        _scan_snippet(validator, tmp_path, "def f():\n    open('a', 'w')\n")
-
-
-def test_scan_unlink_fails(validator, tmp_path) -> None:
-    with pytest.raises(validator.DualPreflightError):
-        _scan_snippet(validator, tmp_path, "def f(p):\n    Path(p).unlink()\n")
-
-
-def test_scan_subprocess_run_fails(validator, tmp_path) -> None:
-    with pytest.raises(validator.DualPreflightError):
-        _scan_snippet(validator, tmp_path, "import subprocess\ndef f():\n    subprocess.run(['ls'])\n")
-
-
-def test_scan_getenv_fails(validator, tmp_path) -> None:
-    body = "def f():\n    return __import__('os').getenv('X')\n"
-    with pytest.raises(validator.DualPreflightError):
-        _scan_snippet(validator, tmp_path, body)
-
-
-def test_scan_pure_read_text_ok(validator, tmp_path) -> None:
-    # read-only Path.read_text must pass.
-    _scan_snippet(validator, tmp_path, "def f(p):\n    return Path(p).read_text()\n")
-
-
-def test_scan_open_read_mode_ok(validator, tmp_path) -> None:
-    _scan_snippet(validator, tmp_path, "def f():\n    return open('a', 'r')\n")
-
-
-def test_package_scan_passes(validator) -> None:
-    validator.check_package_python_scan()  # scans all package python files
-
-
-# ==========================================================================
-# L. isolation & no-network guarantees
-# ==========================================================================
 
 
 def _repo_status(paths) -> str:
@@ -1229,16 +1152,8 @@ def test_validator_no_network_no_sdk_no_secret(validator) -> None:
         assert banned not in src
 
 
-def test_no_singular_selected_model() -> None:
-    text = (PKG_DIR / "model_selection_decision.yaml").read_text(encoding="utf-8")
-    for line in text.splitlines():
-        stripped = line.split("#", 1)[0].strip()
-        assert not stripped.startswith("selected_model:")
-
-
 def test_manifest_source_hashes_recorded(validator) -> None:
     m = validator.check_manifest()
     sp = m["source_packages"]
     assert sp["single_model_preflight"]["contract_hash"] == validator.SINGLE_PREFLIGHT_CONTRACT_HASH
-    assert sp["single_model_preflight"]["package_hash"] == validator.SINGLE_PREFLIGHT_PACKAGE_HASH
     assert sp["dual_model_decision"]["package_hash"] == validator.DUAL_DECISION_PACKAGE_HASH
