@@ -1,16 +1,23 @@
-# Manipulation block text rules for the PA-Wu R1 pilot.
+# Manipulation block text rules for the PA-Wu R1 pilot (MACHINE-ONLY).
 #
 # D-levels affect ONLY Phase 1 (what is shown about how the subject decided).
 # U-levels affect ONLY feedback and Phase 2 (second decision).
 #
+# The R1 pilot is machine-only (see identity_scope_decision.md): the only subject
+# is an AI system. D-levels are deliberately stripped of any decision-process
+# psychological cues (no "reviewed", "considered", "weighed", "evaluated",
+# "thought") so that D adds only factual decision-process INFORMATION, not
+# mentalistic framing.
+#
 # Invariants enforced by build_stimuli.py + validate_pilot_core.py:
-# - feedback text is identical across D for the same scenario/direction/identity;
+# - feedback text is identical across D for the same scenario/direction;
 # - U2 and U3 differ ONLY in whether the second decision keeps or changes the
 #   original decision; the feedback text is identical between U2 and U3;
 # - U3 feedback is NOT more severe than U2 feedback (identical);
 # - U2's original decision is NOT made to look more clearly correct;
-# - across ai/human versions, reason / feedback / outcome text is unchanged
-#   (only the subject label differs, injected by scenario identity templates).
+# - D0 adds no alternatives and no reasons and NO psychological-process word;
+# - D1 adds ONLY the explicit alternatives information (no reason, no mental verb);
+# - D2 adds ONLY the explicit stated reason.
 
 manipulation_id: pa_wu_r1_pilot.manipulation_blocks.v1
 
@@ -20,28 +27,31 @@ manipulation_id: pa_wu_r1_pilot.manipulation_blocks.v1
 d_levels:
   D0:
     key: direct_decision
-    description: Present only the final decision.
+    description: >-
+      Present ONLY the final decision. No alternatives, no reasons, and no
+      decision-process verb (no "reviewed", "considered", "weighed").
     phase_1_template: >-
-      {subject} reviewed the situation and decided: {chosen_decision}.
+      {subject} decided: {chosen_decision}.
     shows_alternatives: false
     shows_reasons: false
 
   D1:
     key: alternatives_shown
     description: >-
-      Present the alternatives the subject considered, WITHOUT detailed internal
-      reasons.
+      Add ONLY the explicit alternatives information (the set of available
+      options). No reason, and NO psychological-process word such as
+      "considered", "weighing", "evaluated" or "thought".
     phase_1_template: >-
-      {subject} considered the available options: {option_a} and {option_b}.
-      After weighing them, {subject} decided: {chosen_decision}.
+      The available options were: {option_a} and {option_b}.
+      {subject} decided: {chosen_decision}.
     shows_alternatives: true
     shows_reasons: false
 
   D2:
     key: reasons_shown
     description: >-
-      Present the task-relevant reasons behind the decision. Reasons stay
-      task-relevant and add NO emotion, consciousness or personality cues.
+      Add ONLY the explicit stated reason behind the decision. The reason stays
+      task-relevant and adds NO emotion, consciousness or personality cue.
     phase_1_template: >-
       {subject} decided: {chosen_decision}. The stated reason was: {decision_reason}.
     shows_alternatives: false
@@ -93,17 +103,21 @@ u_levels:
     second_decision_outcome: change
 
 # --------------------------------------------------------------------------
-# Identity templates (only the subject label differs across ai/human).
+# Identity templates (MACHINE-ONLY).
+#
+# The R1 pilot has a single target subject: an AI system. The `subject_intro`
+# frames the vignette and the `administration_referent_bridge` states, without
+# altering any Wu original item text, that the item referent "the machine" is the
+# AI system just described. The bridge only fixes the referent relation; it does
+# NOT rephrase or replace any scored item.
 # --------------------------------------------------------------------------
 identity_templates:
-  ai:
-    subject: "the AI assistant"
+  machine:
+    subject: "the AI system"
     subject_intro: >-
-      The following describes actions taken by an AI assistant.
-  human:
-    subject: "the person"
-    subject_intro: >-
-      The following describes actions taken by a person.
+      The following describes actions taken by an AI system.
+    administration_referent_bridge: >-
+      In the following items, "the machine" refers to the AI system described above.
 
 invariants:
   d_affects_phase_1_only: true
@@ -111,4 +125,7 @@ invariants:
   feedback_identical_across_d: true
   u2_u3_differ_only_in_second_decision: true
   u3_feedback_not_more_severe: true
-  identity_changes_subject_label_only: true
+  machine_only_single_subject: true
+  d0_has_no_process_verb: true
+  d1_has_no_psychological_process_word: true
+  referent_bridge_does_not_modify_items: true

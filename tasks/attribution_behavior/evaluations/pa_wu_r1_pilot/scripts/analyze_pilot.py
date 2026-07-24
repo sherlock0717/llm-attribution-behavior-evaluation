@@ -2,13 +2,14 @@
 
 Outputs:
   outputs/demo_descriptives.csv   - mean/sd/n/95% CI per construct x condition
-                                     x target_identity x judge_model
+                                     x judge_model (machine-only target subject)
   outputs/demo_contrasts.csv      - planned contrasts P1..P6 per construct,
-                                     overall and split by identity / model
+                                     overall and split by judge model
   outputs/demo_quality_summary.json - parse/validation, balance, repeat count
 
-All numbers are SYNTHETIC demo. The analysis uses the six-level condition factor
-and does NOT estimate a full D x U interaction. No model ranking is produced.
+All numbers are SYNTHETIC demo. The R1 pilot is machine-only (no ai/human
+comparison). The analysis uses the six-level condition factor and does NOT
+estimate a full D x U interaction. No model ranking is produced.
 """
 
 from __future__ import annotations
@@ -31,8 +32,8 @@ QUALITY_OUT = OUT_DIR / "demo_quality_summary.json"
 CONDITIONS = ["C0", "C1", "C2", "C3", "C4", "C5"]
 # planned contrasts: (id, left_condition, right_condition, interpretation)
 PLANNED_CONTRASTS = [
-    ("P1", "C1", "C0", "effect of showing alternatives"),
-    ("P2", "C2", "C0", "effect of showing reasons"),
+    ("P1", "C1", "C0", "explicit alternatives information"),
+    ("P2", "C2", "C0", "explicit stated-reason information"),
     ("P3", "C3", "C2", "effect of feedback only"),
     ("P4", "C4", "C2", "effect of feedback + keeping decision"),
     ("P5", "C5", "C2", "effect of feedback + changing decision"),
@@ -51,7 +52,7 @@ def _ci95(mean: float, sd: float, n: int) -> tuple[float, float]:
 def descriptives(df: pd.DataFrame) -> pd.DataFrame:
     valid = df[df["construct_score"].notna()]
     rows: list[dict] = []
-    group_cols = ["construct", "condition_id", "target_identity", "judge_model_id"]
+    group_cols = ["construct", "condition_id", "judge_model_id"]
     for keys, g in valid.groupby(group_cols):
         mean = float(g["construct_score"].mean())
         sd = float(g["construct_score"].std(ddof=1)) if len(g) > 1 else float("nan")
@@ -60,8 +61,8 @@ def descriptives(df: pd.DataFrame) -> pd.DataFrame:
         rows.append({
             "construct": keys[0],
             "condition_id": keys[1],
-            "target_identity": keys[2],
-            "judge_model_id": keys[3],
+            "target_identity": "machine",
+            "judge_model_id": keys[2],
             "n": n,
             "mean": round(mean, 4),
             "sd": None if math.isnan(sd) else round(sd, 4),
@@ -69,7 +70,7 @@ def descriptives(df: pd.DataFrame) -> pd.DataFrame:
             "ci95_high": round(hi, 4),
             "data_status": "synthetic_demo",
         })
-    return pd.DataFrame(rows).sort_values(["construct", "condition_id", "target_identity", "judge_model_id"])
+    return pd.DataFrame(rows).sort_values(["construct", "condition_id", "judge_model_id"])
 
 
 def _cell_mean(df: pd.DataFrame, construct: str, cond: str, **filt) -> tuple[float, float, int]:
@@ -92,48 +93,38 @@ def _pooled_sd(sd1: float, n1: int, sd2: float, n2: int) -> float:
 
 def contrasts(df: pd.DataFrame) -> pd.DataFrame:
     constructs = sorted(df["construct"].unique())
-    identities = [None, "ai", "human"]
-    models = [None, "deepseek-v4-pro", "gpt-5.6-terra"]
+    # machine-only: no identity split; only overall + split by judge model.
+    splits: list[tuple[str, dict]] = [("overall", {})]
+    for model in ("deepseek-v4-pro", "gpt-5.6-terra"):
+        splits.append((f"model={model}", {"judge_model_id": model}))
     rows: list[dict] = []
     for construct in constructs:
         for pid, left, right, interp in PLANNED_CONTRASTS:
-            # overall + split by identity, + split by model.
-            for ident in identities:
-                for model in models:
-                    if ident is not None and model is not None:
-                        continue  # keep to 2-way splits (overall / identity / model)
-                    filt = {}
-                    split = "overall"
-                    if ident is not None:
-                        filt["target_identity"] = ident
-                        split = f"identity={ident}"
-                    if model is not None:
-                        filt["judge_model_id"] = model
-                        split = f"model={model}"
-                    lm, lsd, ln = _cell_mean(df, construct, left, **filt)
-                    rm, rsd, rn = _cell_mean(df, construct, right, **filt)
-                    diff = lm - rm
-                    psd = _pooled_sd(lsd, ln, rsd, rn)
-                    d_eff = diff / psd if psd and not math.isnan(psd) and psd > 0 else float("nan")
-                    se = psd * math.sqrt(1 / ln + 1 / rn) if psd and not math.isnan(psd) and ln and rn else float("nan")
-                    lo = diff - _T95 * se if not math.isnan(se) else float("nan")
-                    hi = diff + _T95 * se if not math.isnan(se) else float("nan")
-                    rows.append({
-                        "construct": construct,
-                        "contrast_id": pid,
-                        "contrast": f"{left} - {right}",
-                        "interpretation": interp,
-                        "split": split,
-                        "left_mean": round(lm, 4),
-                        "right_mean": round(rm, 4),
-                        "difference": round(diff, 4),
-                        "effect_size_d": None if math.isnan(d_eff) else round(d_eff, 4),
-                        "ci95_low": None if math.isnan(lo) else round(lo, 4),
-                        "ci95_high": None if math.isnan(hi) else round(hi, 4),
-                        "n_left": ln,
-                        "n_right": rn,
-                        "data_status": "synthetic_demo",
-                    })
+            for split, filt in splits:
+                lm, lsd, ln = _cell_mean(df, construct, left, **filt)
+                rm, rsd, rn = _cell_mean(df, construct, right, **filt)
+                diff = lm - rm
+                psd = _pooled_sd(lsd, ln, rsd, rn)
+                d_eff = diff / psd if psd and not math.isnan(psd) and psd > 0 else float("nan")
+                se = psd * math.sqrt(1 / ln + 1 / rn) if psd and not math.isnan(psd) and ln and rn else float("nan")
+                lo = diff - _T95 * se if not math.isnan(se) else float("nan")
+                hi = diff + _T95 * se if not math.isnan(se) else float("nan")
+                rows.append({
+                    "construct": construct,
+                    "contrast_id": pid,
+                    "contrast": f"{left} - {right}",
+                    "interpretation": interp,
+                    "split": split,
+                    "left_mean": round(lm, 4),
+                    "right_mean": round(rm, 4),
+                    "difference": round(diff, 4),
+                    "effect_size_d": None if math.isnan(d_eff) else round(d_eff, 4),
+                    "ci95_low": None if math.isnan(lo) else round(lo, 4),
+                    "ci95_high": None if math.isnan(hi) else round(hi, 4),
+                    "n_left": ln,
+                    "n_right": rn,
+                    "data_status": "synthetic_demo",
+                })
     return pd.DataFrame(rows)
 
 

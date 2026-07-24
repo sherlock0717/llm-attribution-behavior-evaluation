@@ -1,11 +1,15 @@
-"""Build the 192 pilot stimuli deterministically.
+"""Build the 96 pilot stimuli deterministically (MACHINE-ONLY).
 
 Reads condition_matrix.csv, scenario_registry.yaml and manipulation_blocks.yaml
 and writes stimuli.jsonl. IDs are deterministic; text is assembled from the
 manipulation-block templates so that D affects only Phase 1 and U affects only
-feedback / Phase 2. AI and human versions differ only in the subject label.
+feedback / Phase 2.
 
-6 conditions x 2 identities x 8 scenarios x 2 directions = 192 materials.
+The R1 pilot is machine-only (see identity_scope_decision.md): the only subject
+is an AI system. `target_identity` is retained as a schema field but fixed to
+"machine"; it is no longer an experimental factor.
+
+6 conditions x 8 scenarios x 2 directions x 1 identity(machine) = 96 materials.
 """
 
 from __future__ import annotations
@@ -23,7 +27,8 @@ SCENARIO_REGISTRY = PKG_DIR / "scenario_registry.yaml"
 MANIPULATION_BLOCKS = PKG_DIR / "manipulation_blocks.yaml"
 STIMULI_OUT = PKG_DIR / "stimuli.jsonl"
 
-IDENTITIES = ("ai", "human")
+# Machine-only: a single fixed target identity.
+IDENTITIES = ("machine",)
 DIRECTIONS = ("A", "B")
 
 
@@ -95,18 +100,21 @@ def build() -> list[dict]:
                     phase_1 = _fmt(d_levels[d]["phase_1_template"], **fmt_kw)
                     feedback_text = _fmt(u_levels[u]["feedback_template"], **fmt_kw)
                     phase_2 = _fmt(u_levels[u]["phase_2_template"], **fmt_kw)
+                    referent_bridge = itpl["administration_referent_bridge"].strip()
 
                     parts = [itpl["subject_intro"].strip(), phase_1]
                     if feedback_text:
                         parts.append(feedback_text)
                     if phase_2:
                         parts.append(phase_2)
+                    # the administration referent bridge is appended AFTER the
+                    # vignette; it only states that item referent "the machine"
+                    # is the AI system just described. It does not modify items.
+                    parts.append(referent_bridge)
                     complete = " ".join(p for p in parts if p)
 
-                    # pairing ids: same semantic cell across identity / direction.
-                    semantic_pair_id = f"{cid}__{sid}__{direction}"          # identity pair share this
-                    identity_pair_id = f"{cid}__{sid}__{direction}"          # ai<->human counterpart key
-                    direction_pair_id = f"{cid}__{sid}__{identity}"          # A<->B counterpart key
+                    # pairing id: the A<->B counterpart within the same cell.
+                    direction_pair_id = f"{cid}__{sid}__{identity}"
 
                     rec = {
                         "material_id": material_id,
@@ -119,10 +127,9 @@ def build() -> list[dict]:
                         "phase_1_text": phase_1,
                         "feedback_text": feedback_text,
                         "phase_2_text": phase_2,
+                        "referent_bridge_text": referent_bridge,
                         "complete_stimulus_text": complete,
                         "source_scenario_id": sid,
-                        "semantic_pair_id": semantic_pair_id,
-                        "identity_pair_id": identity_pair_id,
                         "direction_pair_id": direction_pair_id,
                     }
                     # forbid two conditions producing identical complete text.
@@ -133,8 +140,8 @@ def build() -> list[dict]:
                     seen_text[complete] = material_id
                     records.append(rec)
 
-    if len(records) != 192:
-        raise ValueError(f"expected 192 stimuli, got {len(records)}")
+    if len(records) != 96:
+        raise ValueError(f"expected 96 stimuli, got {len(records)}")
     return records
 
 
@@ -143,7 +150,7 @@ def main() -> None:
     with STIMULI_OUT.open("w", encoding="utf-8") as fh:
         for rec in records:
             fh.write(json.dumps(rec, ensure_ascii=False, sort_keys=True) + "\n")
-    print(f"wrote {len(records)} stimuli -> {STIMULI_OUT.relative_to(PKG_DIR.parent)}")
+    print(f"wrote {len(records)} machine-only stimuli -> {STIMULI_OUT.relative_to(PKG_DIR.parent)}")
 
 
 if __name__ == "__main__":

@@ -38,7 +38,7 @@
     "u_level": "string (U0..U3)",
     "scenario_id": "string",
     "direction_version": "string (A | B)",
-    "target_identity": "string (ai | human)",
+    "target_identity": "string (fixed value: machine)",
     "repeat_index": "integer >= 0",
     "raw_response": "string (preserved verbatim, never overwritten)",
     "parsed_item_scores": "object mapping item_id -> numeric score on the item's native scale",
@@ -64,7 +64,8 @@
     "pa_*": "1..5"
   },
   "notes": [
-    "judge_model_id is NOT a material factor; both models judge the same 192 materials.",
+    "R1 pilot is machine-only: target_identity is retained as a schema field but fixed to 'machine' (see identity_scope_decision.md).",
+    "judge_model_id is NOT a material factor; both models judge the same 96 materials (2 x 96 = 192 responses per repeat).",
     "raw_response is preserved; scoring reads parsed_item_scores and never mutates raw_response.",
     "No missing-value imputation: a construct score is only computed when all its member items are present and valid."
   ]

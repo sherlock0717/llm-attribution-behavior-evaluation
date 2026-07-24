@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PA—Wu R1 Pilot (machine-only) — Showcase v1</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="site">
+    <div class="wrap">
+      <h1>PA—Wu R1 Pilot — Attribution to an AI System</h1>
+      <div class="sub">Machine-only pilot · six-condition decision-process design · two co-primary judge models</div>
+      <div class="synth-banner" id="synthBanner">
+        <strong>Synthetic demonstration data.</strong> Every number and figure on this page is
+        synthetic and exists only to validate the scoring / analysis / reporting pipeline. It is
+        <strong>not</strong> a real model result, capability claim, or model ranking.
+      </div>
+    </div>
+  </header>
+
+  <nav class="toc">
+    <div class="wrap">
+      <a href="#s1">Question</a>
+      <a href="#s2">Constructs</a>
+      <a href="#s3">Design</a>
+      <a href="#s4">Coverage</a>
+      <a href="#s5">Scenarios</a>
+      <a href="#s6">Judge models</a>
+      <a href="#s8">Results</a>
+      <a href="#s9">Model-adjusted</a>
+      <a href="#s10">Judge diff</a>
+      <a href="#s11">Scenario spread</a>
+      <a href="#s12">Materials</a>
+      <a href="#s13">Boundaries</a>
+      <a href="#s14">Real-data</a>
+      <a href="#s15">GitHub</a>
+    </div>
+  </nav>
+
+  <main class="wrap" id="app">
+    <!-- 1. Research question -->
+    <section id="s1">
+      <h2>1. Research question</h2>
+      <p class="lead">What the pilot asks.</p>
+      <p id="researchQuestion" class="muted"></p>
+      <div class="card">
+        <p><strong>Free will</strong>: <span id="freeWillRole" class="muted"></span></p>
+        <p><strong>Identity scope</strong>: <span id="identityScope" class="muted"></span></p>
+      </div>
+    </section>
+
+    <!-- 2. Construct framework -->
+    <section id="s2">
+      <h2>2. Construct framework</h2>
+      <p class="lead">Six constructs, each on its own native scale. No cross-scale total.</p>
+      <div class="grid cols-3" id="constructCards"></div>
+    </section>
+
+    <!-- 3. Six-condition design -->
+    <section id="s3">
+      <h2>3. Six-condition design (C0–C5)</h2>
+      <p class="lead">D-levels change decision-process information only; U-levels change feedback / second decision only.</p>
+      <div class="grid cols-3" id="conditionCards"></div>
+    </section>
+
+    <!-- 4. Material coverage -->
+    <section id="s4">
+      <h2>4. 96-material coverage</h2>
+      <p class="lead">6 conditions × 8 scenarios × 2 directions × 1 machine identity = 96 materials.</p>
+      <div class="grid cols-2" id="coverageCards"></div>
+    </section>
+
+    <!-- 5. Scenario browser -->
+    <section id="s5">
+      <h2>5. Eight-scenario browser</h2>
+      <p class="lead">Pick a scenario, condition and direction to read the exact machine-only stimulus a judge model receives.</p>
+      <div class="controls">
+        <label>Scenario
+          <select id="scenSelect"></select>
+        </label>
+        <label>Condition
+          <select id="scenCondSelect"></select>
+        </label>
+        <label>Direction
+          <select id="scenDirSelect"></select>
+        </label>
+      </div>
+      <div id="scenStim"></div>
+    </section>
+
+    <!-- 6. Judge models -->
+    <section id="s6">
+      <h2>6. Two judge models</h2>
+      <p class="lead">Two co-primary judge models each score the same 96 materials. This is not a ranking.</p>
+      <div class="grid cols-2" id="judgeCards"></div>
+    </section>
+
+    <!-- 8. Condition x construct results -->
+    <section id="s8">
+      <h2>8. Condition × construct results</h2>
+      <p class="lead">Mean construct score by condition. Toggle raw descriptive vs. model-adjusted contrast framing below in section 9.</p>
+      <div class="controls">
+        <label>Construct
+          <select id="resConstructSelect"></select>
+        </label>
+      </div>
+      <table id="condResultTable"></table>
+      <div class="figure">
+        <img data-fig="fig1_condition_construct_means.png" alt="condition x construct means" />
+        <div class="cap">Condition × primary construct means (native scale). Synthetic demonstration data.</div>
+      </div>
+    </section>
+
+    <!-- 9. Model-adjusted contrasts -->
+    <section id="s9">
+      <h2>9. Planned contrasts P1–P6</h2>
+      <p class="lead">Estimated marginal contrasts from the mixed-effects model, with Holm correction within each construct.</p>
+      <div class="controls">
+        <label>Construct
+          <select id="contrastConstructSelect"></select>
+        </label>
+        <div class="toggle-group" id="contrastMode">
+          <button data-mode="raw">Raw descriptive</button>
+          <button data-mode="adjusted" class="active">Model-adjusted</button>
+        </div>
+      </div>
+      <table id="contrastTable"></table>
+      <div class="figure">
+        <img data-fig="fig2_model_adjusted_contrasts.png" alt="model-adjusted contrasts" />
+        <div class="cap">Model-adjusted estimated-marginal contrasts P1–P6 (primary constructs). Synthetic demonstration data.</div>
+      </div>
+    </section>
+
+    <!-- 10. Judge model difference -->
+    <section id="s10">
+      <h2>10. Judge-model differences</h2>
+      <p class="lead">Descriptive per-model construct means. Not a ranking; no capability claim.</p>
+      <table id="judgeDiffTable"></table>
+      <div class="figure">
+        <img data-fig="fig3_model_profiles.png" alt="judge model profiles" />
+        <div class="cap">Judge-model construct profiles. Synthetic demonstration data; not a ranking.</div>
+      </div>
+    </section>
+
+    <!-- 11. Scenario heterogeneity -->
+    <section id="s11">
+      <h2>11. Scenario heterogeneity</h2>
+      <p class="lead">Spread of scenario-level means per construct.</p>
+      <table id="scenHetTable"></table>
+      <div class="figure">
+        <img data-fig="fig4_scenario_construct_heatmap.png" alt="scenario construct heatmap" />
+        <div class="cap">Scenario × construct mean heatmap. Synthetic demonstration data.</div>
+      </div>
+    </section>
+
+    <!-- 12. Material examples -->
+    <section id="s12">
+      <h2>12. Material examples</h2>
+      <p class="lead">A few machine-only stimuli across conditions (full set in the scenario browser).</p>
+      <div id="materialExamples"></div>
+    </section>
+
+    <!-- 13. Method boundaries -->
+    <section id="s13">
+      <h2>13. Method boundaries</h2>
+      <ul id="boundaryList" class="muted"></ul>
+    </section>
+
+    <!-- 14. Real-data replacement -->
+    <section id="s14">
+      <h2>14. Real-data replacement flow</h2>
+      <p class="lead">How the synthetic demo becomes a real result.</p>
+      <ol id="replacementList" class="muted"></ol>
+    </section>
+
+    <!-- 15. GitHub entry -->
+    <section id="s15">
+      <h2>15. Data &amp; code entry points</h2>
+      <div class="card" id="githubCard"></div>
+    </section>
+  </main>
+
+  <div class="lightbox" id="lightbox">
+    <span class="lb-close" id="lbClose">&times;</span>
+    <img id="lbImg" alt="figure" />
+    <div class="lb-cap" id="lbCap"></div>
+  </div>
+
+  <footer class="site">
+    <div class="wrap">
+      PA—Wu R1 Pilot showcase v1 · machine-only target subject · synthetic demonstration data ·
+      no model ranking · no ai/human comparison.
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

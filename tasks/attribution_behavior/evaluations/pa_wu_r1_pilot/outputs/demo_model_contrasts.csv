@@ -1,37 +1,37 @@
-construct,contrast_id,contrast,interpretation,raw_descriptive_contrast,model_adjusted_contrast,converged,data_status
-IN,P1,C1 - C0,effect of showing alternatives,0.246094,0.171875,True,synthetic_demo
-IN,P2,C2 - C0,effect of showing reasons,0.484375,0.34375,True,synthetic_demo
-IN,P3,C3 - C2,effect of feedback only,0.21875,0.359375,True,synthetic_demo
-IN,P4,C4 - C2,effect of feedback + keeping decision,0.242188,0.46875,True,synthetic_demo
-IN,P5,C5 - C2,effect of feedback + changing decision,0.476562,0.546875,True,synthetic_demo
-IN,P6,C5 - C4,effect of changing vs keeping decision,0.234375,0.078125,True,synthetic_demo
-GO,P1,C1 - C0,effect of showing alternatives,0.214844,0.375,True,synthetic_demo
-GO,P2,C2 - C0,effect of showing reasons,0.683594,0.84375,True,synthetic_demo
-GO,P3,C3 - C2,effect of feedback only,0.144531,-0.203125,True,synthetic_demo
-GO,P4,C4 - C2,effect of feedback + keeping decision,0.050781,0.03125,True,synthetic_demo
-GO,P5,C5 - C2,effect of feedback + changing decision,0.355469,0.21875,True,synthetic_demo
-GO,P6,C5 - C4,effect of changing vs keeping decision,0.304688,0.1875,True,synthetic_demo
-MSI,P1,C1 - C0,effect of showing alternatives,0.283854,0.0625,True,synthetic_demo
-MSI,P2,C2 - C0,effect of showing reasons,0.476562,0.3125,True,synthetic_demo
-MSI,P3,C3 - C2,effect of feedback only,0.216146,0.322917,True,synthetic_demo
-MSI,P4,C4 - C2,effect of feedback + keeping decision,0.447917,0.385417,True,synthetic_demo
-MSI,P5,C5 - C2,effect of feedback + changing decision,0.526042,0.552083,True,synthetic_demo
-MSI,P6,C5 - C4,effect of changing vs keeping decision,0.078125,0.166667,True,synthetic_demo
-IC,P1,C1 - C0,effect of showing alternatives,0.1875,0.2875,True,synthetic_demo
-IC,P2,C2 - C0,effect of showing reasons,0.59375,0.65,True,synthetic_demo
-IC,P3,C3 - C2,effect of feedback only,-0.025,-0.225,True,synthetic_demo
-IC,P4,C4 - C2,effect of feedback + keeping decision,0.171875,0.375,True,synthetic_demo
-IC,P5,C5 - C2,effect of feedback + changing decision,0.4125,0.25,True,synthetic_demo
-IC,P6,C5 - C4,effect of changing vs keeping decision,0.240625,-0.125,True,synthetic_demo
-PA5,P1,C1 - C0,effect of showing alternatives,0.015625,-0.15,True,synthetic_demo
-PA5,P2,C2 - C0,effect of showing reasons,0.303125,0.2625,True,synthetic_demo
-PA5,P3,C3 - C2,effect of feedback only,0.24375,0.1,True,synthetic_demo
-PA5,P4,C4 - C2,effect of feedback + keeping decision,0.209375,0.1,True,synthetic_demo
-PA5,P5,C5 - C2,effect of feedback + changing decision,0.446875,0.3625,True,synthetic_demo
-PA5,P6,C5 - C4,effect of changing vs keeping decision,0.2375,0.2625,True,synthetic_demo
-PA8,P1,C1 - C0,effect of showing alternatives,0.033203,-0.109375,True,synthetic_demo
-PA8,P2,C2 - C0,effect of showing reasons,0.287109,0.34375,True,synthetic_demo
-PA8,P3,C3 - C2,effect of feedback only,0.173828,0.109375,True,synthetic_demo
-PA8,P4,C4 - C2,effect of feedback + keeping decision,0.248047,0.195312,True,synthetic_demo
-PA8,P5,C5 - C2,effect of feedback + changing decision,0.396484,0.34375,True,synthetic_demo
-PA8,P6,C5 - C4,effect of changing vs keeping decision,0.148438,0.148438,True,synthetic_demo
+construct,contrast_id,contrast,interpretation,estimate,standard_error,statistic,p_value,p_value_holm,ci95_low,ci95_high,raw_descriptive_contrast,judge_model_interaction_estimate,data_status
+IN,P1,C1 - C0,explicit alternatives information,0.179688,0.155313,1.15694,0.247297,0.741891,-0.12472,0.484095,0.179688,-0.046875,synthetic_demo
+IN,P2,C2 - C0,explicit stated-reason information,0.507813,0.155313,3.269613,0.001077,0.006462,0.203405,0.81222,0.507812,0.109375,synthetic_demo
+IN,P3,C3 - C2,effect of feedback only,0.15625,0.155313,1.006035,0.314399,0.741891,-0.148157,0.460657,0.15625,-0.15625,synthetic_demo
+IN,P4,C4 - C2,effect of feedback + keeping decision,0.03125,0.155313,0.201207,0.840537,0.840537,-0.273157,0.335657,0.03125,0.03125,synthetic_demo
+IN,P5,C5 - C2,effect of feedback + changing decision,0.242188,0.155313,1.559354,0.118913,0.594563,-0.06222,0.546595,0.242188,-0.140625,synthetic_demo
+IN,P6,C5 - C4,effect of changing vs keeping decision,0.210938,0.155313,1.358147,0.174417,0.697668,-0.09347,0.515345,0.210938,-0.171875,synthetic_demo
+GO,P1,C1 - C0,explicit alternatives information,-0.148437,0.170828,-0.86893,0.384885,0.94306,-0.483254,0.186379,-0.148438,-0.546875,synthetic_demo
+GO,P2,C2 - C0,explicit stated-reason information,0.351563,0.170828,2.057992,0.039591,0.197954,0.016746,0.686379,0.351562,-0.328125,synthetic_demo
+GO,P3,C3 - C2,effect of feedback only,-0.171875,0.170828,-1.00613,0.314353,0.94306,-0.506692,0.162942,-0.171875,-0.1875,synthetic_demo
+GO,P4,C4 - C2,effect of feedback + keeping decision,0.171875,0.170828,1.00613,0.314353,0.94306,-0.162942,0.506692,0.171875,0.21875,synthetic_demo
+GO,P5,C5 - C2,effect of feedback + changing decision,0.398437,0.170828,2.332391,0.01968,0.118081,0.063621,0.733254,0.398438,0.453125,synthetic_demo
+GO,P6,C5 - C4,effect of changing vs keeping decision,0.226562,0.170828,1.326262,0.184753,0.739012,-0.108254,0.561379,0.226562,0.234375,synthetic_demo
+MSI,P1,C1 - C0,explicit alternatives information,0.515625,0.156391,3.29702,0.000977,0.004886,0.209104,0.822146,0.515625,-0.260417,synthetic_demo
+MSI,P2,C2 - C0,explicit stated-reason information,0.645833,0.156391,4.1296,3.6e-05,0.000218,0.339312,0.952355,0.645833,-0.333333,synthetic_demo
+MSI,P3,C3 - C2,effect of feedback only,0.375,0.156391,2.397832,0.016492,0.06597,0.068479,0.681521,0.375,0.270833,synthetic_demo
+MSI,P4,C4 - C2,effect of feedback + keeping decision,0.307292,0.156391,1.96489,0.049427,0.099167,0.00077,0.613813,0.307292,-0.03125,synthetic_demo
+MSI,P5,C5 - C2,effect of feedback + changing decision,0.333333,0.156391,2.131407,0.033056,0.099167,0.026812,0.639855,0.333333,0.0625,synthetic_demo
+MSI,P6,C5 - C4,effect of changing vs keeping decision,0.026042,0.156391,0.166516,0.867751,0.867751,-0.28048,0.332563,0.026042,0.09375,synthetic_demo
+IC,P1,C1 - C0,explicit alternatives information,0.275,0.153919,1.786658,0.073993,0.13532,-0.026675,0.576675,0.275,0.475,synthetic_demo
+IC,P2,C2 - C0,explicit stated-reason information,0.43125,0.153919,2.801805,0.005082,0.025409,0.129575,0.732925,0.43125,0.0625,synthetic_demo
+IC,P3,C3 - C2,effect of feedback only,0.3375,0.153919,2.192717,0.028328,0.113311,0.035825,0.639175,0.3375,0.175,synthetic_demo
+IC,P4,C4 - C2,effect of feedback + keeping decision,0.31875,0.153919,2.070899,0.038368,0.115105,0.017075,0.620425,0.31875,-0.2625,synthetic_demo
+IC,P5,C5 - C2,effect of feedback + changing decision,0.6,0.153919,3.898163,9.7e-05,0.000582,0.298325,0.901675,0.6,-0.05,synthetic_demo
+IC,P6,C5 - C4,effect of changing vs keeping decision,0.28125,0.153919,1.827264,0.06766,0.13532,-0.020425,0.582925,0.28125,0.2125,synthetic_demo
+PA5,P1,C1 - C0,explicit alternatives information,0.21875,0.183273,1.193575,0.232644,0.697933,-0.140458,0.577958,0.21875,0.1375,synthetic_demo
+PA5,P2,C2 - C0,explicit stated-reason information,0.6,0.183273,3.273806,0.001061,0.006367,0.240792,0.959208,0.6,-0.0,synthetic_demo
+PA5,P3,C3 - C2,effect of feedback only,0.10625,0.183273,0.579736,0.562092,0.906212,-0.252958,0.465458,0.10625,0.2875,synthetic_demo
+PA5,P4,C4 - C2,effect of feedback + keeping decision,0.1375,0.183273,0.750247,0.453106,0.906212,-0.221708,0.496708,0.1375,0.275,synthetic_demo
+PA5,P5,C5 - C2,effect of feedback + changing decision,0.575,0.183273,3.137397,0.001705,0.008523,0.215792,0.934208,0.575,-0.6,synthetic_demo
+PA5,P6,C5 - C4,effect of changing vs keeping decision,0.4375,0.183273,2.38715,0.01698,0.067918,0.078292,0.796708,0.4375,-0.875,synthetic_demo
+PA8,P1,C1 - C0,explicit alternatives information,0.242188,0.149649,1.618375,0.105582,0.316745,-0.051118,0.535493,0.242188,0.21875,synthetic_demo
+PA8,P2,C2 - C0,explicit stated-reason information,0.636719,0.149649,4.25476,2.1e-05,0.000126,0.343413,0.930025,0.636719,0.148437,synthetic_demo
+PA8,P3,C3 - C2,effect of feedback only,0.058594,0.149649,0.391542,0.695396,0.695396,-0.234712,0.3519,0.058594,-0.070312,synthetic_demo
+PA8,P4,C4 - C2,effect of feedback + keeping decision,0.144531,0.149649,0.965804,0.334142,0.668284,-0.148775,0.437837,0.144531,-0.054687,synthetic_demo
+PA8,P5,C5 - C2,effect of feedback + changing decision,0.460938,0.149649,3.080133,0.002069,0.010345,0.167632,0.754243,0.460938,-0.59375,synthetic_demo
+PA8,P6,C5 - C4,effect of changing vs keeping decision,0.316406,0.149649,2.114329,0.034487,0.137949,0.0231,0.609712,0.316406,-0.539062,synthetic_demo

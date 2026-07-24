@@ -3,18 +3,25 @@
 Systematic validity review of the pilot stimuli, based on a full read of
 `scenario_registry.yaml`, `manipulation_blocks.yaml` and `stimuli.jsonl`.
 
-Each scenario is reviewed against ten criteria:
+This is a **machine-only** review (see `identity_scope_decision.md`): the single
+target subject is an AI system, so there is no ai/human symmetry to check.
+
+Each scenario is reviewed against twelve criteria:
 
 1. A/B directions have comparable reasonableness;
 2. the two directions differ only in *which* choice, not one being clearly superior;
 3. D0/D1/D2 change only decision-process information;
-4. D1 carries no implicit reasons;
+4. D1 carries no implicit reasons and no psychological-process word;
 5. D2 reasons add no emotion / consciousness / personality / moral cue;
 6. U1/U2/U3 feedback text is identical;
 7. U2 vs U3 differ only in the second decision;
-8. AI/human versions change only the identity label;
+8. every stimulus uses the single machine subject ("the AI system");
 9. no obvious systematic difference in text length / complexity;
-10. which constructs the scenario mainly touches, and any construct contamination.
+10. which constructs the scenario mainly touches, and any construct contamination;
+11. the stimulus subject and the actual scored-item referent are consistent
+    (the administration referent bridge ties "the machine" to the AI system);
+12. the D-manipulation text adds no extra mental-process cue (no "reviewed",
+    "considered", "weighing", "evaluated", "thought").
 
 Only content that clearly affects evaluation validity is changed; no purposeless
 polishing is done.
@@ -29,35 +36,43 @@ uniformly for all scenarios and were verified programmatically by
 
 - **Criterion 3 (D isolation):** D0 → decision only; D1 → alternatives + decision
   (no reason); D2 → decision + reason. Feedback and Phase 2 are unaffected by D.
-- **Criterion 4 (D1 no implicit reason):** the D1 template names the two options
-  and states the decision, with the neutral connector "After weighing them"; no
-  reason clause is present. Confirmed.
+- **Criterion 4 (D1 no reason, no psych word):** the D1 template names the two
+  options ("The available options were: … and …") and states the decision, with
+  **no** reason clause and **no** psychological-process verb. The earlier connector
+  "After weighing them" was removed precisely because "weighing" is a mental-process
+  cue; D1 now adds only the factual alternatives information. Confirmed.
 - **Criterion 6 (feedback identical across U1/U2/U3):** the feedback clause is the
   same scenario feedback string for U1, U2, U3; U0 has empty feedback. Confirmed.
 - **Criterion 7 (U2 vs U3):** identical feedback; Phase 2 differs only in "kept the
   original decision" (U2) vs "changed the original decision, now choosing …" (U3).
   Confirmed. U3 feedback is not more severe (it is identical), and U2's original
   decision is not framed as more clearly correct.
-- **Criterion 8 (identity invariance):** the only text difference between the AI and
-  human version of the same cell is the subject label ("the AI assistant" vs "the
-  person"). Reason, feedback and outcome text are byte-identical otherwise. The AI
-  version is not made more mechanical; the human version is not made more emotional.
-- **Criterion 9 (length/complexity):** within a scenario, ai vs human differ by only
-  the subject-label token count; A vs B differ by only the option/decision noun
-  phrases, which were written to comparable length. Word counts per cell are
-  recorded in `manipulation_review_summary.csv` and show no systematic imbalance
-  large enough to threaten validity (word count is a screening signal, not a hard
-  constraint).
+- **Criterion 8 (machine-only single subject):** every stimulus uses the single
+  subject label "the AI system". There is **no** human version in R1, so there is no
+  ai/human symmetry to verify; the earlier ai/human parity check is retired.
+- **Criterion 9 (length/complexity):** within a scenario, A vs B differ by only the
+  option/decision noun phrases, written to comparable length. Word counts per cell
+  are recorded in `manipulation_review_summary.csv` (machine-only) and show no
+  systematic imbalance large enough to threaten validity (word count is a screening
+  signal, not a hard constraint).
+- **Criterion 11 (subject/item referent consistency):** the scored Wu items refer
+  to "the machine". Each stimulus appends the administration referent bridge — *"In
+  the following items, 'the machine' refers to the AI system described above."* —
+  so the stimulus subject ("the AI system") and the item referent ("the machine")
+  are explicitly tied. The bridge only states the referent relation; it does **not**
+  rewrite any Wu item. Confirmed for all 96 materials by `validate_pilot_core.py`.
+- **Criterion 12 (no extra mental-process cue in D):** D0/D1 phase-1 text is scanned
+  for the words "reviewed", "considered", "weighing", "evaluated", "thought"; none
+  appear. D2 adds only the explicit stated reason. Confirmed programmatically.
 
 **Text-surface note (NOT a validity change):** the standalone `phase_1_text` /
 `feedback_text` / `phase_2_text` fields begin with a lowercase subject label
-(e.g. "the AI assistant …"), because the capitalized sentence opener lives in the
+(e.g. "the AI system …"), because the capitalized sentence opener lives in the
 `subject_intro` that precedes them in `complete_stimulus_text`. This is a purely
 cosmetic artifact of field decomposition and does **not** affect what a judge
 model reads in `complete_stimulus_text` (which opens with a capitalized intro
-sentence). Per the "no purposeless polishing" rule, and because changing it would
-alter the deterministic IDs/hashes and the already-generated demo pipeline without
-any validity benefit, **no change is made.**
+sentence and closes with the referent bridge). Per the "no purposeless polishing"
+rule, **no change is made.**
 
 ---
 
@@ -190,17 +205,26 @@ any validity benefit, **no change is made.**
 
 ## Overall review outcome
 
-- All 8 scenarios **PASS** the ten-criterion review.
-- No material was changed: every structural manipulation invariant (D isolation,
-  D1-no-reason, feedback identity across U, U2/U3 second-decision-only, identity
-  invariance) holds, and the four "wording" notes (s2 independence, s5 capability,
-  s8 adapts) were confirmed to refer to the *task outcome / plan*, not to the
-  deciding subject's construct-relevant attributes, so they do not create construct
-  contamination.
-- The only observation is a cosmetic lowercase-opener artifact in the decomposed
-  phase fields, which does not affect the judge-visible `complete_stimulus_text`
-  and is deliberately left unchanged to preserve deterministic IDs/hashes.
-- Word-count screening (see `manipulation_review_summary.csv`) shows no systematic
-  length/complexity imbalance across A/B, ai/human, or the D/U levels beyond the
-  intended structural additions (alternatives in D1; reasons in D2; feedback in
+- **Machine-only decision.** The R1 pilot measures attribution to an AI system
+  only. The four primary Wu & Shen 2026 constructs use machine-specific original
+  items that must not be rewritten, so no human parallel is produced in R1
+  (see `identity_scope_decision.md`). The earlier ai/human-symmetry conclusion is
+  removed; there is no ai/human comparison to report.
+- All 8 scenarios **PASS** the twelve-criterion review.
+- Every structural manipulation invariant holds: D isolation; D1 adds only the
+  explicit alternatives information with no reason and no psychological-process
+  word; D2 adds only the stated reason; feedback identity across U1/U2/U3; U2/U3
+  differ only in the second decision. The four "wording" notes (s2 independence,
+  s5 capability, s8 adapts) refer to the *task outcome / plan*, not the subject's
+  construct-relevant attributes, so they do not create construct contamination.
+- **Subject/item referent (criterion 11):** the administration referent bridge
+  ties "the machine" (item referent) to "the AI system" (stimulus subject) without
+  modifying any Wu item; verified for all 96 materials.
+- **No extra process cue (criterion 12):** the D0/D1 phase-1 text contains none of
+  "reviewed / considered / weighing / evaluated / thought"; verified programmatically.
+- The only cosmetic observation is the lowercase-opener artifact in the decomposed
+  phase fields, which does not affect the judge-visible `complete_stimulus_text`.
+- Word-count screening (`manipulation_review_summary.csv`, machine-only) shows no
+  systematic length/complexity imbalance across A/B or the D/U levels beyond the
+  intended structural additions (alternatives in D1; reason in D2; feedback in
   U1–U3; second decision in U2/U3).

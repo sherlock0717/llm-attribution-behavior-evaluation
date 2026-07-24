@@ -1,6 +1,6 @@
 condition_id,d_level,u_level,shows_alternatives,shows_reasons,has_feedback,second_decision,second_decision_outcome,description
 C0,D0,U0,no,no,no,no,none,direct decision; no feedback; no second decision
-C1,D1,U0,yes,no,no,no,none,shows considered alternatives; no feedback; no second decision
+C1,D1,U0,yes,no,no,no,none,shows explicit alternatives information; no feedback; no second decision
 C2,D2,U0,no,yes,no,no,none,shows decision reasons; no feedback; no second decision
 C3,D2,U1,no,yes,yes,no,none,shows reasons; receives feedback; no second decision
 C4,D2,U2,no,yes,yes,yes,keep,shows reasons; feedback; second decision keeps original

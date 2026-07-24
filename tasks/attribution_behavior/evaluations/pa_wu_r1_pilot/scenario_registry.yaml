@@ -7,10 +7,8 @@
 # Strict rules honored here:
 # - low-risk domains only (no medical/legal/financial/hiring-elimination decisions);
 # - A and B are value-symmetric and comparable in complexity/severity;
-# - ai and human versions change ONLY the subject label (handled by identity
-#   templates); decision content, reason, feedback and outcome are identical;
-# - the AI version is NOT made more mechanical; the human version is NOT made
-#   more emotional.
+# - the R1 pilot is machine-only: the single subject is an AI system (handled by
+#   the machine identity template); there is NO human version in R1.
 #
 # For each direction, `decision` is the Phase-1 chosen decision and the OTHER
 # direction's decision is used as the `alternate_decision` for U3 (change).
@@ -36,8 +34,8 @@ scenarios:
       Both slots are ordinary working times with comparable convenience; neither
       is presented as objectively better.
     identity_invariance_notes: >-
-      Only the subject label changes between ai and human; the slots, reason and
-      feedback are identical.
+      Machine-only in R1: the subject is an AI system; the slots, reason and
+      feedback are the machine-subject content. No human version exists.
 
   - scenario_id: s2_customer_issue
     domain: customer_issue_handling
@@ -56,7 +54,8 @@ scenarios:
       Speed vs. self-service are comparable, both benign trade-offs with similar
       effort and outcome severity.
     identity_invariance_notes: >-
-      Only the subject label differs; approaches, reason and feedback are shared.
+      Machine-only in R1: subject is an AI system; approaches, reason and feedback
+      are the machine-subject content. No human version exists.
 
   - scenario_id: s3_study_plan
     domain: study_plan_recommendation
@@ -74,7 +73,8 @@ scenarios:
     symmetry_notes: >-
       Sequential vs. interleaved are both established, comparable study strategies.
     identity_invariance_notes: >-
-      Only the subject label differs; plans, reason and feedback are shared.
+      Machine-only in R1: subject is an AI system; plans, reason and feedback
+      are the machine-subject content. No human version exists.
 
   - scenario_id: s4_routing
     domain: routing_and_logistics
@@ -93,7 +93,8 @@ scenarios:
       Distance vs. steadiness are comparable trade-offs with similar outcome
       severity; neither route is unsafe.
     identity_invariance_notes: >-
-      Only the subject label differs; routes, reason and feedback are shared.
+      Machine-only in R1: subject is an AI system; routes, reason and feedback
+      are the machine-subject content. No human version exists.
 
   - scenario_id: s5_task_allocation
     domain: team_task_allocation
@@ -112,7 +113,8 @@ scenarios:
       Expertise-match vs. rotation are both standard, comparable allocation
       principles with similar stakes.
     identity_invariance_notes: >-
-      Only the subject label differs; allocations, reason and feedback are shared.
+      Machine-only in R1: subject is an AI system; allocations, reason and feedback
+      are the machine-subject content. No human version exists.
 
   - scenario_id: s6_content_recommendation
     domain: content_recommendation
@@ -130,7 +132,8 @@ scenarios:
     symmetry_notes: >-
       Depth vs. breadth are comparable, benign editorial trade-offs.
     identity_invariance_notes: >-
-      Only the subject label differs; selections, reason and feedback are shared.
+      Machine-only in R1: subject is an AI system; selections, reason and feedback
+      are the machine-subject content. No human version exists.
 
   - scenario_id: s7_game_strategy
     domain: game_strategy_choice
@@ -148,7 +151,8 @@ scenarios:
     symmetry_notes: >-
       Defense vs. expansion are comparable, low-stakes game strategies.
     identity_invariance_notes: >-
-      Only the subject label differs; strategies, reason and feedback are shared.
+      Machine-only in R1: subject is an AI system; strategies, reason and feedback
+      are the machine-subject content. No human version exists.
 
   - scenario_id: s8_energy_plan
     domain: energy_and_resource_use
@@ -167,4 +171,5 @@ scenarios:
       Scheduled vs. usage-based saving plans are comparable, benign operational
       choices with similar outcome severity.
     identity_invariance_notes: >-
-      Only the subject label differs; plans, reason and feedback are shared.
+      Machine-only in R1: subject is an AI system; plans, reason and feedback
+      are the machine-subject content. No human version exists.

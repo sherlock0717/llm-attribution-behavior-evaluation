@@ -18,7 +18,7 @@ notes which demo figures can be reused directly.
 | 7 | Two-model evaluation method | `study_protocol.yaml` (judge_models) | `figures/fig3_model_profiles.png` |
 | 8 | Results overview | `analyze_pilot.py` outputs | `figures/fig1_condition_construct_means.png` |
 | 9 | Construct differences | scored construct tables | `figures/fig3_model_profiles.png` |
-| 10 | AI–human attribution difference | contrasts × identity | `figures/fig2_ai_human_difference.png` |
+| 10 | Model-adjusted contrasts | estimated marginal contrasts P1–P6 | `figures/fig2_model_adjusted_contrasts.png` |
 | 11 | Scenario heterogeneity | scenario × construct summary | `figures/fig4_scenario_construct_heatmap.png` |
 | 12 | Stability & failure types | `demo_quality_summary.json` (parse/validation, repeats) | `demo_quality_summary.json` |
 | 13 | Method boundaries | `analysis_plan.md` (pilot vs full B*, no D×U) | — |
@@ -28,10 +28,10 @@ notes which demo figures can be reused directly.
 ## Directly reusable demo outputs
 
 - `outputs/figures/fig1_condition_construct_means.png` — sections 5, 8
-- `outputs/figures/fig2_ai_human_difference.png` — section 10
+- `outputs/figures/fig2_model_adjusted_contrasts.png` — section 10 (model-adjusted)
 - `outputs/figures/fig3_model_profiles.png` — sections 7, 9
 - `outputs/figures/fig4_scenario_construct_heatmap.png` — section 11
-- `outputs/figures/fig5_contrast_forest.png` — section 5 (planned contrasts)
+- `outputs/figures/fig5_contrast_forest.png` — section 5 (raw planned contrasts)
 - `outputs/demo_descriptives.csv`, `outputs/demo_contrasts.csv` — tables
 - `reports/demo_report.md` — narrative scaffold
 

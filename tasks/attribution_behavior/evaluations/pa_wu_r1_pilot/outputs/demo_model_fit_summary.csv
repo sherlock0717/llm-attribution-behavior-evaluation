@@ -1,7 +1,7 @@
-construct,n_obs,n_groups,random_intercept_variance,residual_variance,converged,optimizer,failure_reason,data_status
-IN,384,8,0.049361,0.440374,True,cg,,synthetic_demo
-GO,384,8,0.02109,0.363718,True,cg,,synthetic_demo
-MSI,384,8,0.060065,0.350241,True,cg,,synthetic_demo
-IC,384,8,0.049923,0.412008,True,cg,,synthetic_demo
-PA5,384,8,0.040009,0.353646,True,cg,,synthetic_demo
-PA8,384,8,0.02667,0.196885,True,cg,,synthetic_demo
+construct,n_obs,n_material_groups,material_random_intercept_variance,residual_variance,optimizer_attempts,optimizer_used,captured_warnings,converged,data_status
+IN,192,96,0.027154,0.331644,lbfgs;cg,cg,,True,synthetic_demo
+GO,192,96,0.071063,0.324789,lbfgs,lbfgs,lbfgs: UserWarning: Random effects covariance is singular,True,synthetic_demo
+MSI,192,96,0.0,0.391332,lbfgs;cg;powell,powell,"cg: ConvergenceWarning: Maximum Likelihood optimization failed to converge. Check mle_retvals || cg: ConvergenceWarning: Gradient optimization failed, |grad| = 0.291591 || cg: ConvergenceWarning: The MLE may be on the boundary of the parameter space. || powell: ConvergenceWarning: The MLE may be on the boundary of the parameter space.",True,synthetic_demo
+IC,192,96,0.0,0.379055,lbfgs;cg;powell,powell,"cg: ConvergenceWarning: Maximum Likelihood optimization failed to converge. Check mle_retvals || cg: ConvergenceWarning: Gradient optimization failed, |grad| = 0.034055 || cg: ConvergenceWarning: The MLE may be on the boundary of the parameter space. || powell: ConvergenceWarning: The MLE may be on the boundary of the parameter space.",True,synthetic_demo
+PA5,192,96,0.089068,0.359287,lbfgs,lbfgs,lbfgs: UserWarning: Random effects covariance is singular,True,synthetic_demo
+PA8,192,96,0.076917,0.204481,lbfgs;cg,cg,,True,synthetic_demo

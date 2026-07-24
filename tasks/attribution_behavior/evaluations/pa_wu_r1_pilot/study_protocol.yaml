@@ -71,16 +71,29 @@ combined_total_rationale: >-
   them into one unvalidated total is explicitly forbidden.
 
 # --------------------------------------------------------------------------
-# Design factors
+# Design factors (MACHINE-ONLY R1; see identity_scope_decision.md)
 # --------------------------------------------------------------------------
+identity_scope:
+  target_subject: machine
+  target_identity_is_experimental_factor: false
+  human_comparison_in_r1: false
+  rationale: >-
+    The four primary Wu & Shen 2026 constructs use machine-specific original item
+    wording; the P0 items must not be rewritten. R1 therefore measures a
+    machine-only target subject. A future human route requires its own independent
+    candidate-item assets and must not modify P0. No machine/human measurement
+    equivalence is claimed without further research.
+
 design:
   material_factors:
     condition: [C0, C1, C2, C3, C4, C5]     # 6-level C* factor
-    target_identity: [ai, human]
     scenario: 8                              # 8 base scenarios
     direction_version: [A, B]
-  material_count: 192                        # 6 * 2 * 8 * 2
-  judge_models:                              # NOT a material factor
+  fixed_fields:
+    target_identity: machine                 # retained schema field, fixed value
+  material_count: 96                          # 6 * 8 * 2 * 1(machine)
+  responses_per_repeat: 192                   # 96 materials * 2 judge models
+  judge_models:                               # NOT a material factor
     - deepseek-v4-pro
     - gpt-5.6-terra
   judge_model_is_material_factor: false

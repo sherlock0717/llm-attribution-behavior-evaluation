@@ -1,12 +1,13 @@
-"""Generate deterministic SYNTHETIC demo responses.
+"""Generate deterministic SYNTHETIC demo responses (MACHINE-ONLY).
 
-For every material (192) and every judge model (2) this writes one demo response
-record (>= 384 records total). Records are marked data_status = synthetic_demo
-and use a fixed seed. A few small, recognizable condition differences are baked
-in so that the scoring / analysis / figures can be validated end-to-end.
+For every material (96) and every judge model (2) this writes one demo response
+record (192 records total). Records are marked data_status = synthetic_demo and
+use a fixed seed. A few small, recognizable condition differences are baked in so
+that the scoring / analysis / figures can be validated end-to-end.
 
-This does NOT imitate or claim any real DeepSeek or GPT behavior and must never
-be used to say which model is "better".
+The R1 pilot is machine-only: target_identity is fixed to "machine" and is NOT a
+factor in the synthetic latent. This does NOT imitate or claim any real DeepSeek
+or GPT behavior and must never be used to say which model is "better".
 """
 
 from __future__ import annotations
@@ -73,18 +74,16 @@ def _scenario_effect(construct: str, scenario_id: str) -> float:
     return ((h % 1000) / 1000.0 - 0.5) * 0.8
 
 
-def _latent(construct: str, cond: str, identity: str, model: str, scenario_id: str,
+def _latent(construct: str, cond: str, model: str, scenario_id: str,
             rng: random.Random) -> float:
     base = _BASE[construct]
     offset = _COND_OFFSET[cond]
-    # small identity effect: ai judged slightly lower on MSI-type attribution.
-    identity_eff = -0.3 if (identity == "ai" and construct in ("MSI",)) else 0.0
     # small model effect (illustrative only, NOT a capability claim).
     model_eff = 0.15 if model == "gpt-5.6-terra" else -0.15
     scenario_eff = _scenario_effect(construct, scenario_id)
     # larger continuous noise so the design is full-rank and models can converge.
     noise = rng.gauss(0.0, 0.6)
-    return base + offset + identity_eff + model_eff + scenario_eff + noise
+    return base + offset + model_eff + scenario_eff + noise
 
 
 def _clip_round(value: float, hi: int) -> int:
@@ -108,7 +107,7 @@ def generate() -> list[dict]:
             for iid, construct, hi in items:
                 if construct not in construct_latent:
                     construct_latent[construct] = _latent(
-                        construct, mat["condition_id"], mat["target_identity"],
+                        construct, mat["condition_id"],
                         model_id, mat["scenario_id"], rng,
                     )
                 # per-item jitter around the shared construct latent.

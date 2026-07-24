@@ -11,11 +11,17 @@ content, analysis, and presentation*.
 > describe any real capability of DeepSeek or GPT, and must never be read as a
 > model ranking or as empirical support for any theory.
 
+> **Machine-only R1.** The pilot studies attribution to an **AI system** only.
+> The four primary Wu & Shen 2026 constructs use machine-specific original items
+> that must not be rewritten, so R1 has **no ai/human comparison**. See
+> `identity_scope_decision.md`.
+
 ## Core research question
 
 The project studies **how different decision-process cues and post-decision
 behavior shape the way a large language model (acting as a judge) attributes
-agency, mental states, and influential capacity to an acting subject.**
+agency, mental states, and influential capacity to an AI system acting as the
+subject.**
 
 The central question is **not** simply "does the subject have free will".
 Free will appears only as:
@@ -55,43 +61,49 @@ Six decision-process × update conditions:
 | C4 | D2 | U2 | shows reasons; feedback; 2nd decision keeps original |
 | C5 | D2 | U3 | shows reasons; feedback; 2nd decision changes original |
 
-Crossed with `target_identity` (ai / human), `scenario` (8 base scenarios) and
-`direction_version` (A / B):
+Crossed with `scenario` (8 base scenarios) and `direction_version` (A / B), with a
+single fixed `target_identity` = **machine**:
 
-**6 × 2 × 8 × 2 = 192 materials.**
+**6 × 8 × 2 × 1 = 96 materials.**
 
 `judge_model_id` is **not** a material factor. The two judge models
-(`deepseek-v4-pro`, `gpt-5.6-terra`) will each evaluate the same 192 materials.
+(`deepseek-v4-pro`, `gpt-5.6-terra`) each evaluate the same 96 materials →
+**192** model-material responses per repeat. `target_identity` is retained as a
+schema field but fixed to `machine`; it is no longer an experimental factor.
 
 ## Layout
 
 ```
 pa_wu_r1_pilot/
-  README.md                 # this file
-  study_protocol.yaml       # research question, constructs, design
-  condition_matrix.csv      # the 6 C* conditions (D/U mapping)
-  scenario_registry.yaml    # 8 scenarios × A/B directions × ai/human
-  manipulation_blocks.yaml   # D0..D2 / U0..U3 text rules
-  stimuli.jsonl             # 192 generated materials (built by build_stimuli.py)
-  scoring_spec.yaml         # construct/item scoring rules (references P0)
-  analysis_plan.md          # pilot analysis model + planned contrasts
-  result_schema.json        # one model response record schema
-  scripts/                  # build / demo / score / analyze / render / validate
-  demo/                     # synthetic demo responses
-  outputs/                  # scored tables, descriptives, contrasts, figures
-  reports/                  # demo report (synthetic)
-  showcase_plan.md          # future presentation plan
+  README.md                    # this file
+  identity_scope_decision.md   # machine-only decision and rationale
+  study_protocol.yaml          # research question, constructs, design
+  condition_matrix.csv         # the 6 C* conditions (D/U mapping)
+  scenario_registry.yaml       # 8 scenarios × A/B directions (machine-only)
+  manipulation_blocks.yaml     # D0..D2 / U0..U3 text rules (machine identity)
+  stimuli.jsonl                # 96 generated materials (built by build_stimuli.py)
+  stimulus_book.md             # human-readable rendering of all 96 materials
+  materials_review.md          # 12-criterion validity review
+  scoring_spec.yaml            # construct/item scoring rules (references P0)
+  analysis_plan.md             # pilot analysis model + planned contrasts
+  result_schema.json           # one model response record schema
+  scripts/                     # build / demo / score / analyze / fit / render / validate
+  demo/                        # synthetic demo responses
+  outputs/                     # scored tables, descriptives, contrasts, figures
+  reports/                     # demo report (synthetic)
+  showcase_plan.md             # future presentation plan
 ```
 
 ## Reproducible pipeline
 
 ```
-python scripts/build_stimuli.py        # condition_matrix + scenarios + blocks -> stimuli.jsonl
-python scripts/validate_pilot_core.py  # minimal completeness / balance checks
-python scripts/generate_demo_results.py # deterministic synthetic_demo responses
-python scripts/score_results.py        # item-level + construct-level scores
-python scripts/analyze_pilot.py        # descriptives, contrasts, quality summary
-python scripts/render_report.py        # demo report + >=5 figures
+python scripts/build_stimuli.py         # condition_matrix + scenarios + blocks -> 96 stimuli
+python scripts/generate_demo_results.py # deterministic synthetic_demo responses (192 = 2 x 96)
+python scripts/score_results.py         # item-level + construct-level scores
+python scripts/analyze_pilot.py         # descriptives, planned contrasts, quality summary
+python scripts/fit_mixed_models.py      # mixed-effects models + estimated marginal contrasts
+python scripts/render_report.py         # demo report + 5 figures + showcase_data.json
+python scripts/validate_pilot_core.py   # minimal completeness / balance / boundary checks
 ```
 
 ## Boundaries
