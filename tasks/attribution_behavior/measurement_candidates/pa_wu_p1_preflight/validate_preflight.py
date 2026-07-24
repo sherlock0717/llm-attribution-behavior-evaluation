@@ -742,27 +742,68 @@ def _stop_conditions_frozen(stop: dict[str, Any]) -> bool:
     return True
 
 
+_HEAD_SHA_RE = re.compile(r"^[0-9a-f]{40}$")
+
+
+def _branch_ci_evidence_ok(branch: dict[str, Any]) -> bool:
+    """The preflight branch's OWN CI evidence must be a complete, well-formed
+    static record (validated offline; never fetched from GitHub):
+
+    - status == success;
+    - workflow == "CI";
+    - run_number a positive integer;
+    - run_id a positive integer;
+    - verified_head_sha a 40-char lowercase hex SHA.
+    """
+    if not isinstance(branch, dict):
+        return False
+    if str(branch.get("status")) != "success":
+        return False
+    if str(branch.get("workflow")) != "CI":
+        return False
+    if not _positive_int(branch.get("run_number")):
+        return False
+    if not _positive_int(branch.get("run_id")):
+        return False
+    sha = branch.get("verified_head_sha")
+    if not isinstance(sha, str) or not _HEAD_SHA_RE.match(sha):
+        return False
+    return True
+
+
 def _env_reviewed(env: dict[str, Any]) -> bool:
     """environment_review_completed is only true once THIS preflight branch's
     own Linux CI has succeeded and been recorded (not merely the R1 baseline).
-    The honest recording of the Windows exceptions is also required."""
+    The honest recording of the Windows exceptions is also required.
+
+    Validation is purely offline over the backfilled static evidence: it checks
+    the branch CI fields (workflow / run_number / run_id / verified_head_sha),
+    the R1 baseline record completeness, and that the Windows exceptions remain
+    fully recorded and are NOT claimed as fixed. It never queries GitHub."""
     baseline = env.get("r1_baseline_ci", env.get("linux_ci", {}))
     branch = env.get("preflight_branch_ci", {})
     win = env.get("windows_local", {})
     qual = env.get("windows_failure_qualification", {})
-    honest_record = (
-        baseline.get("status") == "success"
+    # R1 baseline record must still be complete (success + a positive run_number).
+    baseline_ok = (
+        isinstance(baseline, dict)
+        and baseline.get("status") == "success"
+        and _positive_int(baseline.get("run_number"))
+    )
+    # Windows exceptions must remain fully recorded and NOT claimed as fixed.
+    windows_record_ok = (
+        isinstance(win, dict)
         and win.get("full_pytest_status") == "environment_specific_failures"
+        and _positive_int(win.get("bash_wrapper_failures"))
+        and _positive_int(win.get("scipy_dll_failures"))
+        and _positive_int(win.get("scipy_collection_errors"))
+        and isinstance(qual, dict)
         and qual.get("in_pr_10_diff") is False
         and qual.get("is_r1_mock_regression") is False
         and qual.get("is_preflight_code_regression") is False
         and qual.get("is_fixed") is False
     )
-    branch_ci_ok = (
-        str(branch.get("status")) == "success"
-        and _nonempty(branch.get("run_number"))
-    )
-    return bool(honest_record and branch_ci_ok)
+    return bool(baseline_ok and windows_record_ok and _branch_ci_evidence_ok(branch))
 
 
 def _cross_contract_consistent(contracts: dict[str, dict[str, Any]]) -> bool:

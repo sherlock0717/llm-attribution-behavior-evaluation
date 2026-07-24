@@ -9,10 +9,13 @@ r1_baseline_ci:
   run_number: 71
   status: success
 
-# 本 preflight 分支自身 CI —— 当前仍 pending（尚未有成功记录）。
+# 本 preflight 分支自身 CI —— PR #11 CI #79 已 success（回填静态证据，不联网核验）。
 preflight_branch_ci:
-  run_number: null
-  status: pending
+  workflow: CI
+  run_number: 79
+  run_id: 30062667683
+  status: success
+  verified_head_sha: 72dc5cfd76a967b9302e81c8ff20b8b07932d24f
 
 windows_local:
   r1_target_tests: passed
@@ -40,5 +43,7 @@ windows_failure_qualification:
 notes: >-
   bash wrapper 失败源于 Windows 子进程环境缺 uv；SciPy DLL 失败/collection error 源于
   Windows 主机"应用程序控制策略"拦截 SciPy 原生 DLL。二者均为 Windows 本地环境问题，与本
-  preflight 包无关，未修复；不得修改 scripts / SciPy 配置 / 系统策略掩盖。
-  environment_review_completed 当前为 false，须待本分支 Linux CI 成功并记录后方可为 true。
+  preflight 包无关，未修复；不得修改 scripts / SciPy 配置 / 系统策略掩盖。上述 Windows 例外
+  均未声称修复（is_fixed: false），CI 成功也不构成真实模型执行授权。
+  environment_review_completed 现已解析为 true：本 preflight 分支自身 Linux CI（PR #11 CI #79，
+  run_id 30062667683，head 72dc5cfd76a967b9302e81c8ff20b8b07932d24f）已 success 并完整记录。

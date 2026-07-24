@@ -66,7 +66,12 @@ def test_initial_preflight_blocked(report) -> None:
     assert report["preflight_status"] == "blocked"
     assert report["authorization_status"] == "blocked"
     assert report["p1_execution_status"] == "blocked"
-    assert "environment_review_completed" in report["blocking_gates"]
+    # PR #11 CI #79 backfilled: the environment gate is now resolved, but the
+    # overall preflight remains blocked on the still-open gates.
+    assert report["real_model_execution_authorized"] is False
+    assert "environment_review_completed" in report["resolved_gates"]
+    assert "environment_review_completed" not in report["blocking_gates"]
+    assert report["blocking_gates"]  # other gates still block
 
 
 def test_p1_status_only_derived(validator) -> None:
@@ -377,7 +382,13 @@ def test_end_to_end_synthetic_authorized_fully_isolated(validator, tmp_path, mon
     _write(dst / "stop_conditions.yaml", _full_stop())
 
     env = _load("environment_acceptance.yaml")
-    env["preflight_branch_ci"] = {"run_number": 99, "status": "success"}
+    env["preflight_branch_ci"] = {
+        "workflow": "CI",
+        "run_number": 99,
+        "run_id": 12345678,
+        "status": "success",
+        "verified_head_sha": "0" * 40,
+    }
     _write(dst / "environment_acceptance.yaml", env)
 
     manifest = _load("preflight_manifest.yaml")
@@ -490,13 +501,27 @@ def test_package_hash_changes_with_template(validator, tmp_path, monkeypatch) ->
 
 
 # ==========================================================================
-# 三、environment gate blocked until branch CI success
+# 三、environment gate resolved by PR #11 CI #79 (still overall blocked)
 # ==========================================================================
 
 
-def test_environment_review_blocked_when_branch_ci_pending() -> None:
+def test_environment_review_branch_ci_backfilled() -> None:
+    # PR #11 CI #79 evidence is now recorded (no longer pending).
     env = _load("environment_acceptance.yaml")
-    assert env["preflight_branch_ci"]["status"] == "pending"
+    ci = env["preflight_branch_ci"]
+    assert ci["workflow"] == "CI"
+    assert ci["run_number"] == 79
+    assert ci["run_id"] == 30062667683
+    assert ci["status"] == "success"
+    assert ci["verified_head_sha"] == "72dc5cfd76a967b9302e81c8ff20b8b07932d24f"
+
+
+def test_environment_review_now_resolved(report) -> None:
+    # The real environment gate is now true and enters resolved_gates.
+    assert "environment_review_completed" in report["resolved_gates"]
+    assert "environment_review_completed" not in report["blocking_gates"]
+    # But the overall preflight is still blocked on the other open gates.
+    assert report["preflight_status"] == "blocked"
 
 
 def test_environment_review_records_all_failures() -> None:
@@ -511,12 +536,68 @@ def test_environment_review_records_all_failures() -> None:
     assert qual["is_fixed"] is False
 
 
-def test_env_reviewed_true_only_with_branch_success(validator) -> None:
+def test_env_reviewed_true_with_backfilled_ci(validator) -> None:
     env = _load("environment_acceptance.yaml")
-    assert validator._env_reviewed(env) is False
+    assert validator._env_reviewed(env) is True
+
+
+def _good_branch_ci() -> dict:
+    return {
+        "workflow": "CI",
+        "run_number": 79,
+        "run_id": 30062667683,
+        "status": "success",
+        "verified_head_sha": "72dc5cfd76a967b9302e81c8ff20b8b07932d24f",
+    }
+
+
+def test_env_reviewed_baseline_branch_ci_good(validator) -> None:
+    env = _load("environment_acceptance.yaml")
     env2 = copy.deepcopy(env)
-    env2["preflight_branch_ci"] = {"run_number": 88, "status": "success"}
+    env2["preflight_branch_ci"] = _good_branch_ci()
     assert validator._env_reviewed(env2) is True
+
+
+@pytest.mark.parametrize(
+    "mutation",
+    [
+        {"status": "pending"},               # not success
+        {"workflow": "Lint"},                # wrong workflow
+        {"run_number": None},                # missing run_number
+        {"run_number": 0},                   # non-positive run_number
+        {"run_number": "79"},                # non-int run_number
+        {"run_id": None},                    # missing run_id
+        {"run_id": -1},                      # non-positive run_id
+        {"run_id": "x"},                     # non-int run_id
+        {"verified_head_sha": "72dc5c"},     # too short
+        {"verified_head_sha": "Z" * 40},     # not hex
+        {"verified_head_sha": "72DC5CFD76A967B9302E81C8FF20B8B07932D24F"},  # uppercase
+        {"verified_head_sha": 123},          # not a string
+    ],
+)
+def test_env_reviewed_false_on_bad_branch_ci(validator, mutation) -> None:
+    env = _load("environment_acceptance.yaml")
+    env2 = copy.deepcopy(env)
+    ci = _good_branch_ci()
+    ci.update(mutation)
+    env2["preflight_branch_ci"] = ci
+    assert validator._env_reviewed(env2) is False
+
+
+def test_env_reviewed_false_when_windows_claimed_fixed(validator) -> None:
+    env = _load("environment_acceptance.yaml")
+    env2 = copy.deepcopy(env)
+    env2["preflight_branch_ci"] = _good_branch_ci()
+    env2["windows_failure_qualification"]["is_fixed"] = True
+    assert validator._env_reviewed(env2) is False
+
+
+def test_env_reviewed_false_when_baseline_incomplete(validator) -> None:
+    env = _load("environment_acceptance.yaml")
+    env2 = copy.deepcopy(env)
+    env2["preflight_branch_ci"] = _good_branch_ci()
+    env2["r1_baseline_ci"] = {"status": "success"}  # missing run_number
+    assert validator._env_reviewed(env2) is False
 
 
 # ==========================================================================

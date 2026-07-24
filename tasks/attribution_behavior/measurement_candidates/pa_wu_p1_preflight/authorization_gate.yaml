@@ -30,8 +30,8 @@ required_gates:
   stop_conditions_frozen: false
   privacy_review_completed: false
   # environment_review_completed 需本 preflight 分支 Linux CI 成功并记录后才为 true；
-  # 当前分支 CI pending，故为 false。
-  environment_review_completed: false
+  # PR #11 CI #79 已 success 并完整回填，故为 true。
+  environment_review_completed: true
   mock_package_validated: true
   source_hashes_verified: true
 
