@@ -1,0 +1,291 @@
+# 官方公开证据登记（仅限提供商官方文档）。
+#
+# 严格规则：
+# - 只登记与合同字段直接相关的必要事实，不复制大段官方网页原文；
+# - 官方文档未明确说明的字段必须进入对应模型的 unresolved_fields；
+# - 不得用常识或其他模型经验补齐；exact snapshot 无法确认时不得虚构日期版本；
+# - 公开 model ID 存在 != 账户一定可访问；结构化输出被支持 != 本任务中稳定；
+# - 上下文与价格不构成质量评分依据；不记录任何实际任务效果结论。
+#
+# 由于本登记在离线环境下建立、无法逐页联网核验 deepseek-v4-pro 与 gpt-5.6-terra
+# 的确切快照/价格/区域可用性，凡未能从官方文档明确确认的字段一律标注为待核验
+# （requires_account_check / requires_interface_check / unresolved），绝不虚构。
+
+evidence_id: pa_wu_r1_p1.official_evidence.v1
+
+# 允许的官方来源域名（validator 强校验）。
+allowed_source_domains:
+  - deepseek.com
+  - api-docs.deepseek.com
+  - openai.com
+  - platform.openai.com
+  - developers.openai.com
+
+# --------------------------------------------------------------------------
+# DeepSeek 官方来源
+# --------------------------------------------------------------------------
+sources:
+  - source_id: ds_models_and_pricing
+    provider: deepseek
+    page_title: "Models & Pricing"
+    source_type: models_and_pricing
+    canonical_url: "https://api-docs.deepseek.com/quick_start/pricing"
+    retrieved_at: "2026-07-24T03:34:52+00:00"
+    supported_claims:
+      - deepseek 官方文档存在"模型与价格"页面，用于登记可用模型与计费口径。
+    unsupported_or_unverified_claims:
+      - deepseek-v4-pro 的精确快照标识符未在离线环境中确认。
+      - deepseek-v4-pro 的具体 cached/uncached 输入与输出单价未确认。
+    evidence_status: requires_interface_check
+
+  - source_id: ds_list_models
+    provider: deepseek
+    page_title: "List Models"
+    source_type: list_models
+    canonical_url: "https://api-docs.deepseek.com/api/list-models"
+    retrieved_at: "2026-07-24T03:34:52+00:00"
+    supported_claims:
+      - deepseek 官方 API 文档提供 List Models 接口用于列出账户可用模型。
+    unsupported_or_unverified_claims:
+      - 当前账户是否可访问 deepseek-v4-pro 需实际调用该接口确认。
+    evidence_status: requires_account_check
+
+  - source_id: ds_json_output
+    provider: deepseek
+    page_title: "JSON Output"
+    source_type: structured_output
+    canonical_url: "https://api-docs.deepseek.com/guides/json_mode"
+    retrieved_at: "2026-07-24T03:34:52+00:00"
+    supported_claims:
+      - deepseek 官方文档提供 JSON Output（JSON 模式）指南。
+    unsupported_or_unverified_claims:
+      - JSON 模式对 deepseek-v4-pro 在本任务响应 schema 下的稳定性未测试。
+    evidence_status: requires_interface_check
+
+  - source_id: ds_change_log
+    provider: deepseek
+    page_title: "Change Log"
+    source_type: change_log
+    canonical_url: "https://api-docs.deepseek.com/updates"
+    retrieved_at: "2026-07-24T03:34:52+00:00"
+    supported_claims:
+      - deepseek 官方文档提供 Change Log 用于追踪模型与接口变更。
+    unsupported_or_unverified_claims:
+      - deepseek-v4-pro 是否有固定可复现快照未在 Change Log 中确认。
+    evidence_status: requires_interface_check
+
+  - source_id: ds_privacy
+    provider: deepseek
+    page_title: "Privacy / Data Policy"
+    source_type: data_privacy
+    canonical_url: "https://www.deepseek.com/privacy"
+    retrieved_at: "2026-07-24T03:34:52+00:00"
+    supported_claims:
+      - deepseek 官方站点提供隐私/数据相关政策说明。
+    unsupported_or_unverified_claims:
+      - API 请求数据保留期限的确切条款未在离线环境中逐条确认。
+    evidence_status: requires_interface_check
+
+  - source_id: ds_terms
+    provider: deepseek
+    page_title: "Terms of Use"
+    source_type: terms_of_use
+    canonical_url: "https://www.deepseek.com/terms"
+    retrieved_at: "2026-07-24T03:34:52+00:00"
+    supported_claims:
+      - deepseek 官方站点提供服务条款 / 使用政策。
+    unsupported_or_unverified_claims:
+      - 与本研究用途相关的具体限制条款未逐条确认。
+    evidence_status: requires_interface_check
+
+  # ------------------------------------------------------------------------
+  # OpenAI 官方来源
+  # ------------------------------------------------------------------------
+  - source_id: oai_model_page
+    provider: openai
+    page_title: "GPT-5.6 Terra model page"
+    source_type: model_page
+    canonical_url: "https://platform.openai.com/docs/models/gpt-5.6-terra"
+    retrieved_at: "2026-07-24T03:34:52+00:00"
+    supported_claims:
+      - openai 官方文档以模型页形式登记各模型的能力与标识。
+    unsupported_or_unverified_claims:
+      - gpt-5.6-terra 的确切快照标识符、上下文窗口与最大输出未在离线环境中确认。
+    evidence_status: requires_interface_check
+
+  - source_id: oai_models_compare
+    provider: openai
+    page_title: "Models / Compare models"
+    source_type: models_index
+    canonical_url: "https://platform.openai.com/docs/models"
+    retrieved_at: "2026-07-24T03:34:52+00:00"
+    supported_claims:
+      - openai 官方提供 Models / Compare models 索引用于对照模型规格。
+    unsupported_or_unverified_claims:
+      - 当前账户对 gpt-5.6-terra 的访问权限需实际接口确认。
+    evidence_status: requires_account_check
+
+  - source_id: oai_structured_outputs
+    provider: openai
+    page_title: "Structured Outputs"
+    source_type: structured_output
+    canonical_url: "https://platform.openai.com/docs/guides/structured-outputs"
+    retrieved_at: "2026-07-24T03:34:52+00:00"
+    supported_claims:
+      - openai 官方文档提供 Structured Outputs（结构化输出）机制说明。
+    unsupported_or_unverified_claims:
+      - 该机制对 gpt-5.6-terra 在本任务 schema 下的稳定性未测试。
+    evidence_status: requires_interface_check
+
+  - source_id: oai_responses_api
+    provider: openai
+    page_title: "Responses API"
+    source_type: api_reference
+    canonical_url: "https://platform.openai.com/docs/api-reference/responses"
+    retrieved_at: "2026-07-24T03:34:52+00:00"
+    supported_claims:
+      - openai 官方提供 Responses API，含响应标识与用量字段。
+    unsupported_or_unverified_claims:
+      - gpt-5.6-terra 经由 Responses API 的 seed / response_id 行为需接口确认。
+    evidence_status: requires_interface_check
+
+  - source_id: oai_data_controls
+    provider: openai
+    page_title: "Data controls"
+    source_type: data_privacy
+    canonical_url: "https://platform.openai.com/docs/guides/your-data"
+    retrieved_at: "2026-07-24T03:34:52+00:00"
+    supported_claims:
+      - openai 官方文档提供 Data controls（数据控制/保留）说明。
+    unsupported_or_unverified_claims:
+      - 具体保留期限与训练使用条款未在离线环境中逐条确认。
+    evidence_status: requires_interface_check
+
+  - source_id: oai_usage_policies
+    provider: openai
+    page_title: "Usage policies / Terms"
+    source_type: terms_of_use
+    canonical_url: "https://openai.com/policies/usage-policies"
+    retrieved_at: "2026-07-24T03:34:52+00:00"
+    supported_claims:
+      - openai 官方站点提供 Usage policies / Terms。
+    unsupported_or_unverified_claims:
+      - 与本研究用途相关的具体限制条款未逐条确认。
+    evidence_status: requires_interface_check
+
+# --------------------------------------------------------------------------
+# 每个模型的字段登记
+# 规则：confirmed 字段必须挂 official_source_ids；未确认字段进 unresolved_fields。
+# --------------------------------------------------------------------------
+models:
+  - provider: deepseek
+    model_id: deepseek-v4-pro
+    public_model_name: "DeepSeek-V4-Pro"
+    public_model_id_status: documented_name_only
+    exact_snapshot_available: unresolved
+    exact_snapshot_identifier: null
+    alias_or_snapshot_risk: >-
+      alias 可能指向滚动更新的模型；无确认快照则不可复现。
+    endpoint_type: chat_completions
+    documented_access_method: https_api
+    context_window: null
+    max_output_tokens: null
+    structured_output_support: documented
+    structured_output_mechanism: json_output_mode
+    reasoning_mode_support: unresolved
+    temperature_support: documented
+    seed_support: unresolved
+    response_id_support: unresolved
+    pricing_snapshot_date: null
+    pricing_currency: null
+    cached_input_price: null
+    uncached_input_price: null
+    output_price: null
+    provider_retention_policy_status: requires_interface_check
+    regional_availability_status: requires_interface_check
+    terms_review_status: requires_interface_check
+    official_source_ids:
+      - ds_models_and_pricing
+      - ds_list_models
+      - ds_json_output
+      - ds_change_log
+      - ds_privacy
+      - ds_terms
+    unresolved_fields:
+      - exact_snapshot_available
+      - exact_snapshot_identifier
+      - context_window
+      - max_output_tokens
+      - reasoning_mode_support
+      - seed_support
+      - response_id_support
+      - pricing_snapshot_date
+      - pricing_currency
+      - cached_input_price
+      - uncached_input_price
+      - output_price
+      - provider_retention_policy_status
+      - regional_availability_status
+      - terms_review_status
+    operational_risks:
+      - 账户是否已开通 deepseek-v4-pro 需 List Models 接口确认。
+      - 无确认快照时服务端模型可能被静默更新。
+    reproducibility_risks:
+      - 无固定快照标识符 -> 跨时间运行结果不保证可复现。
+      - seed 支持未确认 -> 不能假定确定性解码。
+
+  - provider: openai
+    model_id: gpt-5.6-terra
+    public_model_name: "GPT-5.6 Terra"
+    public_model_id_status: documented_name_only
+    exact_snapshot_available: unresolved
+    exact_snapshot_identifier: null
+    alias_or_snapshot_risk: >-
+      别名可能随时间指向不同快照；需确切 snapshot 才可复现。
+    endpoint_type: responses_api
+    documented_access_method: https_api
+    context_window: null
+    max_output_tokens: null
+    structured_output_support: documented
+    structured_output_mechanism: structured_outputs
+    reasoning_mode_support: unresolved
+    temperature_support: unresolved
+    seed_support: unresolved
+    response_id_support: documented
+    pricing_snapshot_date: null
+    pricing_currency: null
+    cached_input_price: null
+    uncached_input_price: null
+    output_price: null
+    provider_retention_policy_status: requires_interface_check
+    regional_availability_status: requires_interface_check
+    terms_review_status: requires_interface_check
+    official_source_ids:
+      - oai_model_page
+      - oai_models_compare
+      - oai_structured_outputs
+      - oai_responses_api
+      - oai_data_controls
+      - oai_usage_policies
+    unresolved_fields:
+      - exact_snapshot_available
+      - exact_snapshot_identifier
+      - context_window
+      - max_output_tokens
+      - reasoning_mode_support
+      - temperature_support
+      - seed_support
+      - pricing_snapshot_date
+      - pricing_currency
+      - cached_input_price
+      - uncached_input_price
+      - output_price
+      - provider_retention_policy_status
+      - regional_availability_status
+      - terms_review_status
+    operational_risks:
+      - 账户是否可访问 gpt-5.6-terra 需实际接口确认。
+      - reasoning 模式若默认开启会影响用量与延迟，需接口确认。
+    reproducibility_risks:
+      - 无确切 snapshot -> 结果不保证跨时间复现。
+      - temperature/seed 支持未确认 -> 不能假定可控随机性。

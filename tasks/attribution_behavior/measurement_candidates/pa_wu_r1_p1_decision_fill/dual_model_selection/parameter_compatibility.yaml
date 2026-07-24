@@ -1,0 +1,165 @@
+# 双模型参数兼容性映射（研究参数 -> 各提供商映射）。
+#
+# 严格规则：不得为了表面统一，把提供商特有参数伪装成完全等价。
+# semantic_equivalence_status 合法值：
+#   equivalent | approximately_equivalent | provider_specific | unresolved | not_supported
+# 未能从官方文档确认的差异一律 unresolved，不虚构。
+
+compatibility_id: pa_wu_r1_p1.parameter_compatibility.v1
+
+mappings:
+  - canonical_research_parameter: endpoint
+    deepseek_mapping: chat_completions
+    openai_mapping: responses_api
+    semantic_equivalence_status: provider_specific
+    evidence_source_ids:
+      - ds_models_and_pricing
+      - oai_responses_api
+    unresolved_difference: >-
+      两者均为 HTTPS API，但请求/响应结构不同，需在适配层归一化。
+    harmonization_policy: >-
+      研究层只依赖统一的请求语义与响应字段，由 provider 适配层各自实现。
+
+  - canonical_research_parameter: request_format
+    deepseek_mapping: messages_array
+    openai_mapping: responses_input
+    semantic_equivalence_status: approximately_equivalent
+    evidence_source_ids:
+      - ds_json_output
+      - oai_responses_api
+    unresolved_difference: >-
+      字段命名与结构不同；语义（system/user 分工）大体对应但需逐项核验。
+    harmonization_policy: >-
+      在适配层将统一 prompt 分段映射到各自请求结构，禁止改变语义。
+
+  - canonical_research_parameter: response_format
+    deepseek_mapping: json_output_mode
+    openai_mapping: structured_outputs
+    semantic_equivalence_status: approximately_equivalent
+    evidence_source_ids:
+      - ds_json_output
+      - oai_structured_outputs
+    unresolved_difference: >-
+      两者均支持结构化 JSON，但 schema 约束强度与失败行为不同，未测试。
+    harmonization_policy: >-
+      定义统一响应字段集，各自尽力约束；结构化稳定性留待 preflight 阶段验证。
+
+  - canonical_research_parameter: structured_output_mechanism
+    deepseek_mapping: json_output_mode
+    openai_mapping: structured_outputs
+    semantic_equivalence_status: provider_specific
+    evidence_source_ids:
+      - ds_json_output
+      - oai_structured_outputs
+    unresolved_difference: >-
+      内部约束机制（是否强制 schema、是否可拒绝）不同。
+    harmonization_policy: >-
+      研究层只消费解析后的字段；机制差异记录为提供商特有，不假装等价。
+
+  - canonical_research_parameter: reasoning_or_thinking_mode
+    deepseek_mapping: unresolved
+    openai_mapping: unresolved
+    semantic_equivalence_status: unresolved
+    evidence_source_ids:
+      - ds_change_log
+      - oai_model_page
+    unresolved_difference: >-
+      两模型 reasoning/thinking 模式的存在性与计算语义均未从官方确认。
+    harmonization_policy: >-
+      在确认前不启用任何推理模式差异化配置；保持默认并记录为 unresolved。
+
+  - canonical_research_parameter: temperature
+    deepseek_mapping: documented
+    openai_mapping: unresolved
+    semantic_equivalence_status: unresolved
+    evidence_source_ids:
+      - ds_models_and_pricing
+      - oai_model_page
+    unresolved_difference: >-
+      deepseek 文档支持 temperature；gpt-5.6-terra 是否支持及取值域未确认。
+    harmonization_policy: >-
+      在两侧均确认前，不假定 temperature 语义等价；采样设置留待 preflight 冻结。
+
+  - canonical_research_parameter: top_p
+    deepseek_mapping: unresolved
+    openai_mapping: unresolved
+    semantic_equivalence_status: unresolved
+    evidence_source_ids:
+      - ds_models_and_pricing
+      - oai_model_page
+    unresolved_difference: >-
+      两侧 top_p 的支持与默认值未从官方确认。
+    harmonization_policy: >-
+      确认前不设置 top_p 差异；保持记录为 unresolved。
+
+  - canonical_research_parameter: seed
+    deepseek_mapping: unresolved
+    openai_mapping: unresolved
+    semantic_equivalence_status: unresolved
+    evidence_source_ids:
+      - ds_change_log
+      - oai_responses_api
+    unresolved_difference: >-
+      两侧 seed 支持与"是否为确定性保证"均未确认。
+    harmonization_policy: >-
+      不把 seed 视为确定性保证；确认前记录为 unresolved。
+
+  - canonical_research_parameter: max_output_tokens
+    deepseek_mapping: unresolved
+    openai_mapping: unresolved
+    semantic_equivalence_status: approximately_equivalent
+    evidence_source_ids:
+      - ds_models_and_pricing
+      - oai_model_page
+    unresolved_difference: >-
+      概念对应（输出上限），但各模型上限数值未确认。
+    harmonization_policy: >-
+      研究层设定统一目标上限，受各模型实际上限约束（数值待确认）。
+
+  - canonical_research_parameter: response_identifier
+    deepseek_mapping: unresolved
+    openai_mapping: documented
+    semantic_equivalence_status: provider_specific
+    evidence_source_ids:
+      - ds_change_log
+      - oai_responses_api
+    unresolved_difference: >-
+      openai Responses API 提供 response id；deepseek 对应字段未确认。
+    harmonization_policy: >-
+      日志层各自记录可得的请求/响应标识；缺失侧标注 unresolved。
+
+  - canonical_research_parameter: retry_relevant_error_categories
+    deepseek_mapping: unresolved
+    openai_mapping: unresolved
+    semantic_equivalence_status: unresolved
+    evidence_source_ids:
+      - ds_change_log
+      - oai_responses_api
+    unresolved_difference: >-
+      两侧错误码分类（限流/服务端错误/内容策略）映射未逐项确认。
+    harmonization_policy: >-
+      在 preflight 重试合同中按提供商分别建立错误分类映射。
+
+  - canonical_research_parameter: token_usage_fields
+    deepseek_mapping: unresolved
+    openai_mapping: unresolved
+    semantic_equivalence_status: approximately_equivalent
+    evidence_source_ids:
+      - ds_models_and_pricing
+      - oai_responses_api
+    unresolved_difference: >-
+      两侧均报告 token 用量，但字段命名与是否含缓存拆分未确认。
+    harmonization_policy: >-
+      日志层归一化为统一用量字段；缺失细分标注 unresolved。
+
+  - canonical_research_parameter: cache_usage_fields
+    deepseek_mapping: unresolved
+    openai_mapping: unresolved
+    semantic_equivalence_status: unresolved
+    evidence_source_ids:
+      - ds_models_and_pricing
+      - oai_responses_api
+    unresolved_difference: >-
+      缓存输入计费/用量字段两侧均未确认。
+    harmonization_policy: >-
+      成本估算暂不依赖缓存拆分；确认后再纳入预算合同。

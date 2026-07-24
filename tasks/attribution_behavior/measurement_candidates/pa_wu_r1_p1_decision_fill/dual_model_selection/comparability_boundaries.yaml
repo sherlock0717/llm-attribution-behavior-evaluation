@@ -1,0 +1,43 @@
+# 双模型可比性边界。
+#
+# 明确区分：可以控制一致的内容 / 无法直接保证一致的内容 / 当前不能得出的结论。
+# 本文件不得包含任何模型优劣、准确率或效果结论。
+
+comparability_id: pa_wu_r1_p1.comparability_boundaries.v1
+
+# 可以在实验设计层面控制一致的内容。
+controllable_consistency:
+  - same_scenario_text
+  - same_identity_text
+  - same_pa_wu_item_source
+  - same_response_field_definition
+  - same_repeat_count
+  - same_case_order_policy
+  - same_scoring_postprocessing_rules
+
+# 无法直接保证一致的内容（提供商内部/服务端因素）。
+uncontrollable_consistency:
+  - model_internal_reasoning_mechanism
+  - reasoning_and_thinking_computational_semantics
+  - decoding_implementation
+  - safety_policy
+  - server_side_model_updates
+  - structured_output_internal_constraint_mechanism
+  - token_accounting_method
+  - latency_and_rate_limiting
+  - snapshot_reproducibility_degree
+
+# 当前阶段明确不能得出的结论（禁止在任何文件中出现其肯定形式）。
+conclusions_not_supported:
+  - which_model_is_more_accurate
+  - which_model_is_more_stable
+  - which_model_is_more_suitable_for_pa_wu
+  - which_model_attribution_is_closer_to_human
+  - dual_model_differences_come_from_model_capability
+  - dual_model_measurement_results_are_equivalent
+  - any_d_or_u_effect_conclusion
+  - any_identity_effect_conclusion
+
+note: >-
+  可比性边界仅描述"可控/不可控"与"当前不可得出的结论"，用于约束后续设计，
+  不构成对两模型的任何效果评价。研究结论仍为 C — 仍需补证。
