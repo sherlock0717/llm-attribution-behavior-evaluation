@@ -37,7 +37,7 @@ rules:
   case_repeat_unique_within_run: true    # 同一 run_id 下 case/repeat 唯一
   block_scoring_if_missing_provenance: true  # 缺关键来源字段不得进入评分分析
 
-# 关键来源字段：缺失任一则该记录不得进入评分分析。
+# 关键来源字段：缺失任一则该记录不得进入评分分析（必须是 required_log_fields 子集）。
 critical_provenance_fields:
   - run_id
   - run_version
@@ -47,6 +47,13 @@ critical_provenance_fields:
   - administration_hash
   - model_id
   - exact_model_version
+
+# 隐私审查记录。privacy_review_completed 门禁只有 status=completed 且
+# reviewed_by / reviewed_at 均非空时才为 true。初始为 pending。
+privacy_review:
+  status: pending           # pending | completed
+  reviewed_by: null
+  reviewed_at: null
 
 frozen: false
 
