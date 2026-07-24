@@ -45,34 +45,34 @@
   },
   "scenario_heterogeneity": {
     "GO": {
-      "scenario_mean_min": 4.4948,
-      "scenario_mean_max": 4.5521,
-      "scenario_mean_range": 0.0573
+      "scenario_mean_min": 4.25,
+      "scenario_mean_max": 4.7656,
+      "scenario_mean_range": 0.5156
     },
     "IC": {
-      "scenario_mean_min": 4.5,
-      "scenario_mean_max": 4.5667,
-      "scenario_mean_range": 0.0667
+      "scenario_mean_min": 4.2,
+      "scenario_mean_max": 4.8167,
+      "scenario_mean_range": 0.6167
     },
     "IN": {
-      "scenario_mean_min": 4.5,
-      "scenario_mean_max": 4.5521,
-      "scenario_mean_range": 0.0521
+      "scenario_mean_min": 4.1458,
+      "scenario_mean_max": 4.8125,
+      "scenario_mean_range": 0.6667
     },
     "MSI": {
-      "scenario_mean_min": 3.3299,
-      "scenario_mean_max": 3.3958,
-      "scenario_mean_range": 0.066
+      "scenario_mean_min": 2.9583,
+      "scenario_mean_max": 3.6771,
+      "scenario_mean_range": 0.7188
     },
     "PA5": {
-      "scenario_mean_min": 3.4875,
-      "scenario_mean_max": 3.5417,
-      "scenario_mean_range": 0.0542
+      "scenario_mean_min": 3.2375,
+      "scenario_mean_max": 3.7625,
+      "scenario_mean_range": 0.525
     },
     "PA8": {
-      "scenario_mean_min": 3.4844,
-      "scenario_mean_max": 3.5417,
-      "scenario_mean_range": 0.0573
+      "scenario_mean_min": 3.2344,
+      "scenario_mean_max": 3.7786,
+      "scenario_mean_range": 0.5443
     }
   },
   "note": "Synthetic demonstration data. Not real model results; no model ranking."

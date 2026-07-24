@@ -64,15 +64,27 @@ def _all_items(spec: dict) -> list[tuple[str, str, int]]:
     return list(seen.values())
 
 
-def _latent(construct: str, cond: str, identity: str, model: str, rng: random.Random) -> float:
+def _scenario_effect(construct: str, scenario_id: str) -> float:
+    """A small deterministic per-scenario shift so scenario random-intercept
+    variance is estimable (kept small; synthetic and illustrative only)."""
+    key = f"scen:{construct}:{scenario_id}"
+    h = int(hashlib.sha256(key.encode()).hexdigest(), 16)
+    # spread roughly in [-0.4, +0.4]
+    return ((h % 1000) / 1000.0 - 0.5) * 0.8
+
+
+def _latent(construct: str, cond: str, identity: str, model: str, scenario_id: str,
+            rng: random.Random) -> float:
     base = _BASE[construct]
     offset = _COND_OFFSET[cond]
     # small identity effect: ai judged slightly lower on MSI-type attribution.
     identity_eff = -0.3 if (identity == "ai" and construct in ("MSI",)) else 0.0
     # small model effect (illustrative only, NOT a capability claim).
     model_eff = 0.15 if model == "gpt-5.6-terra" else -0.15
-    noise = rng.uniform(-0.25, 0.25)
-    return base + offset + identity_eff + model_eff + noise
+    scenario_eff = _scenario_effect(construct, scenario_id)
+    # larger continuous noise so the design is full-rank and models can converge.
+    noise = rng.gauss(0.0, 0.6)
+    return base + offset + identity_eff + model_eff + scenario_eff + noise
 
 
 def _clip_round(value: float, hi: int) -> int:
@@ -92,8 +104,15 @@ def generate() -> list[dict]:
             seed_key = f"{SEED}:{model_id}:{mat['material_id']}"
             rng = random.Random(int(hashlib.sha256(seed_key.encode()).hexdigest(), 16) % (2**32))
             parsed: dict[str, int] = {}
+            construct_latent: dict[str, float] = {}
             for iid, construct, hi in items:
-                lat = _latent(construct, mat["condition_id"], mat["target_identity"], model_id, rng)
+                if construct not in construct_latent:
+                    construct_latent[construct] = _latent(
+                        construct, mat["condition_id"], mat["target_identity"],
+                        model_id, mat["scenario_id"], rng,
+                    )
+                # per-item jitter around the shared construct latent.
+                lat = construct_latent[construct] + rng.gauss(0.0, 0.4)
                 parsed[iid] = _clip_round(lat, hi)
             prompt_hash = hashlib.sha256(
                 (mat["complete_stimulus_text"] + model_id).encode("utf-8")

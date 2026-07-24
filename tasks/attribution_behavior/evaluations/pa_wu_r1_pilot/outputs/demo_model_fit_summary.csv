@@ -1,0 +1,7 @@
+construct,n_obs,n_groups,random_intercept_variance,residual_variance,converged,optimizer,failure_reason,data_status
+IN,384,8,0.049361,0.440374,True,cg,,synthetic_demo
+GO,384,8,0.02109,0.363718,True,cg,,synthetic_demo
+MSI,384,8,0.060065,0.350241,True,cg,,synthetic_demo
+IC,384,8,0.049923,0.412008,True,cg,,synthetic_demo
+PA5,384,8,0.040009,0.353646,True,cg,,synthetic_demo
+PA8,384,8,0.02667,0.196885,True,cg,,synthetic_demo

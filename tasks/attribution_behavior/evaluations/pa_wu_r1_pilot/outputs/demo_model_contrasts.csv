@@ -1,0 +1,37 @@
+construct,contrast_id,contrast,interpretation,raw_descriptive_contrast,model_adjusted_contrast,converged,data_status
+IN,P1,C1 - C0,effect of showing alternatives,0.246094,0.171875,True,synthetic_demo
+IN,P2,C2 - C0,effect of showing reasons,0.484375,0.34375,True,synthetic_demo
+IN,P3,C3 - C2,effect of feedback only,0.21875,0.359375,True,synthetic_demo
+IN,P4,C4 - C2,effect of feedback + keeping decision,0.242188,0.46875,True,synthetic_demo
+IN,P5,C5 - C2,effect of feedback + changing decision,0.476562,0.546875,True,synthetic_demo
+IN,P6,C5 - C4,effect of changing vs keeping decision,0.234375,0.078125,True,synthetic_demo
+GO,P1,C1 - C0,effect of showing alternatives,0.214844,0.375,True,synthetic_demo
+GO,P2,C2 - C0,effect of showing reasons,0.683594,0.84375,True,synthetic_demo
+GO,P3,C3 - C2,effect of feedback only,0.144531,-0.203125,True,synthetic_demo
+GO,P4,C4 - C2,effect of feedback + keeping decision,0.050781,0.03125,True,synthetic_demo
+GO,P5,C5 - C2,effect of feedback + changing decision,0.355469,0.21875,True,synthetic_demo
+GO,P6,C5 - C4,effect of changing vs keeping decision,0.304688,0.1875,True,synthetic_demo
+MSI,P1,C1 - C0,effect of showing alternatives,0.283854,0.0625,True,synthetic_demo
+MSI,P2,C2 - C0,effect of showing reasons,0.476562,0.3125,True,synthetic_demo
+MSI,P3,C3 - C2,effect of feedback only,0.216146,0.322917,True,synthetic_demo
+MSI,P4,C4 - C2,effect of feedback + keeping decision,0.447917,0.385417,True,synthetic_demo
+MSI,P5,C5 - C2,effect of feedback + changing decision,0.526042,0.552083,True,synthetic_demo
+MSI,P6,C5 - C4,effect of changing vs keeping decision,0.078125,0.166667,True,synthetic_demo
+IC,P1,C1 - C0,effect of showing alternatives,0.1875,0.2875,True,synthetic_demo
+IC,P2,C2 - C0,effect of showing reasons,0.59375,0.65,True,synthetic_demo
+IC,P3,C3 - C2,effect of feedback only,-0.025,-0.225,True,synthetic_demo
+IC,P4,C4 - C2,effect of feedback + keeping decision,0.171875,0.375,True,synthetic_demo
+IC,P5,C5 - C2,effect of feedback + changing decision,0.4125,0.25,True,synthetic_demo
+IC,P6,C5 - C4,effect of changing vs keeping decision,0.240625,-0.125,True,synthetic_demo
+PA5,P1,C1 - C0,effect of showing alternatives,0.015625,-0.15,True,synthetic_demo
+PA5,P2,C2 - C0,effect of showing reasons,0.303125,0.2625,True,synthetic_demo
+PA5,P3,C3 - C2,effect of feedback only,0.24375,0.1,True,synthetic_demo
+PA5,P4,C4 - C2,effect of feedback + keeping decision,0.209375,0.1,True,synthetic_demo
+PA5,P5,C5 - C2,effect of feedback + changing decision,0.446875,0.3625,True,synthetic_demo
+PA5,P6,C5 - C4,effect of changing vs keeping decision,0.2375,0.2625,True,synthetic_demo
+PA8,P1,C1 - C0,effect of showing alternatives,0.033203,-0.109375,True,synthetic_demo
+PA8,P2,C2 - C0,effect of showing reasons,0.287109,0.34375,True,synthetic_demo
+PA8,P3,C3 - C2,effect of feedback only,0.173828,0.109375,True,synthetic_demo
+PA8,P4,C4 - C2,effect of feedback + keeping decision,0.248047,0.195312,True,synthetic_demo
+PA8,P5,C5 - C2,effect of feedback + changing decision,0.396484,0.34375,True,synthetic_demo
+PA8,P6,C5 - C4,effect of changing vs keeping decision,0.148438,0.148438,True,synthetic_demo

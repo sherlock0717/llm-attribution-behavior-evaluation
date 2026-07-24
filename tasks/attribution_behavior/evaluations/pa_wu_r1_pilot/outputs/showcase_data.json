@@ -1,0 +1,656 @@
+{
+  "data_status": "synthetic_demo",
+  "project_summary": {
+    "research_question": "How decision-process cues (D) and post-decision behavior (U) shape an LLM judge's attribution of agency, mental states and influential capacity to an acting subject.",
+    "free_will_role": "single exploratory MSI item (wu_ms3); never sole construct or total",
+    "stage": "pilot",
+    "note": "All numbers are synthetic demonstration data."
+  },
+  "constructs": {
+    "primary": [
+      "IN",
+      "GO",
+      "MSI",
+      "IC"
+    ],
+    "supplementary": [
+      "PA5",
+      "PA8"
+    ],
+    "native_scales": {
+      "IN": "1-7",
+      "GO": "1-7",
+      "MSI": "1-5",
+      "IC": "1-7",
+      "PA5": "1-5",
+      "PA8": "1-5"
+    }
+  },
+  "conditions": {
+    "C0": "D0-U0",
+    "C1": "D1-U0",
+    "C2": "D2-U0",
+    "C3": "D2-U1",
+    "C4": "D2-U2",
+    "C5": "D2-U3"
+  },
+  "scenarios": [
+    "s1_scheduling",
+    "s2_customer_issue",
+    "s3_study_plan",
+    "s4_routing",
+    "s5_task_allocation",
+    "s6_content_recommendation",
+    "s7_game_strategy",
+    "s8_energy_plan"
+  ],
+  "material_balance": {
+    "per_condition": {
+      "C0": 32,
+      "C1": 32,
+      "C2": 32,
+      "C3": 32,
+      "C4": 32,
+      "C5": 32
+    },
+    "per_identity": {
+      "ai": 96,
+      "human": 96
+    },
+    "per_scenario": {
+      "s1_scheduling": 24,
+      "s2_customer_issue": 24,
+      "s3_study_plan": 24,
+      "s4_routing": 24,
+      "s5_task_allocation": 24,
+      "s6_content_recommendation": 24,
+      "s7_game_strategy": 24,
+      "s8_energy_plan": 24
+    },
+    "per_direction": {
+      "A": 96,
+      "B": 96
+    }
+  },
+  "descriptive_results": {
+    "condition_means": {
+      "GO": {
+        "C0": 3.8594,
+        "C1": 4.0742,
+        "C2": 4.543,
+        "C3": 4.6875,
+        "C4": 4.5938,
+        "C5": 4.8984
+      },
+      "IC": {
+        "C0": 4.0281,
+        "C1": 4.2156,
+        "C2": 4.6219,
+        "C3": 4.5969,
+        "C4": 4.7938,
+        "C5": 5.0344
+      },
+      "IN": {
+        "C0": 3.9024,
+        "C1": 4.1484,
+        "C2": 4.3867,
+        "C3": 4.6055,
+        "C4": 4.6289,
+        "C5": 4.8633
+      },
+      "MSI": {
+        "C0": 2.7161,
+        "C1": 3.0,
+        "C2": 3.1927,
+        "C3": 3.4089,
+        "C4": 3.6406,
+        "C5": 3.7187
+      },
+      "PA5": {
+        "C0": 3.075,
+        "C1": 3.0906,
+        "C2": 3.3781,
+        "C3": 3.6219,
+        "C4": 3.5875,
+        "C5": 3.825
+      },
+      "PA8": {
+        "C0": 3.1094,
+        "C1": 3.1426,
+        "C2": 3.3965,
+        "C3": 3.5703,
+        "C4": 3.6445,
+        "C5": 3.793
+      }
+    },
+    "identity_means": {
+      "GO": {
+        "ai": 4.4792,
+        "human": 4.4062
+      },
+      "IC": {
+        "ai": 4.5812,
+        "human": 4.5156
+      },
+      "IN": {
+        "ai": 4.4101,
+        "human": 4.4349
+      },
+      "MSI": {
+        "ai": 3.0712,
+        "human": 3.4878
+      },
+      "PA5": {
+        "ai": 3.4688,
+        "human": 3.3906
+      },
+      "PA8": {
+        "ai": 3.4785,
+        "human": 3.4069
+      }
+    },
+    "model_means": {
+      "GO": {
+        "deepseek-v4-pro": 4.276,
+        "gpt-5.6-terra": 4.6094
+      },
+      "IC": {
+        "deepseek-v4-pro": 4.3604,
+        "gpt-5.6-terra": 4.7365
+      },
+      "IN": {
+        "deepseek-v4-pro": 4.2734,
+        "gpt-5.6-terra": 4.5716
+      },
+      "MSI": {
+        "deepseek-v4-pro": 3.0998,
+        "gpt-5.6-terra": 3.4592
+      },
+      "PA5": {
+        "deepseek-v4-pro": 3.3281,
+        "gpt-5.6-terra": 3.5312
+      },
+      "PA8": {
+        "deepseek-v4-pro": 3.3236,
+        "gpt-5.6-terra": 3.5618
+      }
+    }
+  },
+  "model_adjusted_results": {
+    "fit_summary": [
+      {
+        "construct": "IN",
+        "n_obs": 384,
+        "n_groups": 8,
+        "random_intercept_variance": 0.049361,
+        "residual_variance": 0.440374,
+        "converged": true,
+        "optimizer": "cg",
+        "failure_reason": NaN,
+        "data_status": "synthetic_demo"
+      },
+      {
+        "construct": "GO",
+        "n_obs": 384,
+        "n_groups": 8,
+        "random_intercept_variance": 0.02109,
+        "residual_variance": 0.363718,
+        "converged": true,
+        "optimizer": "cg",
+        "failure_reason": NaN,
+        "data_status": "synthetic_demo"
+      },
+      {
+        "construct": "MSI",
+        "n_obs": 384,
+        "n_groups": 8,
+        "random_intercept_variance": 0.060065,
+        "residual_variance": 0.350241,
+        "converged": true,
+        "optimizer": "cg",
+        "failure_reason": NaN,
+        "data_status": "synthetic_demo"
+      },
+      {
+        "construct": "IC",
+        "n_obs": 384,
+        "n_groups": 8,
+        "random_intercept_variance": 0.049923,
+        "residual_variance": 0.412008,
+        "converged": true,
+        "optimizer": "cg",
+        "failure_reason": NaN,
+        "data_status": "synthetic_demo"
+      },
+      {
+        "construct": "PA5",
+        "n_obs": 384,
+        "n_groups": 8,
+        "random_intercept_variance": 0.040009,
+        "residual_variance": 0.353646,
+        "converged": true,
+        "optimizer": "cg",
+        "failure_reason": NaN,
+        "data_status": "synthetic_demo"
+      },
+      {
+        "construct": "PA8",
+        "n_obs": 384,
+        "n_groups": 8,
+        "random_intercept_variance": 0.02667,
+        "residual_variance": 0.196885,
+        "converged": true,
+        "optimizer": "cg",
+        "failure_reason": NaN,
+        "data_status": "synthetic_demo"
+      }
+    ]
+  },
+  "planned_contrasts": [
+    {
+      "construct": "IN",
+      "contrast_id": "P1",
+      "contrast": "C1 - C0",
+      "interpretation": "effect of showing alternatives",
+      "raw_descriptive_contrast": 0.246094,
+      "model_adjusted_contrast": 0.171875,
+      "converged": true,
+      "data_status": "synthetic_demo"
+    },
+    {
+      "construct": "IN",
+      "contrast_id": "P2",
+      "contrast": "C2 - C0",
+      "interpretation": "effect of showing reasons",
+      "raw_descriptive_contrast": 0.484375,
+      "model_adjusted_contrast": 0.34375,
+      "converged": true,
+      "data_status": "synthetic_demo"
+    },
+    {
+      "construct": "IN",
+      "contrast_id": "P3",
+      "contrast": "C3 - C2",
+      "interpretation": "effect of feedback only",
+      "raw_descriptive_contrast": 0.21875,
+      "model_adjusted_contrast": 0.359375,
+      "converged": true,
+      "data_status": "synthetic_demo"
+    },
+    {
+      "construct": "IN",
+      "contrast_id": "P4",
+      "contrast": "C4 - C2",
+      "interpretation": "effect of feedback + keeping decision",
+      "raw_descriptive_contrast": 0.242188,
+      "model_adjusted_contrast": 0.46875,
+      "converged": true,
+      "data_status": "synthetic_demo"
+    },
+    {
+      "construct": "IN",
+      "contrast_id": "P5",
+      "contrast": "C5 - C2",
+      "interpretation": "effect of feedback + changing decision",
+      "raw_descriptive_contrast": 0.476562,
+      "model_adjusted_contrast": 0.546875,
+      "converged": true,
+      "data_status": "synthetic_demo"
+    },
+    {
+      "construct": "IN",
+      "contrast_id": "P6",
+      "contrast": "C5 - C4",
+      "interpretation": "effect of changing vs keeping decision",
+      "raw_descriptive_contrast": 0.234375,
+      "model_adjusted_contrast": 0.078125,
+      "converged": true,
+      "data_status": "synthetic_demo"
+    },
+    {
+      "construct": "GO",
+      "contrast_id": "P1",
+      "contrast": "C1 - C0",
+      "interpretation": "effect of showing alternatives",
+      "raw_descriptive_contrast": 0.214844,
+      "model_adjusted_contrast": 0.375,
+      "converged": true,
+      "data_status": "synthetic_demo"
+    },
+    {
+      "construct": "GO",
+      "contrast_id": "P2",
+      "contrast": "C2 - C0",
+      "interpretation": "effect of showing reasons",
+      "raw_descriptive_contrast": 0.683594,
+      "model_adjusted_contrast": 0.84375,
+      "converged": true,
+      "data_status": "synthetic_demo"
+    },
+    {
+      "construct": "GO",
+      "contrast_id": "P3",
+      "contrast": "C3 - C2",
+      "interpretation": "effect of feedback only",
+      "raw_descriptive_contrast": 0.144531,
+      "model_adjusted_contrast": -0.203125,
+      "converged": true,
+      "data_status": "synthetic_demo"
+    },
+    {
+      "construct": "GO",
+      "contrast_id": "P4",
+      "contrast": "C4 - C2",
+      "interpretation": "effect of feedback + keeping decision",
+      "raw_descriptive_contrast": 0.050781,
+      "model_adjusted_contrast": 0.03125,
+      "converged": true,
+      "data_status": "synthetic_demo"
+    },
+    {
+      "construct": "GO",
+      "contrast_id": "P5",
+      "contrast": "C5 - C2",
+      "interpretation": "effect of feedback + changing decision",
+      "raw_descriptive_contrast": 0.355469,
+      "model_adjusted_contrast": 0.21875,
+      "converged": true,
+      "data_status": "synthetic_demo"
+    },
+    {
+      "construct": "GO",
+      "contrast_id": "P6",
+      "contrast": "C5 - C4",
+      "interpretation": "effect of changing vs keeping decision",
+      "raw_descriptive_contrast": 0.304688,
+      "model_adjusted_contrast": 0.1875,
+      "converged": true,
+      "data_status": "synthetic_demo"
+    },
+    {
+      "construct": "MSI",
+      "contrast_id": "P1",
+      "contrast": "C1 - C0",
+      "interpretation": "effect of showing alternatives",
+      "raw_descriptive_contrast": 0.283854,
+      "model_adjusted_contrast": 0.0625,
+      "converged": true,
+      "data_status": "synthetic_demo"
+    },
+    {
+      "construct": "MSI",
+      "contrast_id": "P2",
+      "contrast": "C2 - C0",
+      "interpretation": "effect of showing reasons",
+      "raw_descriptive_contrast": 0.476562,
+      "model_adjusted_contrast": 0.3125,
+      "converged": true,
+      "data_status": "synthetic_demo"
+    },
+    {
+      "construct": "MSI",
+      "contrast_id": "P3",
+      "contrast": "C3 - C2",
+      "interpretation": "effect of feedback only",
+      "raw_descriptive_contrast": 0.216146,
+      "model_adjusted_contrast": 0.322917,
+      "converged": true,
+      "data_status": "synthetic_demo"
+    },
+    {
+      "construct": "MSI",
+      "contrast_id": "P4",
+      "contrast": "C4 - C2",
+      "interpretation": "effect of feedback + keeping decision",
+      "raw_descriptive_contrast": 0.447917,
+      "model_adjusted_contrast": 0.385417,
+      "converged": true,
+      "data_status": "synthetic_demo"
+    },
+    {
+      "construct": "MSI",
+      "contrast_id": "P5",
+      "contrast": "C5 - C2",
+      "interpretation": "effect of feedback + changing decision",
+      "raw_descriptive_contrast": 0.526042,
+      "model_adjusted_contrast": 0.552083,
+      "converged": true,
+      "data_status": "synthetic_demo"
+    },
+    {
+      "construct": "MSI",
+      "contrast_id": "P6",
+      "contrast": "C5 - C4",
+      "interpretation": "effect of changing vs keeping decision",
+      "raw_descriptive_contrast": 0.078125,
+      "model_adjusted_contrast": 0.166667,
+      "converged": true,
+      "data_status": "synthetic_demo"
+    },
+    {
+      "construct": "IC",
+      "contrast_id": "P1",
+      "contrast": "C1 - C0",
+      "interpretation": "effect of showing alternatives",
+      "raw_descriptive_contrast": 0.1875,
+      "model_adjusted_contrast": 0.2875,
+      "converged": true,
+      "data_status": "synthetic_demo"
+    },
+    {
+      "construct": "IC",
+      "contrast_id": "P2",
+      "contrast": "C2 - C0",
+      "interpretation": "effect of showing reasons",
+      "raw_descriptive_contrast": 0.59375,
+      "model_adjusted_contrast": 0.65,
+      "converged": true,
+      "data_status": "synthetic_demo"
+    },
+    {
+      "construct": "IC",
+      "contrast_id": "P3",
+      "contrast": "C3 - C2",
+      "interpretation": "effect of feedback only",
+      "raw_descriptive_contrast": -0.025,
+      "model_adjusted_contrast": -0.225,
+      "converged": true,
+      "data_status": "synthetic_demo"
+    },
+    {
+      "construct": "IC",
+      "contrast_id": "P4",
+      "contrast": "C4 - C2",
+      "interpretation": "effect of feedback + keeping decision",
+      "raw_descriptive_contrast": 0.171875,
+      "model_adjusted_contrast": 0.375,
+      "converged": true,
+      "data_status": "synthetic_demo"
+    },
+    {
+      "construct": "IC",
+      "contrast_id": "P5",
+      "contrast": "C5 - C2",
+      "interpretation": "effect of feedback + changing decision",
+      "raw_descriptive_contrast": 0.4125,
+      "model_adjusted_contrast": 0.25,
+      "converged": true,
+      "data_status": "synthetic_demo"
+    },
+    {
+      "construct": "IC",
+      "contrast_id": "P6",
+      "contrast": "C5 - C4",
+      "interpretation": "effect of changing vs keeping decision",
+      "raw_descriptive_contrast": 0.240625,
+      "model_adjusted_contrast": -0.125,
+      "converged": true,
+      "data_status": "synthetic_demo"
+    },
+    {
+      "construct": "PA5",
+      "contrast_id": "P1",
+      "contrast": "C1 - C0",
+      "interpretation": "effect of showing alternatives",
+      "raw_descriptive_contrast": 0.015625,
+      "model_adjusted_contrast": -0.15,
+      "converged": true,
+      "data_status": "synthetic_demo"
+    },
+    {
+      "construct": "PA5",
+      "contrast_id": "P2",
+      "contrast": "C2 - C0",
+      "interpretation": "effect of showing reasons",
+      "raw_descriptive_contrast": 0.303125,
+      "model_adjusted_contrast": 0.2625,
+      "converged": true,
+      "data_status": "synthetic_demo"
+    },
+    {
+      "construct": "PA5",
+      "contrast_id": "P3",
+      "contrast": "C3 - C2",
+      "interpretation": "effect of feedback only",
+      "raw_descriptive_contrast": 0.24375,
+      "model_adjusted_contrast": 0.1,
+      "converged": true,
+      "data_status": "synthetic_demo"
+    },
+    {
+      "construct": "PA5",
+      "contrast_id": "P4",
+      "contrast": "C4 - C2",
+      "interpretation": "effect of feedback + keeping decision",
+      "raw_descriptive_contrast": 0.209375,
+      "model_adjusted_contrast": 0.1,
+      "converged": true,
+      "data_status": "synthetic_demo"
+    },
+    {
+      "construct": "PA5",
+      "contrast_id": "P5",
+      "contrast": "C5 - C2",
+      "interpretation": "effect of feedback + changing decision",
+      "raw_descriptive_contrast": 0.446875,
+      "model_adjusted_contrast": 0.3625,
+      "converged": true,
+      "data_status": "synthetic_demo"
+    },
+    {
+      "construct": "PA5",
+      "contrast_id": "P6",
+      "contrast": "C5 - C4",
+      "interpretation": "effect of changing vs keeping decision",
+      "raw_descriptive_contrast": 0.2375,
+      "model_adjusted_contrast": 0.2625,
+      "converged": true,
+      "data_status": "synthetic_demo"
+    },
+    {
+      "construct": "PA8",
+      "contrast_id": "P1",
+      "contrast": "C1 - C0",
+      "interpretation": "effect of showing alternatives",
+      "raw_descriptive_contrast": 0.033203,
+      "model_adjusted_contrast": -0.109375,
+      "converged": true,
+      "data_status": "synthetic_demo"
+    },
+    {
+      "construct": "PA8",
+      "contrast_id": "P2",
+      "contrast": "C2 - C0",
+      "interpretation": "effect of showing reasons",
+      "raw_descriptive_contrast": 0.287109,
+      "model_adjusted_contrast": 0.34375,
+      "converged": true,
+      "data_status": "synthetic_demo"
+    },
+    {
+      "construct": "PA8",
+      "contrast_id": "P3",
+      "contrast": "C3 - C2",
+      "interpretation": "effect of feedback only",
+      "raw_descriptive_contrast": 0.173828,
+      "model_adjusted_contrast": 0.109375,
+      "converged": true,
+      "data_status": "synthetic_demo"
+    },
+    {
+      "construct": "PA8",
+      "contrast_id": "P4",
+      "contrast": "C4 - C2",
+      "interpretation": "effect of feedback + keeping decision",
+      "raw_descriptive_contrast": 0.248047,
+      "model_adjusted_contrast": 0.195312,
+      "converged": true,
+      "data_status": "synthetic_demo"
+    },
+    {
+      "construct": "PA8",
+      "contrast_id": "P5",
+      "contrast": "C5 - C2",
+      "interpretation": "effect of feedback + changing decision",
+      "raw_descriptive_contrast": 0.396484,
+      "model_adjusted_contrast": 0.34375,
+      "converged": true,
+      "data_status": "synthetic_demo"
+    },
+    {
+      "construct": "PA8",
+      "contrast_id": "P6",
+      "contrast": "C5 - C4",
+      "interpretation": "effect of changing vs keeping decision",
+      "raw_descriptive_contrast": 0.148438,
+      "model_adjusted_contrast": 0.148438,
+      "converged": true,
+      "data_status": "synthetic_demo"
+    }
+  ],
+  "quality_summary": {
+    "n_materials": 192,
+    "n_responses": 384,
+    "item_valid_rate": 1.0,
+    "construct_scored_rate": 1.0,
+    "scenario_heterogeneity": {
+      "GO": {
+        "scenario_mean_min": 4.25,
+        "scenario_mean_max": 4.7656,
+        "scenario_mean_range": 0.5156
+      },
+      "IC": {
+        "scenario_mean_min": 4.2,
+        "scenario_mean_max": 4.8167,
+        "scenario_mean_range": 0.6167
+      },
+      "IN": {
+        "scenario_mean_min": 4.1458,
+        "scenario_mean_max": 4.8125,
+        "scenario_mean_range": 0.6667
+      },
+      "MSI": {
+        "scenario_mean_min": 2.9583,
+        "scenario_mean_max": 3.6771,
+        "scenario_mean_range": 0.7188
+      },
+      "PA5": {
+        "scenario_mean_min": 3.2375,
+        "scenario_mean_max": 3.7625,
+        "scenario_mean_range": 0.525
+      },
+      "PA8": {
+        "scenario_mean_min": 3.2344,
+        "scenario_mean_max": 3.7786,
+        "scenario_mean_range": 0.5443
+      }
+    }
+  },
+  "figure_paths": [
+    "outputs/figures/fig1_condition_construct_means.png",
+    "outputs/figures/fig2_ai_human_difference.png",
+    "outputs/figures/fig3_model_profiles.png",
+    "outputs/figures/fig4_scenario_construct_heatmap.png",
+    "outputs/figures/fig5_contrast_forest.png"
+  ]
+}
