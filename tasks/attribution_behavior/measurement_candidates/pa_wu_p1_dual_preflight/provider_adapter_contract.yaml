@@ -1,0 +1,49 @@
+# Provider 适配层合同。
+# Prompt 与研究语义只有一个共享来源（prompt_freeze_contract.yaml）。
+# provider adapter 只转换请求与响应结构，绝不改变研究材料语义。
+
+adapter_id: pa_wu_p1_dual_preflight.provider_adapter.v1
+
+# 语义不变量（全部必须为 true，否则 validator 拒绝）。
+semantic_invariants:
+  scenario_semantics_unchanged: true
+  identity_semantics_unchanged: true
+  item_wording_unchanged: true
+  response_field_meaning_unchanged: true
+  hidden_reasoning_not_requested: true
+  model_specific_content_rewrite_forbidden: true
+
+# 参数兼容性来源（已合并的双模型决策包）。
+compatibility_reference:
+  path: tasks/attribution_behavior/measurement_candidates/pa_wu_r1_p1_decision_fill/dual_model_selection/parameter_compatibility.yaml
+  package_hash: 97a9a625bba76636
+
+adapters:
+  deepseek-v4-pro:
+    provider: deepseek
+    request_endpoint_mapping: null
+    request_schema_mapping: null
+    structured_output_mapping: null
+    response_parser_mapping: null
+    token_usage_mapping: null
+    response_id_mapping: null
+    adapter_sha256: null
+    frozen: false
+
+  gpt-5.6-terra:
+    provider: openai
+    request_endpoint_mapping: null
+    request_schema_mapping: null
+    structured_output_mapping: null
+    response_parser_mapping: null
+    token_usage_mapping: null
+    response_id_mapping: null
+    adapter_sha256: null
+    frozen: false
+
+all_adapters_frozen: false
+
+notes: >-
+  适配层只做结构映射（端点/请求/结构化输出/响应解析/token 用量/响应标识）。冻结某模型
+  adapter 需填全部映射并给出 adapter_sha256。任一语义不变量为 false、或 frozen=true 却缺
+  映射/hash、或引入 role/fallback 字段，validator 必失败。本轮两个 adapter 均未冻结。

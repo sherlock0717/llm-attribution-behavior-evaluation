@@ -1,0 +1,122 @@
+# 双模型停止条件合同。保留原有停止条件，并增加双模型专属条件。
+# 任一模型触发硬停止，双模型整体停止；不允许另一模型补跑替代失败模型；停止后只能人工审查。
+# 本轮保持未冻结（frozen: false）。
+
+stop_conditions_id: pa_wu_p1_dual_preflight.stop_conditions.v1
+
+immediate_stop:
+  - condition: model_version_changed
+    threshold: any_change
+    action: hard_stop
+    resume_requires: model_refreeze_and_reauthorization
+    owner: null
+  - condition: prompt_hash_mismatch
+    threshold: any_mismatch
+    action: hard_stop
+    resume_requires: prompt_refreeze_and_new_run_version
+    owner: null
+  - condition: administration_hash_mismatch
+    threshold: any_mismatch
+    action: hard_stop
+    resume_requires: source_reverification
+    owner: null
+  - condition: item_set_version_mismatch
+    threshold: any_mismatch
+    action: hard_stop
+    resume_requires: p0_source_reverification
+    owner: null
+  - condition: budget_hard_limit_reached
+    threshold: maximum_total_budget
+    action: hard_stop
+    resume_requires: new_budget_approval
+    owner: null
+  - condition: unauthorized_execution
+    threshold: any
+    action: hard_stop
+    resume_requires: authorization_gate_review
+    owner: null
+  - condition: secret_detected
+    threshold: any
+    action: hard_stop
+    resume_requires: security_review
+    owner: null
+  - condition: source_contract_changed
+    threshold: any_change
+    action: hard_stop
+    resume_requires: full_preflight_revalidation
+    owner: null
+  # ---- 双模型专属立即停止条件 ----
+  - condition: any_model_contract_hash_changed
+    threshold: any_change
+    action: hard_stop
+    resume_requires: dual_model_refreeze_and_reauthorization
+    owner: null
+  - condition: any_provider_adapter_hash_changed
+    threshold: any_change
+    action: hard_stop
+    resume_requires: adapter_refreeze
+    owner: null
+  - condition: cross_model_case_pair_missing
+    threshold: any
+    action: hard_stop
+    resume_requires: pairing_reverification
+    owner: null
+  - condition: one_model_request_count_diverged
+    threshold: any_divergence
+    action: hard_stop
+    resume_requires: sampling_reverification
+    owner: null
+  - condition: one_model_budget_limit_reached
+    threshold: model_maximum_budget
+    action: hard_stop
+    resume_requires: new_budget_approval
+    owner: null
+  - condition: one_model_systematic_schema_failure
+    threshold: systematic
+    action: hard_stop
+    resume_requires: human_review
+    owner: null
+
+threshold_stop:
+  - condition: schema_failure_rate
+    threshold: null
+    threshold_status: unresolved
+    action: stop_and_review
+    resume_requires: human_review
+    owner: null
+  - condition: provider_error_rate
+    threshold: null
+    threshold_status: unresolved
+    action: stop_and_review
+    resume_requires: human_review
+    owner: null
+  - condition: missing_item_rate
+    threshold: null
+    threshold_status: unresolved
+    action: stop_and_review
+    resume_requires: human_review
+    owner: null
+  - condition: duplicate_response_rate
+    threshold: null
+    threshold_status: unresolved
+    action: stop_and_review
+    resume_requires: human_review
+    owner: null
+  - condition: cost_estimation_error
+    threshold: null
+    threshold_status: unresolved
+    action: stop_and_review
+    resume_requires: human_review
+    owner: null
+
+# 双模型停止语义。
+dual_model_stop_policy:
+  any_model_hard_stop_stops_all: true
+  no_fallback_substitution: true
+  resume_requires_human_review_only: true
+
+frozen: false
+
+notes: >-
+  任一模型触发硬停止则双模型整体停止；不允许另一模型继续补跑并替代失败模型；停止后只能
+  人工审查，不自动切换 fallback。阈值待人工核定，unresolved 时保持 blocked。本轮 frozen: false。

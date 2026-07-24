@@ -1,0 +1,41 @@
+# 双模型授权门禁 —— 授权状态的单一人工来源。
+# validator 从各来源合同重新计算每个门禁真值；任一 required gate 为 false 时
+# authorization 必须 blocked。两个模型必须作为一个整体授权，不允许只授权其中一个。
+# validator 绝不自动更改授权。p1_execution_status 不持久化于任何合同/manifest。
+
+authorization_id: pa_wu_p1_dual_preflight.authorization.v1
+
+required_model_ids:
+  - deepseek-v4-pro
+  - gpt-5.6-terra
+
+all_or_nothing_execution: true
+
+# required_gates：本包必需的完整门禁名集合（双模型语义）。validator 要求与内置
+# REQUIRED_GATES 精确相等，并逐项从合同重算真值。
+required_gates:
+  - route_frozen
+  - dual_model_decision_verified
+  - all_models_frozen
+  - provider_adapters_frozen
+  - prompt_frozen
+  - all_model_sampling_frozen
+  - all_model_budgets_approved
+  - all_model_retry_policies_frozen
+  - logging_contract_frozen
+  - stop_conditions_frozen
+  - privacy_review_completed
+  - environment_review_completed
+  - mock_package_validated
+  - source_hashes_verified
+
+authorization_status: blocked
+real_model_execution_authorized: false
+authorized_by: null
+authorized_at: null
+
+notes: >-
+  授权是人工动作：需在所有 required_gates 计算为 true 后，由 authorized_by/authorized_at
+  显式记录并将 real_model_execution_authorized 置 true，authorization_status 方可 authorized。
+  两个 co-primary 模型作为一个整体授权；不允许只授权一个模型。validator 只校验一致性与
+  状态机，绝不代替人工授权，也绝不自动改写任何合同。

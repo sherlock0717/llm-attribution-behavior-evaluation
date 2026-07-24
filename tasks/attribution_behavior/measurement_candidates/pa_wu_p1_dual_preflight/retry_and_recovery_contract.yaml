@@ -1,0 +1,38 @@
+# 双模型重试与恢复合同：共享退避原则 + 每模型 provider 错误分类。
+# all_model_retry_policies_frozen 仅当两模型均冻结时为 true；本轮为 false。
+
+retry_id: pa_wu_p1_dual_preflight.retry.v1
+
+shared_policy:
+  max_attempts: null
+  exponential_backoff: null
+  jitter: null
+  retry_after_respected: null
+  resume_from_checkpoint: null
+  duplicate_request_detection: null
+  partial_run_recovery: null
+  idempotency_key_policy: null
+  checkpoint_interval: null
+
+models:
+  deepseek-v4-pro:
+    provider: deepseek
+    provider_error_taxonomy: null
+    retryable_codes: []
+    non_auto_retryable_codes: []
+    manual_review_required_codes: []
+    frozen: false
+
+  gpt-5.6-terra:
+    provider: openai
+    provider_error_taxonomy: null
+    retryable_codes: []
+    non_auto_retryable_codes: []
+    manual_review_required_codes: []
+    frozen: false
+
+all_model_retry_policies_frozen: false
+
+notes: >-
+  共享最大尝试与退避原则；两模型分别记录 provider error taxonomy 与可重试/不可自动重试
+  错误集合，各自 frozen。任一模型未冻结时整体为 false。本轮实际包保持 false。

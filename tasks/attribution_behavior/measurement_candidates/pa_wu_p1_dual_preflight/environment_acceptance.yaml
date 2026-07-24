@@ -1,0 +1,19 @@
+# 双模型迁移包环境验收（新包单独记录）。
+# 不得直接把 PR #12 的 CI 结果写成本迁移包的环境验收结果。
+# environment_review_completed 必须保持 false，直到本迁移分支自己的 PR CI 成功并记录。
+
+environment_acceptance_id: pa_wu_p1_dual_preflight.environment_acceptance.v1
+
+# 仅作为基线证据引用，不构成本迁移包环境验收。
+inherited_baseline_ci:
+  source: "PR #12 / CI #87"
+  note: 仅作为基线证据，不作为本迁移包的环境验收结果。
+
+# 本迁移分支自身 CI —— 等待未来 PR 触发。
+branch_ci: null
+
+environment_review_completed: false
+
+notes: >-
+  environment_review_completed 恒为 false，须待本迁移分支自身 PR 的 Linux CI 成功并完整
+  记录后方可为 true。继承的 PR #12 / CI #87 仅为基线证据，不能替代本包的环境验收。

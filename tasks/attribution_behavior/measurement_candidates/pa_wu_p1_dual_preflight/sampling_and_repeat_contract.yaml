@@ -1,0 +1,49 @@
+# 双模型采样与重复合同：共享设计 + 每模型参数。
+# 任一模型未冻结时 sampling_frozen 整体为 false；不允许用一个模型参数自动补全另一个模型。
+
+sampling_id: pa_wu_p1_dual_preflight.sampling.v1
+
+# 共享设计（两模型一致的用例/重复/顺序策略）。
+shared_design:
+  planned_case_count: null
+  repeats_per_case: null
+  scenario_order_policy: null
+  item_order_policy: null
+  repeat_index_policy: null
+
+models:
+  deepseek-v4-pro:
+    temperature: null
+    top_p: null
+    max_output_tokens: null
+    seed: null
+    seed_supported: null
+    seed_is_determinism_guarantee: false
+    planned_request_count: null
+    concurrency: null
+    request_timeout_seconds: null
+    frozen: false
+
+  gpt-5.6-terra:
+    temperature: null
+    top_p: null
+    max_output_tokens: null
+    seed: null
+    seed_supported: null
+    seed_is_determinism_guarantee: false
+    planned_request_count: null
+    concurrency: null
+    request_timeout_seconds: null
+    frozen: false
+
+aggregate:
+  total_planned_requests: null
+
+linked_to_budget_contract: true
+all_model_sampling_frozen: false
+
+notes: >-
+  冻结时每模型 planned_request_count = shared.planned_case_count × shared.repeats_per_case；
+  aggregate.total_planned_requests = 两模型 planned_request_count 之和。两模型可有不同
+  temperature/top_p/seed 支持/max_output_tokens/并发/timeout。seed 永不等于确定性保证；
+  seed_supported=false 时 seed 必须为 null。任一模型未冻结时 sampling_frozen 整体为 false。

@@ -1,0 +1,86 @@
+# 双模型 preflight 包清单。本包是原单模型 preflight 的后继结构。
+# 原包不删除、不废弃、不修改。
+
+manifest_id: pa_wu_p1_dual_preflight.manifest.v1
+route_id: R1
+package_status: dual_model_preflight_schema
+migration_status: schema_implemented_not_frozen
+review_status: internal_agent_review_only
+
+selected_model_ids:
+  - deepseek-v4-pro
+  - gpt-5.6-terra
+
+role_policy: co_primary
+all_or_nothing_execution: true
+
+# 迁移来源记录（hash 使用本轮实际 validator 输出，不凭记忆填写）。
+source_packages:
+  single_model_preflight:
+    path: tasks/attribution_behavior/measurement_candidates/pa_wu_p1_preflight
+    contract_hash: 2b9548cb6bac6fd3
+    package_hash: d73b5bf6ecee5830
+  dual_model_decision:
+    path: tasks/attribution_behavior/measurement_candidates/pa_wu_r1_p1_decision_fill/dual_model_selection
+    package_hash: 97a9a625bba76636
+
+# 迁移声明。
+migration_declarations:
+  successor_of_single_model_preflight: true
+  original_package_not_deleted: true
+  original_package_not_deprecated: true
+  original_package_not_modified: true
+  dual_model_selection_from_merged_decision_package: true
+  selection_complete_does_not_mean_contracts_frozen: true
+  any_model_subgate_unmet_keeps_blocked: true
+  no_primary_secondary_or_fallback: true
+  p1_execution_status_derived_only: true
+  authorization_single_human_source: true
+
+# 受管文件（validator 要求精确匹配）。
+files:
+  - README.md
+  - preflight_manifest.yaml
+  - route_freeze.yaml
+  - model_selection_decision.yaml
+  - provider_adapter_contract.yaml
+  - prompt_freeze_contract.yaml
+  - sampling_and_repeat_contract.yaml
+  - budget_and_rate_limit_contract.yaml
+  - retry_and_recovery_contract.yaml
+  - provenance_and_logging_contract.yaml
+  - stop_conditions.yaml
+  - authorization_gate.yaml
+  - environment_acceptance.yaml
+  - validate_dual_preflight.py
+
+# 合同文件（validator 载入列表）。
+contract_files:
+  - route_freeze.yaml
+  - model_selection_decision.yaml
+  - provider_adapter_contract.yaml
+  - prompt_freeze_contract.yaml
+  - sampling_and_repeat_contract.yaml
+  - budget_and_rate_limit_contract.yaml
+  - retry_and_recovery_contract.yaml
+  - provenance_and_logging_contract.yaml
+  - stop_conditions.yaml
+  - authorization_gate.yaml
+  - environment_acceptance.yaml
+
+reuses:
+  r1_mock_package_hash: 7c83def4c93ad26f
+  r1_mock_package: tasks/attribution_behavior/measurement_candidates/pa_wu_r1_mock
+  measurement_source: pa_wu_p0
+
+invariants:
+  route_is_r1: true
+  identity_is_machine: true
+  mock_only_upstream: true
+  co_primary_dual_model: true
+  all_or_nothing_execution: true
+
+notes: >-
+  本包为原单模型 preflight 的后继结构；原包保持不变。双模型选择来源为已合并的决策包。
+  模型选择完成不等于模型合同已冻结；任一模型子门禁不满足时整体保持 blocked；不存在
+  primary/secondary/fallback；p1_execution_status 只由 validator 派生；授权仅单一人工来源。

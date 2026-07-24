@@ -1,0 +1,74 @@
+# 共享 Prompt 冻结合同（双模型共用单一 Prompt，不为每模型创建独立语义 Prompt）。
+# provider 差异只能进入 provider_adapter_contract.yaml，不得进入本合同。
+# 任一未冻结段存在时 prompt_frozen 保持 false，preflight 保持 blocked。
+
+prompt_freeze_id: pa_wu_p1_dual_preflight.prompt_freeze.v1
+
+constraints:
+  request_hidden_reasoning: false
+  request_structured_final_scores_only: true
+  item_wording_source: pa_wu_p0
+  scenario_model_rewrite_allowed: false
+  identity_presented: machine
+  change_requires_new_run_version: true
+  block_on_prompt_hash_mismatch: true
+  single_shared_prompt: true              # 单一共享 Prompt，非每模型独立语义
+  per_model_semantic_prompt_forbidden: true
+
+segments:
+  system_prompt:
+    content: null
+    template_reference: null
+    sha256: null
+    frozen: false
+    owner: null
+    change_requires_new_run_version: true
+  task_instruction:
+    content: null
+    template_reference: null
+    sha256: null
+    frozen: false
+    owner: null
+    change_requires_new_run_version: true
+  scenario_block:
+    content: null
+    template_reference: null
+    sha256: null
+    frozen: false
+    owner: null
+    change_requires_new_run_version: true
+  identity_block:
+    content: null
+    template_reference: null
+    sha256: null
+    frozen: false
+    owner: null
+    change_requires_new_run_version: true
+  response_schema:
+    content: null
+    template_reference: null
+    sha256: null
+    frozen: false
+    owner: null
+    change_requires_new_run_version: true
+  # item_block 绑定完整固定顺序 P0 来源束（不允许 inline content 或单文件替代）。
+  item_block:
+    content: null
+    template_reference: null
+    source_bundle:
+      - pa_wu_p0/items_pa_2024.yaml
+      - pa_wu_p0/items_wu_shen_2026.yaml
+      - pa_wu_p0/forms.yaml
+    sha256: null
+    frozen: false
+    owner: null
+    change_requires_new_run_version: true
+
+template_reference_allowed_roots:
+  - pa_wu_p0
+  - pa_wu_p1_dual_preflight/templates
+
+notes: >-
+  单一共享 Prompt 供两个 co-primary 模型共用；identity 恒为 machine；item_block 恒绑定固定
+  顺序 P0 束。provider 之间的请求/响应差异只能在 provider_adapter_contract 表达。本轮所有
+  段保持未冻结，prompt_frozen 为 false。

@@ -1,0 +1,69 @@
+# 双模型选择决策合同（复数结构）。
+# selection_status 记录人工已选择的事实；validator 绝不将 human_selected 自动提升为
+# frozen。每个模型独立冻结判定；任一模型未冻结时 model_frozen 整体为 false。
+
+model_selection_id: pa_wu_p1_dual_preflight.model_selection.v1
+
+selection_status: human_selected
+decision_reference_verified: true
+
+selected_models:
+  - provider: deepseek
+    model_id: deepseek-v4-pro
+    role: co_primary
+  - provider: openai
+    model_id: gpt-5.6-terra
+    role: co_primary
+
+decisions:
+  deepseek-v4-pro:
+    freeze_status: unresolved
+    provider: deepseek
+    model_id: deepseek-v4-pro
+    role: co_primary
+    exact_model_version_or_snapshot: null
+    endpoint_type: null
+    access_method: null
+    context_window_requirement: null
+    structured_output_support: null
+    deterministic_seed_support: null
+    temperature_support: null
+    response_id_available: null
+    provider_retention_policy_reviewed: false
+    pricing_snapshot_date: null
+    pricing_source_recorded: null
+    regional_availability_reviewed: false
+    terms_of_use_reviewed: false
+    decided_by: null
+    decided_at: null
+    source_references: []
+
+  gpt-5.6-terra:
+    freeze_status: unresolved
+    provider: openai
+    model_id: gpt-5.6-terra
+    role: co_primary
+    exact_model_version_or_snapshot: null
+    endpoint_type: null
+    access_method: null
+    context_window_requirement: null
+    structured_output_support: null
+    deterministic_seed_support: null
+    temperature_support: null
+    response_id_available: null
+    provider_retention_policy_reviewed: false
+    pricing_snapshot_date: null
+    pricing_source_recorded: null
+    regional_availability_reviewed: false
+    terms_of_use_reviewed: false
+    decided_by: null
+    decided_at: null
+    source_references: []
+
+# all_models_frozen 由两个子决策共同派生；本轮两者均 unresolved，故为 false。
+all_models_frozen: false
+
+notes: >-
+  selection_status 恒为 human_selected（用户已选两个 co-primary 模型）。冻结是人工动作：
+  需为每个模型完整填写快照/条款/审查字段并将该模型 freeze_status 置为 frozen；validator
+  不会自动完成。任一模型未冻结时 model_frozen 整体为 false。不得使用单数 selected_model。

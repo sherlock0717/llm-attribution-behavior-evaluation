@@ -1,0 +1,75 @@
+# 双模型来源与日志合同。在原单模型字段基础上增加双模型 provenance 字段。
+# logging_contract_frozen 本轮保持 false。
+
+logging_id: pa_wu_p1_dual_preflight.logging.v1
+
+# 原单模型 required 日志字段（保留）。
+base_required_log_fields:
+  - run_id
+  - run_version
+  - case_id
+  - scenario_id
+  - repeat_index
+  - request_timestamp
+  - response_timestamp
+  - provider
+  - model_id
+  - exact_model_version
+  - request_id_or_response_id
+  - prompt_hash
+  - administration_hash
+  - input_payload_hash
+  - raw_response_hash
+  - parsed_response_hash
+  - validation_status
+  - failure_code
+  - retry_count
+  - token_usage
+  - estimated_cost
+  - package_commit_sha
+
+# 新增双模型 provenance 字段（每条请求都必须可记录）。
+dual_model_required_log_fields:
+  - dual_run_group_id
+  - model_contract_hash
+  - provider_adapter_hash
+  - model_sampling_hash
+  - model_budget_hash
+  - model_request_sequence
+  - cross_model_case_pair_id
+  - provider_response_format
+  - provider_token_usage_raw
+  - normalized_token_usage
+  - provider_cost_raw
+  - normalized_estimated_cost
+
+critical_provenance_fields:
+  - provider
+  - model_id
+  - model_contract_hash
+  - cross_model_case_pair_id
+  - prompt_hash
+  - administration_hash
+
+rules:
+  never_log_api_key: true
+  never_log_secret: true
+  separate_raw_and_parsed_response: true
+  no_silent_overwrite: true
+  case_repeat_unique_within_run: true
+  block_scoring_if_missing_provenance: true
+  every_request_has_provider_and_model_id: true
+  cross_model_case_pair_required: true
+  per_model_contract_hash_required: true      # 不允许只记录一个全局 model hash
+  single_global_model_hash_forbidden: true
+
+privacy_review:
+  status: pending
+  reviewed_by: null
+  reviewed_at: null
+
+frozen: false
+
+notes: >-
+  同一语义 case 在两个模型的请求通过 cross_model_case_pair_id 配对；两个模型分别记录自身
+  合同 hash（不允许只记录一个全局 model hash）。logging_contract_frozen 本轮保持 false。

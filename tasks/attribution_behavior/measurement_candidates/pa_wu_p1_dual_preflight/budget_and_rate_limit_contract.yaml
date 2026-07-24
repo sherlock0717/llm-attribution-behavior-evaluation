@@ -1,0 +1,67 @@
+# 双模型预算与限流合同：每模型独立预算 + aggregate 汇总。
+# 任一模型 budget_approved=false 或 aggregate 未批准时，整体 budget_approved=false。
+# 不得把 DeepSeek 的并发/价格用于 OpenAI，反之亦然。
+
+budget_id: pa_wu_p1_dual_preflight.budget.v1
+
+_decision_package: tasks/attribution_behavior/measurement_candidates/pa_wu_r1_p1_decision_fill/dual_model_selection
+
+models:
+  deepseek-v4-pro:
+    currency: USD
+    pricing_unit: per_million_tokens
+    pricing_evidence_reference:
+      package_path: tasks/attribution_behavior/measurement_candidates/pa_wu_r1_p1_decision_fill/dual_model_selection
+      source_ids:
+        - ds_models_and_pricing
+    pricing_snapshot_date: null
+    estimated_input_tokens: null
+    estimated_output_tokens: null
+    planned_request_count: null
+    estimated_cost: null
+    maximum_model_budget: null
+    warning_threshold: null
+    concurrency_limit: 500
+    requests_per_minute_limit: null
+    tokens_per_minute_limit: null
+    budget_owner: null
+    budget_approved: false
+    approval_timestamp: null
+
+  gpt-5.6-terra:
+    currency: USD
+    pricing_unit: per_million_tokens
+    pricing_evidence_reference:
+      package_path: tasks/attribution_behavior/measurement_candidates/pa_wu_r1_p1_decision_fill/dual_model_selection
+      source_ids:
+        - oai_model_page
+    pricing_snapshot_date: null
+    estimated_input_tokens: null
+    estimated_output_tokens: null
+    planned_request_count: null
+    estimated_cost: null
+    maximum_model_budget: null
+    warning_threshold: null
+    concurrency_limit: null
+    requests_per_minute_limit: null
+    tokens_per_minute_limit: null
+    budget_owner: null
+    budget_approved: false
+    approval_timestamp: null
+
+aggregate:
+  currency: USD
+  maximum_total_budget: null
+  warning_total_threshold: null
+  estimated_total_cost: null
+  total_planned_requests: null
+  aggregate_budget_owner: null
+  aggregate_budget_approved: false
+  aggregate_approval_timestamp: null
+
+all_model_budgets_approved: false
+
+notes: >-
+  每模型独立计算请求数/成本/硬上限；aggregate estimated_total_cost = 两模型之和，
+  aggregate total_planned_requests = 两模型请求数之和。任一模型或 aggregate 未批准时整体
+  为 false。DeepSeek concurrency_limit 固定 500（不得用于 OpenAI）。本轮不要求完成审批。
