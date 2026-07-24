@@ -82,5 +82,6 @@ notes: >-
   初始允许保留未冻结字段，但只要任一 segment.frozen 为 false，preflight 与 P1 都保持
   blocked。冻结时每段必须恰有 content 或 template_reference 之一；template_reference 必须
   解析到白名单目录内的真实本地文件，且 sha256 与其规范化内容一致。item_block 只允许
-  template_reference（P0 来源），不允许 inline content。scenario_block 若用
+  固定顺序的 P0 source_bundle，不允许 inline content 或单文件 template_reference 替代；
+  source_bundle 及其复合 hash 不一致时保持 blocked。scenario_block 若用
   template_reference 也必须解析真实本地文件；在正式 scenario 资产不存在前保持未冻结。
