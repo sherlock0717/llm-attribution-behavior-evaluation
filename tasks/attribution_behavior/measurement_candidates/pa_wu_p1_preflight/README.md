@@ -34,9 +34,12 @@ Prompt 各段可用 `template_reference` 指向本地资产。受控解析器只
 真实本地文件（`pa_wu_p0/*` 与 `pa_wu_p1_preflight/templates/*`），**不联网**，
 且拒绝路径逃逸；冻结时 `sha256` 必须等于该文件规范化内容的哈希。
 
-- **item_block 必须绑定 P0**：只允许 `template_reference` 指向 `pa_wu_p0/`
-  下的 item wording 资产，**不允许 inline content 替代**；其 `sha256` 必须等于该
-  P0 文件实际内容哈希，**P0 wording 变化后 prompt 门禁必失败**。
+- **item_block 必须绑定完整 P0 来源束**：使用固定顺序的 `source_bundle`
+  （`items_pa_2024.yaml` / `items_wu_shen_2026.yaml` / `forms.yaml`，覆盖 combined 与
+  wu19_only 两条来源），**不允许 inline content 或单文件 template_reference 替代**；
+  其 `sha256` 必须等于该束的复合哈希（每文件相对路径 + 规范化 UTF-8 内容 → 规范化
+  JSON → SHA-256）。任一 P0 文件内容变化、集合缺失/多余/乱序、或引用其他 P0 文件
+  （README/manifest 等），**prompt 门禁必失败**。
 - **scenario_block** 若使用 `template_reference` 也必须解析真实本地文件与 hash；
   在正式 scenario 资产尚不存在前保持未冻结与 blocked，不构造虚假正式引用。
 
@@ -55,10 +58,22 @@ Prompt 各段可用 `template_reference` 指向本地资产。受控解析器只
 requests/httpx/urllib/socket 的调用、subprocess 调用网络 CLI、以及对 R2/R3 路径的
 `open`/`Path`/import 操作。secret 扫描在去除行尾注释后判定，**不能通过追加注释标记绕过**。
 
+## 环境验收门禁为何仍 blocked
+
+`environment_review_completed` 只有在**本 preflight 分支自己的 Linux CI 成功且记录完整**
+时才为 true；当前 `preflight_branch_ci.status` 为 `pending`（仅有 R1 baseline CI #71
+成功不足以满足）。Windows 本地的 5 项 bash wrapper 失败、2 项 SciPy DLL 失败与 1 项
+SciPy collection error 均为环境问题、未修复、不判为本轮 preflight 代码回归。
+
 ## 当前真实合同状态
 
-当前磁盘上的真实合同仍为 **blocked**（模型未选定、prompt/sampling/budget/retry/logging/
-stop 未冻结、privacy review 处于 pending）。
+当前磁盘上的真实合同仍为 **blocked**（模型未选定；prompt/sampling/budget/retry/logging/
+stop 未冻结；privacy review pending；environment_review_completed 因分支 CI pending 为
+false）。`validate_preflight.py` 通过 AST 检测导入（含 importlib 别名 / `from importlib
+import import_module` 别名 / `__import__`）、网络模块调用、subprocess 列表/元组形式的
+curl/wget/powershell/pwsh、以及 R2/R3 路径的 open·Path·import；数值用 `math.isfinite`
+拒绝 NaN/±inf，日期用 `fromisoformat` 真实解析；secret 扫描去注释后判定，不能靠追加标记绕过。
+`package_hash` 覆盖 manifest + 全部合同 + `validate_preflight.py` + 所有受管模板。
 
 ## 文件
 

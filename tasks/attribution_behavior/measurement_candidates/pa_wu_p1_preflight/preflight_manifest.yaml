@@ -27,6 +27,10 @@ files:
   - environment_acceptance.yaml
   - validate_preflight.py
 
+# 嵌套受管资产（如 templates/ 下的受控 prompt 模板）。当前无正式模板，保持为空；
+# 目录中任何未声明的嵌套 yaml/py/md/txt/json 资产都会被 validator 拒绝。
+template_files: []
+
 # validator 需要纳入 contract_hash 计算的合同文件（顺序无关，validator 排序）。
 contract_files:
   - route_freeze.yaml

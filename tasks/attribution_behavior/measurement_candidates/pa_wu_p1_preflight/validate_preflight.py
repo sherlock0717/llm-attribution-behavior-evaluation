@@ -16,18 +16,40 @@ from __future__ import annotations
 import ast
 import hashlib
 import json
+import math
 import re
+from datetime import date, datetime
 from pathlib import Path
 from typing import Any
 
 import yaml
 
 PACKAGE_DIR = Path(__file__).resolve().parent
-MEASUREMENT_CANDIDATES_DIR = PACKAGE_DIR.parent
-R1_MOCK_DIR = MEASUREMENT_CANDIDATES_DIR / "pa_wu_r1_mock"
-P0_DIR = MEASUREMENT_CANDIDATES_DIR / "pa_wu_p0"
+
+
+def _mc_dir() -> Path:
+    """The measurement_candidates dir, derived dynamically from PACKAGE_DIR so
+    tests can relocate the package (and its P0 / templates roots) into tmp."""
+    return PACKAGE_DIR.parent
+
 
 R1_MOCK_HASH = "7c83def4c93ad26f"
+
+# The complete, fixed-order P0 source bundle that item_block must bind to.
+# Covers both the combined and wu19_only sources.
+ITEM_BLOCK_P0_BUNDLE = (
+    "pa_wu_p0/items_pa_2024.yaml",
+    "pa_wu_p0/items_wu_shen_2026.yaml",
+    "pa_wu_p0/forms.yaml",
+)
+
+def _r1_mock_dir() -> Path:
+    return _mc_dir() / "pa_wu_r1_mock"
+
+
+def _p0_dir() -> Path:
+    return _mc_dir() / "pa_wu_p0"
+
 
 _PLACEHOLDERS = frozenset({"", "x", "xx", "placeholder", "todo", "tbd", "none", "null"})
 _SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
@@ -222,20 +244,33 @@ def _nonempty(value: Any) -> bool:
     return True
 
 
+def _finite_number(value: Any) -> bool:
+    """Real finite number: rejects bool, NaN, +inf, -inf."""
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return False
+    return math.isfinite(float(value))
+
+
 def _positive_number(value: Any) -> bool:
-    return isinstance(value, (int, float)) and not isinstance(value, bool) and value > 0
+    return _finite_number(value) and value > 0
 
 
 def _positive_int(value: Any) -> bool:
     return isinstance(value, int) and not isinstance(value, bool) and value > 0
 
 
-def _finite_number(value: Any) -> bool:
-    return isinstance(value, (int, float)) and not isinstance(value, bool)
-
-
 def _is_date(value: Any) -> bool:
-    return isinstance(value, str) and bool(_DATE_RE.match(value.strip()))
+    """Real ISO date/datetime parse via fromisoformat (not just a regex)."""
+    if not isinstance(value, str) or not value.strip():
+        return False
+    text = value.strip()
+    for parser in (date.fromisoformat, datetime.fromisoformat):
+        try:
+            parser(text)
+            return True
+        except ValueError:
+            continue
+    return False
 
 
 def _rate_ok(value: Any) -> bool:
@@ -248,12 +283,13 @@ def _rate_ok(value: Any) -> bool:
 
 
 def _allowed_template_roots() -> list[Path]:
-    # Roots are anchored to the stable measurement_candidates dir (NOT to the
-    # possibly-monkeypatched PACKAGE_DIR), so references always resolve to the
-    # real P0 source and the real controlled-template directory.
+    # Roots are derived dynamically from PACKAGE_DIR (via _mc_dir) so a
+    # relocated package (e.g. under tmp_path in tests) resolves against its OWN
+    # sibling P0 source and its OWN controlled-template directory.
+    mc = _mc_dir()
     return [
-        (MEASUREMENT_CANDIDATES_DIR / "pa_wu_p0").resolve(),
-        (MEASUREMENT_CANDIDATES_DIR / "pa_wu_p1_preflight" / "templates").resolve(),
+        (mc / "pa_wu_p0").resolve(),
+        (mc / "pa_wu_p1_preflight" / "templates").resolve(),
     ]
 
 
@@ -264,8 +300,8 @@ def resolve_template(reference: str) -> Path:
     """
     if not isinstance(reference, str) or not reference.strip():
         raise PreflightError(f"invalid template_reference: {reference!r}")
-    # Reference is relative to measurement_candidates dir.
-    candidate = (MEASUREMENT_CANDIDATES_DIR / reference).resolve()
+    # Reference is relative to the (dynamic) measurement_candidates dir.
+    candidate = (_mc_dir() / reference).resolve()
     roots = _allowed_template_roots()
 
     def _within(child: Path, root: Path) -> bool:
@@ -289,6 +325,23 @@ def template_content_hash(reference: str) -> str:
     path = resolve_template(reference)
     text = path.read_text(encoding="utf-8")
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
+def source_bundle_hash(references: list[str]) -> str:
+    """Fixed-order composite SHA-256 over a bundle of local P0 sources.
+
+    Each entry contributes {relative_path, content} (normalized utf-8). The
+    canonical JSON preserves order (list, not set), so a reordering, a missing
+    or extra entry, or any content change alters the hash.
+    """
+    payload = []
+    for ref in references:
+        path = resolve_template(ref)
+        payload.append(
+            {"path": ref, "content": path.read_text(encoding="utf-8")}
+        )
+    blob = json.dumps(payload, ensure_ascii=False, sort_keys=False)
+    return hashlib.sha256(blob.encode("utf-8")).hexdigest()
 
 
 # --------------------------------------------------------------------------
@@ -336,7 +389,7 @@ def check_route_boundary(route: dict[str, Any]) -> None:
 
 
 def load_r1_mock_manifest() -> dict[str, Any]:
-    path = R1_MOCK_DIR / "mock_manifest.yaml"
+    path = _r1_mock_dir() / "mock_manifest.yaml"
     if not path.is_file():
         raise PreflightError(f"R1 mock manifest not found: {path}")
     with path.open(encoding="utf-8") as fh:
@@ -360,7 +413,7 @@ def verify_r1_mock_source(route: dict[str, Any]) -> str:
     if not manifest.get("forbidden_score_ids"):
         raise PreflightError("R1 mock manifest missing forbidden_score_ids")
     for fname in manifest.get("files", []):
-        if not (R1_MOCK_DIR / str(fname)).is_file():
+        if not (_r1_mock_dir() / str(fname)).is_file():
             raise PreflightError(f"R1 mock file listed in manifest is missing: {fname}")
     return ref_hash
 
@@ -370,7 +423,7 @@ def run_r1_mock_validator() -> str:
 
     spec = importlib.util.spec_from_file_location(
         "pa_wu_r1_mock_validate_from_preflight",
-        R1_MOCK_DIR / "validate_mock_package.py",
+        _r1_mock_dir() / "validate_mock_package.py",
     )
     if spec is None or spec.loader is None:
         raise PreflightError("cannot load R1 mock validate_mock_package.py")
@@ -419,9 +472,16 @@ def _model_frozen(model: dict[str, Any]) -> bool:
     for f in _MODEL_TRUE_FIELDS:
         if dec.get(f) is not True:
             return False
-    if not _nonempty(dec.get("decided_by")) or not _nonempty(dec.get("decided_at")):
+    if not _nonempty(dec.get("decided_by")):
         return False
-    if not isinstance(dec.get("source_references"), list) or not dec["source_references"]:
+    # decided_at must parse as a real ISO date/datetime.
+    if not (_is_date(dec.get("decided_at"))):
+        return False
+    refs = dec.get("source_references")
+    if not isinstance(refs, list) or not refs:
+        return False
+    # every source reference element must be non-empty and non-placeholder.
+    if not all(_nonempty(r) for r in refs):
         return False
     return True
 
@@ -429,21 +489,34 @@ def _model_frozen(model: dict[str, Any]) -> bool:
 def _segment_ok(name: str, seg: dict[str, Any]) -> bool:
     if not isinstance(seg, dict) or seg.get("frozen") is not True:
         return False
+    if not _nonempty(seg.get("owner")):
+        return False
+    if seg.get("change_requires_new_run_version") is not True:
+        return False
+    sha = str(seg.get("sha256", ""))
+    if not _SHA256_RE.match(sha):
+        return False
+
+    if name == "item_block":
+        # item_block binds the COMPLETE, fixed-order P0 source bundle. No inline
+        # content, no single template_reference substitution allowed.
+        if _nonempty(seg.get("content")) or _nonempty(seg.get("template_reference")):
+            return False
+        bundle = seg.get("source_bundle")
+        if not isinstance(bundle, list) or list(bundle) != list(ITEM_BLOCK_P0_BUNDLE):
+            return False
+        try:
+            actual = source_bundle_hash([str(x) for x in bundle])
+        except PreflightError:
+            return False
+        return actual == sha
+
+    # Non-item segments: exactly one of content / template_reference.
     content = seg.get("content")
     tref = seg.get("template_reference")
     has_content = _nonempty(content)
     has_tref = _nonempty(tref)
-    # item_block must be P0 template_reference only (no inline content).
-    if name == "item_block":
-        if has_content or not has_tref:
-            return False
-        if not str(tref).startswith("pa_wu_p0/"):
-            return False
-    # exactly one source of truth.
     if has_content == has_tref:
-        return False
-    sha = str(seg.get("sha256", ""))
-    if not _SHA256_RE.match(sha):
         return False
     try:
         if has_content:
@@ -452,11 +525,7 @@ def _segment_ok(name: str, seg: dict[str, Any]) -> bool:
             actual = template_content_hash(str(tref))
     except PreflightError:
         return False
-    if actual != sha:
-        return False
-    if not _nonempty(seg.get("owner")):
-        return False
-    return seg.get("change_requires_new_run_version") is True
+    return actual == sha
 
 
 def _prompt_frozen(prompt: dict[str, Any]) -> bool:
@@ -673,16 +742,64 @@ def _stop_conditions_frozen(stop: dict[str, Any]) -> bool:
 
 
 def _env_reviewed(env: dict[str, Any]) -> bool:
-    ci = env.get("linux_ci", {})
+    """environment_review_completed is only true once THIS preflight branch's
+    own Linux CI has succeeded and been recorded (not merely the R1 baseline).
+    The honest recording of the Windows exceptions is also required."""
+    baseline = env.get("r1_baseline_ci", env.get("linux_ci", {}))
+    branch = env.get("preflight_branch_ci", {})
     win = env.get("windows_local", {})
     qual = env.get("windows_failure_qualification", {})
-    return (
-        ci.get("status") == "success"
+    honest_record = (
+        baseline.get("status") == "success"
         and win.get("full_pytest_status") == "environment_specific_failures"
         and qual.get("in_pr_10_diff") is False
         and qual.get("is_r1_mock_regression") is False
+        and qual.get("is_preflight_code_regression") is False
         and qual.get("is_fixed") is False
     )
+    branch_ci_ok = (
+        str(branch.get("status")) == "success"
+        and _nonempty(branch.get("run_number"))
+    )
+    return bool(honest_record and branch_ci_ok)
+
+
+def _cross_contract_consistent(contracts: dict[str, dict[str, Any]]) -> bool:
+    """Cross-contract coherence between the model decision, sampling and budget.
+
+    Only enforced when model / sampling / budget are individually satisfied; a
+    mismatch flips model_frozen to false (the decision is not truly frozen if it
+    contradicts the sampling/budget it will run under)."""
+    model = contracts["model_selection_decision.yaml"]
+    sampling = contracts["sampling_and_repeat_contract.yaml"]
+    budget = contracts["budget_and_rate_limit_contract.yaml"]
+    dec = model.get("decision", {})
+    if not isinstance(dec, dict):
+        return False
+    # deterministic_seed_support must agree with sampling.seed_supported
+    if bool(dec.get("deterministic_seed_support")) != bool(sampling.get("seed_supported")):
+        return False
+    # structured output is required for structured-final-scores-only
+    if dec.get("structured_output_support") is not True:
+        return False
+    # temperature_support must agree with an actual temperature setting
+    temp = sampling.get("temperature")
+    if dec.get("temperature_support") is True:
+        if not _finite_number(temp):
+            return False
+    else:
+        # no temperature support -> temperature must be absent/None
+        if temp is not None:
+            return False
+    # model pricing source/date must match the budget pricing record
+    pricing = budget.get("pricing", {})
+    if not isinstance(pricing, dict):
+        return False
+    if str(dec.get("pricing_source_recorded")) != str(pricing.get("source")):
+        return False
+    if str(dec.get("pricing_snapshot_date")) != str(pricing.get("snapshot_date")):
+        return False
+    return True
 
 
 def compute_gate_status(
@@ -691,12 +808,23 @@ def compute_gate_status(
     source_hashes_verified: bool,
 ) -> dict[str, bool]:
     route = contracts["route_freeze.yaml"]
+    model_ok = _model_frozen(contracts["model_selection_decision.yaml"])
+    # Cross-contract coherence only matters once model itself is frozen AND the
+    # counterpart contracts are frozen/approved; otherwise leave model gated on
+    # its own completeness (avoids masking the real blocking reason).
+    if model_ok and _sampling_frozen(
+        contracts["sampling_and_repeat_contract.yaml"]
+    ) and _budget_approved(
+        contracts["budget_and_rate_limit_contract.yaml"],
+        contracts["sampling_and_repeat_contract.yaml"],
+    ):
+        model_ok = _cross_contract_consistent(contracts)
     return {
         "route_frozen": bool(
             route.get("route_id") == "R1"
             and str(route.get("mock_package_hash")) == R1_MOCK_HASH
         ),
-        "model_frozen": _model_frozen(contracts["model_selection_decision.yaml"]),
+        "model_frozen": model_ok,
         "prompt_frozen": _prompt_frozen(contracts["prompt_freeze_contract.yaml"]),
         "sampling_frozen": _sampling_frozen(
             contracts["sampling_and_repeat_contract.yaml"]
@@ -832,47 +960,73 @@ def scan_python_source(path: Path) -> None:
             return ".".join(reversed(parts))
         return ""
 
-    def _str_args(node: ast.Call) -> list[str]:
-        out = []
-        for a in list(node.args) + [k.value for k in node.keywords]:
+    def _flat_str_args(node: ast.Call) -> list[str]:
+        """All string constant args, INCLUDING those nested in list/tuple args
+        (so subprocess.run(['curl', url]) is inspected element-wise)."""
+        out: list[str] = []
+        containers = list(node.args) + [k.value for k in node.keywords]
+        for a in containers:
             if isinstance(a, ast.Constant) and isinstance(a.value, str):
                 out.append(a.value)
+            elif isinstance(a, (ast.List, ast.Tuple)):
+                for elt in a.elts:
+                    if isinstance(elt, ast.Constant) and isinstance(elt.value, str):
+                        out.append(elt.value)
         return out
+
+    # Track dynamic-import entry points regardless of alias:
+    #   import importlib as X            -> X.import_module
+    #   from importlib import import_module as Y  -> Y(...)
+    importlib_aliases: set[str] = set()          # names bound to the importlib module
+    import_module_aliases: set[str] = {"__import__"}  # names bound to import_module fn
 
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
             for alias in node.names:
-                if alias.name.split(".")[0] in BANNED_MODULES:
+                top = alias.name.split(".")[0]
+                if top in BANNED_MODULES:
                     raise PreflightError(f"banned import: {alias.name} in {path.name}")
+                if alias.name == "importlib":
+                    importlib_aliases.add(alias.asname or "importlib")
         elif isinstance(node, ast.ImportFrom):
-            if (node.module or "").split(".")[0] in BANNED_MODULES:
+            mod = (node.module or "").split(".")[0]
+            if mod in BANNED_MODULES:
                 raise PreflightError(f"banned import-from: {node.module} in {path.name}")
-        elif isinstance(node, ast.Call):
-            name = _call_name(node)
-            args = _str_args(node)
-            if name in ("importlib.import_module", "import_module", "__import__"):
-                for a in args:
-                    if a.split(".")[0] in BANNED_MODULES:
-                        raise PreflightError(f"banned dynamic import {a!r} in {path.name}")
-                    if any(frag in a for frag in FORBIDDEN_PATH_FRAGMENTS):
-                        raise PreflightError(f"forbidden path import {a!r} in {path.name}")
-            # attribute calls into banned modules e.g. requests.get / socket.socket
-            top = name.split(".")[0]
-            if top in BANNED_MODULES:
-                raise PreflightError(f"banned network call {name!r} in {path.name}")
-            # subprocess network CLI
-            if name.startswith("subprocess.") or name in ("run", "Popen", "call", "check_output"):
-                for a in args:
-                    low = a.lower()
-                    if any(cli.lower() in low.split() or low == cli.lower() for cli in _NETWORK_CLI):
-                        raise PreflightError(f"network CLI via subprocess in {path.name}: {a!r}")
-            # open()/Path() on forbidden R2/R3 fragments
-            if name in ("open", "Path") or name.endswith(".open"):
-                for a in args:
-                    if any(frag in a for frag in FORBIDDEN_PATH_FRAGMENTS):
-                        raise PreflightError(
-                            f"forbidden R2/R3 path access {a!r} in {path.name}"
-                        )
+            if node.module == "importlib":
+                for alias in node.names:
+                    if alias.name == "import_module":
+                        import_module_aliases.add(alias.asname or "import_module")
+
+    dynamic_import_names = set(import_module_aliases)
+    for a in importlib_aliases:
+        dynamic_import_names.add(f"{a}.import_module")
+
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        name = _call_name(node)
+        args = _flat_str_args(node)
+        if name in dynamic_import_names or name.endswith(".import_module"):
+            for a in args:
+                if a.split(".")[0] in BANNED_MODULES:
+                    raise PreflightError(f"banned dynamic import {a!r} in {path.name}")
+                if any(frag in a for frag in FORBIDDEN_PATH_FRAGMENTS):
+                    raise PreflightError(f"forbidden path import {a!r} in {path.name}")
+        top = name.split(".")[0]
+        if top in BANNED_MODULES:
+            raise PreflightError(f"banned network call {name!r} in {path.name}")
+        if name.startswith("subprocess.") or name in ("run", "Popen", "call", "check_output"):
+            for a in args:
+                low = a.lower().strip()
+                first_token = low.split()[0] if low.split() else low
+                if any(low == c or first_token == c or c in low.split() for c in (_c.lower() for _c in _NETWORK_CLI)):
+                    raise PreflightError(f"network CLI via subprocess in {path.name}: {a!r}")
+        if name in ("open", "Path") or name.endswith(".open"):
+            for a in args:
+                if any(frag in a for frag in FORBIDDEN_PATH_FRAGMENTS):
+                    raise PreflightError(
+                        f"forbidden R2/R3 path access {a!r} in {path.name}"
+                    )
 
 
 def scan_text_secrets(path: Path) -> None:
@@ -926,24 +1080,47 @@ def check_validator_self_ast() -> None:
 # --------------------------------------------------------------------------
 
 
-def _managed_contract_assets() -> set[str]:
-    """Every .yaml/.py contract asset physically in the package (excluding the
-    validator and manifest are still listed in files)."""
-    names = set()
-    for p in PACKAGE_DIR.iterdir():
-        if p.suffix.lower() in (".yaml", ".yml", ".py", ".md"):
-            names.add(p.name)
-    return names
+_MANAGED_SUFFIXES = (".yaml", ".yml", ".py", ".md", ".txt", ".json")
+
+
+def _managed_top_level_assets() -> set[str]:
+    return {
+        p.name
+        for p in PACKAGE_DIR.iterdir()
+        if p.is_file() and p.suffix.lower() in _MANAGED_SUFFIXES
+    }
+
+
+def _managed_nested_assets() -> set[str]:
+    """Recursively collect managed assets BELOW the top level (e.g. templates/*),
+    as POSIX relative paths from PACKAGE_DIR."""
+    out: set[str] = set()
+    for p in PACKAGE_DIR.rglob("*"):
+        if not p.is_file() or p.suffix.lower() not in _MANAGED_SUFFIXES:
+            continue
+        rel = p.relative_to(PACKAGE_DIR).as_posix()
+        if "/" in rel:  # nested only
+            out.add(rel)
+    return out
 
 
 def check_manifest() -> dict[str, Any]:
     m = load_manifest()
     if set(m.get("files", [])) != set(REQUIRED_FILES):
         raise PreflightError("manifest files list does not match required files")
-    # Every physical yaml/py/md asset must be declared in files (no stray assets).
-    stray = _managed_contract_assets() - set(m.get("files", []))
+    # Every physical top-level managed asset must be declared in files.
+    stray = _managed_top_level_assets() - set(m.get("files", []))
     if stray:
         raise PreflightError(f"undeclared package assets present: {sorted(stray)}")
+    # Nested assets (e.g. templates/*) must be declared in template_files.
+    declared_nested = set(m.get("template_files", []))
+    actual_nested = _managed_nested_assets()
+    if actual_nested != declared_nested:
+        missing = sorted(actual_nested - declared_nested)
+        extra = sorted(declared_nested - actual_nested)
+        raise PreflightError(
+            f"manifest template_files mismatch (undeclared={missing}, stale={extra})"
+        )
     if set(m.get("contract_files", [])) != set(CONTRACT_FILES):
         raise PreflightError("manifest contract_files does not match validator load list")
     if m.get("route_id") != "R1":
@@ -974,9 +1151,18 @@ def compute_contract_hash(contracts: dict[str, dict[str, Any]]) -> str:
 def compute_package_hash(
     contracts: dict[str, dict[str, Any]], manifest: dict[str, Any]
 ) -> str:
+    """Package hash covering manifest + all contracts + validate_preflight.py +
+    every managed nested template asset. Any change to the validator or a
+    template therefore changes the package hash."""
+    validator_src = Path(__file__).read_text(encoding="utf-8")
+    templates: dict[str, str] = {}
+    for rel in sorted(_managed_nested_assets()):
+        templates[rel] = (PACKAGE_DIR / rel).read_text(encoding="utf-8")
     payload = {
         "manifest": manifest,
         "contracts": {name: contracts[name] for name in sorted(contracts)},
+        "validator_source": validator_src,
+        "templates": templates,
     }
     blob = json.dumps(payload, sort_keys=True, ensure_ascii=False, default=str)
     return hashlib.sha256(blob.encode("utf-8")).hexdigest()[:16]

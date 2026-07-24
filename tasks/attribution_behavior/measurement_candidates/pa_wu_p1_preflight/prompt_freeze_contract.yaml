@@ -51,12 +51,21 @@ segments:
     frozen: false
     owner: null
     change_requires_new_run_version: true
-  # item_block 必须绑定 P0 来源：template_reference 指向 P0 item wording 资产，
-  # 不允许 inline content 替代；sha256 冻结时必须等于该 P0 文件规范化内容的哈希，
-  # P0 wording 变化后本门禁必须失败。
+  # item_block 必须绑定完整 P0 来源束（固定顺序），不允许 inline content 或单文件
+  # template_reference 替代。source_bundle 覆盖 combined 与 wu19_only 两条来源：
+  #   - pa_wu_p0/items_pa_2024.yaml
+  #   - pa_wu_p0/items_wu_shen_2026.yaml
+  #   - pa_wu_p0/forms.yaml
+  # sha256 冻结时必须等于该束的复合哈希（每个文件的相对路径 + 规范化 UTF-8 内容，
+  # 对规范化 JSON 计算 SHA-256）。任一 P0 文件内容变化、集合缺失/多余/乱序、或引用
+  # 其他 P0 文件（如 README.md / manifest.yaml），门禁必失败。
   item_block:
     content: null
-    template_reference: pa_wu_p0/items_pa_2024.yaml
+    template_reference: null
+    source_bundle:
+      - pa_wu_p0/items_pa_2024.yaml
+      - pa_wu_p0/items_wu_shen_2026.yaml
+      - pa_wu_p0/forms.yaml
     sha256: null
     frozen: false
     owner: null
