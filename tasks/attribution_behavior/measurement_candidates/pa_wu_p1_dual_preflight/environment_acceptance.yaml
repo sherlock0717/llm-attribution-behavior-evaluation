@@ -10,10 +10,23 @@ inherited_baseline_ci:
   note: 仅作为基线证据，不作为本迁移包的环境验收结果。
 
 # 本迁移分支自身 CI —— 等待未来 PR 触发。
+# 结构化 mapping schema（冻结时须完整有效，任意非空但字段无效仍失败）：
+#   branch_ci:
+#     workflow: CI
+#     run_number: <正整数>
+#     run_id: <正整数>
+#     status: completed
+#     conclusion: success
+#     verified_head_sha: <40 位小写 hex>
+#     jobs:
+#       "windows-latest / Python 3.12": success
+#       "ubuntu-latest / Python 3.12": success
 branch_ci: null
 
 environment_review_completed: false
 
 notes: >-
-  environment_review_completed 恒为 false，须待本迁移分支自身 PR 的 Linux CI 成功并完整
-  记录后方可为 true。继承的 PR #12 / CI #87 仅为基线证据，不能替代本包的环境验收。
+  environment_review_completed 严格等于 branch_ci 是否为完整有效的结构化 CI 证据（workflow=CI、
+  status=completed、conclusion=success、40 位 head SHA、windows 与 ubuntu 两个 Python 3.12 任务
+  均 success）。任意非空但不完整/无效的 branch_ci 仍失败；继承的 PR #12 / CI #87 仅为基线证据，
+  不能替代本包的环境验收，也不能使门禁通过。本轮 branch_ci 为 null，故门禁保持 false。

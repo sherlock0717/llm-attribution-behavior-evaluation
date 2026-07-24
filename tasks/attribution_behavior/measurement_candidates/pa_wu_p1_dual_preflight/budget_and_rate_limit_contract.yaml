@@ -15,6 +15,13 @@ models:
       source_ids:
         - ds_models_and_pricing
     pricing_snapshot_date: null
+    # 定价明细：estimated_cost 冻结时须由此结构真实重算。基线全 null（未冻结）。
+    pricing_inputs:
+      uncached_input_price_per_million: null
+      cached_input_price_per_million: null
+      output_price_per_million: null
+      estimated_cached_input_tokens: null
+      estimated_uncached_input_tokens: null
     estimated_input_tokens: null
     estimated_output_tokens: null
     planned_request_count: null
@@ -36,6 +43,12 @@ models:
       source_ids:
         - oai_model_page
     pricing_snapshot_date: null
+    pricing_inputs:
+      uncached_input_price_per_million: null
+      cached_input_price_per_million: null
+      output_price_per_million: null
+      estimated_cached_input_tokens: null
+      estimated_uncached_input_tokens: null
     estimated_input_tokens: null
     estimated_output_tokens: null
     planned_request_count: null
