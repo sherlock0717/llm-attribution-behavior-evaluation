@@ -118,8 +118,8 @@ mappings:
     openai_mapping: unresolved
     semantic_equivalence_status: unresolved
     evidence_source_ids:
-      - ds_pricing_snapshot
-      - oai_pricing_snapshot
+      - ds_create_chat_completion
+      - oai_responses_api
     unresolved_difference: >-
       两侧 seed 支持与"是否为确定性保证"均未确认。
     harmonization_policy: >-
@@ -142,7 +142,7 @@ mappings:
     openai_mapping: response_id
     semantic_equivalence_status: provider_specific
     evidence_source_ids:
-      - ds_pricing_snapshot
+      - ds_create_chat_completion
       - oai_responses_api
     unresolved_difference: >-
       OpenAI Responses endpoint 提供 response id；DeepSeek 对应字段未确认。

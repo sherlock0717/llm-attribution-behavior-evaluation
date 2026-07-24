@@ -47,6 +47,7 @@ EXPECTED_MODEL_IDS = frozenset(m for _, m in EXPECTED_MODELS)
 ALLOWED_SOURCE_DOMAINS = (
     "deepseek.com",
     "api-docs.deepseek.com",
+    "cdn.deepseek.com",
     "openai.com",
     "platform.openai.com",
     "developers.openai.com",
@@ -150,26 +151,51 @@ _RISK_IDS_BY_MODEL: dict[str, frozenset[str]] = {
     for mid, fields in PROVIDER_SPECIFIC_TRACKED_FIELDS.items()
 }
 
+# endpoint_type is evidenced per subclaim. The legal endpoint subclaim VALUES
+# per model; a source's supports_fields uses "endpoint_type.<subclaim>".
+_ENDPOINT_SUBCLAIMS_BY_MODEL: dict[str, frozenset[str]] = {
+    "deepseek-v4-pro": frozenset({"openai_chat_completions", "anthropic_compatible_api"}),
+    "gpt-5.6-terra": frozenset({"responses_api", "chat_completions"}),
+}
+_ALL_ENDPOINT_SUBCLAIM_SUPPORTS = frozenset(
+    f"endpoint_type.{sub}"
+    for subs in _ENDPOINT_SUBCLAIMS_BY_MODEL.values()
+    for sub in subs
+)
+
+# Legal known-risk claim types.
+_RISK_CLAIM_TYPES = frozenset(
+    {"direct_official_documentation", "methodological_inference_from_official_documentation"}
+)
+
+# Human-page-name tokens that are NOT allowed in a source_id / page_title:
+# they indicate a fabricated per-field split of the same real page.
+_FABRICATED_SOURCE_TOKENS = ("pricing_snapshot", "snapshot_seed", "pricing-snapshot", "snapshot-seed")
+
 # Auxiliary (non per-model-field) claims a source may legitimately support,
 # used by compatibility param bindings (logging/usage layer, not a model field).
 _AUX_SUPPORTS_FIELDS = frozenset({"token_usage_fields"})
 
-# Legal values that may appear in a source.supports_fields entry.
-_ALL_TRACKED_FIELD_NAMES = frozenset(EVIDENCE_TRACKED_FIELDS)
+# Legal values that may appear in a source.supports_fields entry. endpoint_type
+# is only legal in its subclaim form (endpoint_type.<sub>), never bare.
+_ALL_TRACKED_FIELD_NAMES = frozenset(
+    f for f in EVIDENCE_TRACKED_FIELDS if f != "endpoint_type"
+)
 _ALL_PROVIDER_SPECIFIC_ENTRIES = frozenset(
     entry
     for entries in PROVIDER_SPECIFIC_TRACKED_FIELDS.values()
     for entry in entries
 )
 _LEGAL_SUPPORTS_FIELD_VALUES = (
-    _ALL_TRACKED_FIELD_NAMES | _ALL_PROVIDER_SPECIFIC_ENTRIES | _AUX_SUPPORTS_FIELDS
+    _ALL_TRACKED_FIELD_NAMES
+    | _ALL_PROVIDER_SPECIFIC_ENTRIES
+    | _AUX_SUPPORTS_FIELDS
+    | _ALL_ENDPOINT_SUBCLAIM_SUPPORTS
 )
 
 # Compatibility parameter -> the evidence field each side's source must support.
-# Parameters without a direct single field binding are omitted (only provider
-# presence + source existence are enforced for those).
+# "endpoint" binds to ANY endpoint subclaim of that provider (special-cased).
 _PARAM_FIELD_BINDING: dict[str, str] = {
-    "endpoint": "endpoint_type",
     "context_window": "context_window",
     "max_output_tokens": "max_output_tokens",
     "reasoning_or_thinking_mode": "reasoning_mode_support",
@@ -179,6 +205,7 @@ _PARAM_FIELD_BINDING: dict[str, str] = {
     "structured_output_mechanism": "structured_output_mechanism",
     "token_usage_fields": "token_usage_fields",
 }
+_ENDPOINT_PARAM = "endpoint"
 _NO_SIDE_STATUSES = frozenset({"not_supported", "not_applicable"})
 
 _CONFIRMED = "confirmed_official_documentation"
@@ -386,6 +413,16 @@ def _check_sources(sources: Any) -> dict[str, dict[str, Any]]:
             raise DualModelDecisionError("source missing source_id")
         if sid in meta:
             raise DualModelDecisionError(f"duplicate source_id {sid!r}")
+        page_title = str(s.get("page_title", ""))
+        # Reject fabricated per-field splits of the same real page (a source_id or
+        # page_title using an artificial page name like pricing_snapshot/snapshot_seed).
+        low_id = sid.lower()
+        low_title = page_title.lower()
+        for tok in _FABRICATED_SOURCE_TOKENS:
+            if tok in low_id or tok in low_title:
+                raise DualModelDecisionError(
+                    f"source {sid!r}: fabricated per-field source name (token {tok!r})"
+                )
         provider = str(s.get("provider", ""))
         if provider not in _LEGAL_PROVIDERS:
             raise DualModelDecisionError(f"source {sid}: illegal provider {provider!r}")
@@ -457,7 +494,8 @@ def check_evidence(evidence: dict[str, Any]) -> dict[str, Any]:
     documented_by_model: dict[str, list[str]] = {}
     unresolved_by_model: dict[str, list[str]] = {}
     documented_ps_by_model: dict[str, list[str]] = {}
-    confirmed_risks_by_model: dict[str, list[str]] = {}
+    direct_risks_by_model: dict[str, list[str]] = {}
+    inference_risks_by_model: dict[str, list[str]] = {}
     source_field_binding_count = 0
     seen: set[str] = set()
 
@@ -486,6 +524,32 @@ def check_evidence(evidence: dict[str, Any]) -> dict[str, Any]:
         unresolved_from_fe: set[str] = set()
         used_source_ids: set[str] = set()
 
+        def _bind_source(field_label: str, sid: str, supports_key: str) -> None:
+            """Common per-source binding checks (existence/provider/scope/support)."""
+            nonlocal source_field_binding_count
+            if sid not in src_meta:
+                raise DualModelDecisionError(f"{mid}.{field_label}: unknown source_id {sid!r}")
+            used_source_ids.add(sid)
+            if src_meta[sid]["provider"] != provider:
+                raise DualModelDecisionError(
+                    f"{mid}.{field_label}: source {sid} provider "
+                    f"{src_meta[sid]['provider']!r} != model provider {provider!r}"
+                )
+            if (src_meta[sid]["scope"] != "provider_generic"
+                    and mid not in src_meta[sid]["supports"]):
+                raise DualModelDecisionError(
+                    f"{mid}.{field_label}: source {sid} does not support this model"
+                )
+            if src_meta[sid]["status"] != _CONFIRMED:
+                raise DualModelDecisionError(
+                    f"{mid}.{field_label}: cites non-confirmed source {sid!r}"
+                )
+            if supports_key not in src_meta[sid]["supports_fields"]:
+                raise DualModelDecisionError(
+                    f"{mid}.{field_label}: source {sid} does not support {supports_key!r}"
+                )
+            source_field_binding_count += 1
+
         for field in EVIDENCE_TRACKED_FIELDS:
             if field not in fe:
                 raise DualModelDecisionError(
@@ -494,6 +558,46 @@ def check_evidence(evidence: dict[str, Any]) -> dict[str, Any]:
             entry = fe[field]
             if not isinstance(entry, dict):
                 raise DualModelDecisionError(f"{mid}: field_evidence[{field}] not a mapping")
+
+            # ---- endpoint_type: per-subclaim evidence ----
+            if field == "endpoint_type":
+                if str(entry.get("status")) != _CONFIRMED:
+                    raise DualModelDecisionError(f"{mid}.endpoint_type: must be confirmed")
+                declared_ep = m.get("endpoint_type")
+                if not isinstance(declared_ep, list) or not declared_ep:
+                    raise DualModelDecisionError(f"{mid}.endpoint_type: non-empty list required")
+                if len(declared_ep) != len(set(map(str, declared_ep))):
+                    raise DualModelDecisionError(f"{mid}.endpoint_type: duplicate values")
+                subclaims = entry.get("subclaims", {})
+                if not isinstance(subclaims, dict):
+                    raise DualModelDecisionError(f"{mid}.endpoint_type: subclaims required")
+                if set(map(str, subclaims)) != set(map(str, declared_ep)):
+                    raise DualModelDecisionError(
+                        f"{mid}.endpoint_type: subclaims keys {sorted(subclaims)} != "
+                        f"values {sorted(map(str, declared_ep))}"
+                    )
+                # endpoint_type must be the COMPLETE expected set for this model
+                # (dropping a documented endpoint like Anthropic entry fails).
+                if set(map(str, declared_ep)) != _ENDPOINT_SUBCLAIMS_BY_MODEL.get(mid, frozenset()):
+                    raise DualModelDecisionError(
+                        f"{mid}.endpoint_type: values {sorted(map(str, declared_ep))} != "
+                        f"expected {sorted(_ENDPOINT_SUBCLAIMS_BY_MODEL.get(mid, frozenset()))}"
+                    )
+                for sub, sub_entry in subclaims.items():
+                    if not isinstance(sub_entry, dict):
+                        raise DualModelDecisionError(
+                            f"{mid}.endpoint_type.{sub}: entry must be a mapping"
+                        )
+                    sub_sids = sub_entry.get("source_ids", [])
+                    if not isinstance(sub_sids, list) or not sub_sids:
+                        raise DualModelDecisionError(
+                            f"{mid}.endpoint_type.{sub}: source_ids must be non-empty"
+                        )
+                    for sid in sub_sids:
+                        _bind_source(f"endpoint_type.{sub}", str(sid), f"endpoint_type.{sub}")
+                documented.append("endpoint_type")
+                continue
+
             status = str(entry.get("status"))
             sids = entry.get("source_ids", [])
             if not isinstance(sids, list) or not sids:
@@ -606,12 +710,19 @@ def check_evidence(evidence: dict[str, Any]) -> dict[str, Any]:
                 source_field_binding_count += 1
             ps_documented.append(ps_field)
 
+        # Exact-value check for the decision package: deepseek concurrency == 500.
+        if mid == "deepseek-v4-pro" and m.get("concurrency_limit") != 500:
+            raise DualModelDecisionError(
+                f"{mid}: concurrency_limit must be 500, got {m.get('concurrency_limit')!r}"
+            )
+
         # ---- known_risks: each risk has a stable id + its own confirmed evidence ----
         known_risks = m.get("known_risks", [])
         if not isinstance(known_risks, list) or not known_risks:
             raise DualModelDecisionError(f"{mid}: known_risks must be a non-empty list")
         expected_risk_ids = _RISK_IDS_BY_MODEL.get(mid, frozenset())
-        confirmed_risks: list[str] = []
+        direct_risks: list[str] = []
+        inference_risks: list[str] = []
         seen_risk_ids: set[str] = set()
         for risk in known_risks:
             if not isinstance(risk, dict):
@@ -624,6 +735,11 @@ def check_evidence(evidence: dict[str, Any]) -> dict[str, Any]:
             seen_risk_ids.add(rid)
             if not str(risk.get("statement", "")).strip():
                 raise DualModelDecisionError(f"{mid}.{rid}: risk statement required")
+            claim_type = str(risk.get("claim_type"))
+            if claim_type not in _RISK_CLAIM_TYPES:
+                raise DualModelDecisionError(
+                    f"{mid}.{rid}: illegal claim_type {claim_type!r}"
+                )
             rfe = risk.get("field_evidence", {})
             if not isinstance(rfe, dict) or str(rfe.get("status")) != _CONFIRMED:
                 raise DualModelDecisionError(
@@ -647,7 +763,10 @@ def check_evidence(evidence: dict[str, Any]) -> dict[str, Any]:
                     )
                 used_source_ids.add(sid)
                 source_field_binding_count += 1
-            confirmed_risks.append(rid)
+            if claim_type == "direct_official_documentation":
+                direct_risks.append(rid)
+            else:
+                inference_risks.append(rid)
         if seen_risk_ids != set(expected_risk_ids):
             raise DualModelDecisionError(
                 f"{mid}: known_risks ids {sorted(seen_risk_ids)} != expected "
@@ -685,7 +804,8 @@ def check_evidence(evidence: dict[str, Any]) -> dict[str, Any]:
         documented_by_model[mid] = sorted(documented)
         unresolved_by_model[mid] = sorted(declared_set)
         documented_ps_by_model[mid] = sorted(ps_documented)
-        confirmed_risks_by_model[mid] = sorted(confirmed_risks)
+        direct_risks_by_model[mid] = sorted(direct_risks)
+        inference_risks_by_model[mid] = sorted(inference_risks)
 
     if seen != set(EXPECTED_MODEL_IDS):
         raise DualModelDecisionError("evidence models mismatch expected model ids")
@@ -693,7 +813,8 @@ def check_evidence(evidence: dict[str, Any]) -> dict[str, Any]:
         "documented_by_model": documented_by_model,
         "unresolved_by_model": unresolved_by_model,
         "documented_ps_by_model": documented_ps_by_model,
-        "confirmed_risks_by_model": confirmed_risks_by_model,
+        "direct_risks_by_model": direct_risks_by_model,
+        "inference_risks_by_model": inference_risks_by_model,
         "source_field_binding_count": source_field_binding_count,
         "src_meta": src_meta,
     }
@@ -745,33 +866,41 @@ def check_parameter_compatibility(
         oai_active = oai_side not in _NO_SIDE_STATUSES
         bound_field = _PARAM_FIELD_BINDING.get(param)
 
-        # Each active side must have a source of its provider (and, when the
-        # param binds a field, a source that supports that provider's field).
+        def _provider_supports_binding(prov: str) -> bool:
+            """True if some cited source of `prov` supports the param's binding.
+            For endpoint, ANY endpoint subclaim support counts."""
+            for s in ev_ids:
+                if src_meta[s]["provider"] != prov:
+                    continue
+                if param == _ENDPOINT_PARAM:
+                    if any(sf.startswith("endpoint_type.")
+                           for sf in src_meta[s]["supports_fields"]):
+                        return True
+                elif bound_field is None:
+                    return True
+                elif bound_field in src_meta[s]["supports_fields"]:
+                    return True
+            return False
+
+        needs_binding = (param == _ENDPOINT_PARAM) or (bound_field is not None)
+
         if ds_active:
             if "deepseek" not in providers_present:
                 raise DualModelDecisionError(
                     f"compatibility[{param}]: deepseek side lacks a deepseek source"
                 )
-            if bound_field is not None and not any(
-                src_meta[s]["provider"] == "deepseek"
-                and bound_field in src_meta[s]["supports_fields"]
-                for s in ev_ids
-            ):
+            if needs_binding and not _provider_supports_binding("deepseek"):
                 raise DualModelDecisionError(
-                    f"compatibility[{param}]: no deepseek source supports {bound_field!r}"
+                    f"compatibility[{param}]: no deepseek source supports the binding"
                 )
         if oai_active:
             if "openai" not in providers_present:
                 raise DualModelDecisionError(
                     f"compatibility[{param}]: openai side lacks an openai source"
                 )
-            if bound_field is not None and not any(
-                src_meta[s]["provider"] == "openai"
-                and bound_field in src_meta[s]["supports_fields"]
-                for s in ev_ids
-            ):
+            if needs_binding and not _provider_supports_binding("openai"):
                 raise DualModelDecisionError(
-                    f"compatibility[{param}]: no openai source supports {bound_field!r}"
+                    f"compatibility[{param}]: no openai source supports the binding"
                 )
         if ds_active and oai_active:
             dual_provider_binding_count += 1
@@ -958,7 +1087,8 @@ def build_report() -> dict[str, Any]:
         "documented_fields_by_model": ev_result["documented_by_model"],
         "unresolved_fields_by_model": ev_result["unresolved_by_model"],
         "documented_provider_specific_fields_by_model": ev_result["documented_ps_by_model"],
-        "confirmed_risks_by_model": ev_result["confirmed_risks_by_model"],
+        "direct_documented_risks_by_model": ev_result["direct_risks_by_model"],
+        "grounded_inference_risks_by_model": ev_result["inference_risks_by_model"],
         "source_field_binding_count": ev_result["source_field_binding_count"],
         "compatibility_dual_provider_binding_count": dual_binding_count,
         "compatibility_summary": compatibility_summary,
