@@ -1,0 +1,71 @@
+{
+  "schema_id": "pa_wu_r1_pilot.result_schema.v1",
+  "description": "Schema for a single judge-model response record. All demo records carry data_status = synthetic_demo. Raw responses are preserved and never overwritten.",
+  "record_type": "model_response",
+  "required_fields": [
+    "run_id",
+    "run_version",
+    "judge_model_id",
+    "provider",
+    "material_id",
+    "condition_id",
+    "d_level",
+    "u_level",
+    "scenario_id",
+    "direction_version",
+    "target_identity",
+    "repeat_index",
+    "raw_response",
+    "parsed_item_scores",
+    "parse_status",
+    "validation_status",
+    "failure_code",
+    "prompt_hash",
+    "response_id",
+    "input_tokens",
+    "output_tokens",
+    "estimated_cost",
+    "timestamp"
+  ],
+  "field_types": {
+    "run_id": "string",
+    "run_version": "string",
+    "judge_model_id": "string (deepseek-v4-pro | gpt-5.6-terra)",
+    "provider": "string (deepseek | openai)",
+    "material_id": "string",
+    "condition_id": "string (C0..C5)",
+    "d_level": "string (D0..D2)",
+    "u_level": "string (U0..U3)",
+    "scenario_id": "string",
+    "direction_version": "string (A | B)",
+    "target_identity": "string (ai | human)",
+    "repeat_index": "integer >= 0",
+    "raw_response": "string (preserved verbatim, never overwritten)",
+    "parsed_item_scores": "object mapping item_id -> numeric score on the item's native scale",
+    "parse_status": "string (parsed | parse_error)",
+    "validation_status": "string (valid | invalid)",
+    "failure_code": "string | null",
+    "prompt_hash": "string (sha256 hex)",
+    "response_id": "string | null",
+    "input_tokens": "integer >= 0",
+    "output_tokens": "integer >= 0",
+    "estimated_cost": "number >= 0",
+    "timestamp": "string (ISO 8601)"
+  },
+  "provenance_fields": {
+    "data_status": "synthetic_demo for every record in this package",
+    "seed": "fixed integer seed recorded per run"
+  },
+  "item_score_domain": {
+    "wu_in*": "1..7",
+    "wu_go*": "1..7",
+    "wu_ms*": "1..5",
+    "wu_ic*": "1..7",
+    "pa_*": "1..5"
+  },
+  "notes": [
+    "judge_model_id is NOT a material factor; both models judge the same 192 materials.",
+    "raw_response is preserved; scoring reads parsed_item_scores and never mutates raw_response.",
+    "No missing-value imputation: a construct score is only computed when all its member items are present and valid."
+  ]
+}

@@ -1,0 +1,170 @@
+# Eight low-risk, general scenarios with a clear decision behavior.
+#
+# Each scenario has two equally reasonable direction versions (A / B) that are
+# NOT a mere name swap: they represent two genuinely different but symmetric
+# choices (comparable value orientation, complexity and outcome severity).
+#
+# Strict rules honored here:
+# - low-risk domains only (no medical/legal/financial/hiring-elimination decisions);
+# - A and B are value-symmetric and comparable in complexity/severity;
+# - ai and human versions change ONLY the subject label (handled by identity
+#   templates); decision content, reason, feedback and outcome are identical;
+# - the AI version is NOT made more mechanical; the human version is NOT made
+#   more emotional.
+#
+# For each direction, `decision` is the Phase-1 chosen decision and the OTHER
+# direction's decision is used as the `alternate_decision` for U3 (change).
+# `feedback` is identical across D-levels and across ai/human.
+
+scenario_registry_id: pa_wu_r1_pilot.scenario_registry.v1
+
+scenarios:
+  - scenario_id: s1_scheduling
+    domain: scheduling_and_meetings
+    decision_context: >-
+      A weekly team meeting must be scheduled and one of two equally workable
+      time slots has to be chosen.
+    option_a: "hold the meeting on Tuesday morning"
+    option_b: "hold the meeting on Thursday afternoon"
+    direction_a_decision: "schedule the weekly team meeting on Tuesday morning"
+    direction_b_decision: "schedule the weekly team meeting on Thursday afternoon"
+    direction_a_reason: "Tuesday morning aligns with when most agenda items are ready to review"
+    direction_b_reason: "Thursday afternoon aligns with when most agenda items are ready to review"
+    feedback: "two team members noted the chosen slot overlapped with their focus-work time"
+    risk_level: low
+    symmetry_notes: >-
+      Both slots are ordinary working times with comparable convenience; neither
+      is presented as objectively better.
+    identity_invariance_notes: >-
+      Only the subject label changes between ai and human; the slots, reason and
+      feedback are identical.
+
+  - scenario_id: s2_customer_issue
+    domain: customer_issue_handling
+    decision_context: >-
+      A customer reported a minor issue and one of two equally reasonable handling
+      approaches must be chosen.
+    option_a: "resolve the issue with a quick direct fix and a short explanation"
+    option_b: "resolve the issue with a guided walkthrough so the customer can self-serve next time"
+    direction_a_decision: "handle the customer issue with a quick direct fix and a short explanation"
+    direction_b_decision: "handle the customer issue with a guided walkthrough for self-service"
+    direction_a_reason: "a quick direct fix returns the customer to normal use fastest"
+    direction_b_reason: "a guided walkthrough returns the customer to normal use with more independence"
+    feedback: "the customer said the resolution worked but wished the other approach had been offered"
+    risk_level: low
+    symmetry_notes: >-
+      Speed vs. self-service are comparable, both benign trade-offs with similar
+      effort and outcome severity.
+    identity_invariance_notes: >-
+      Only the subject label differs; approaches, reason and feedback are shared.
+
+  - scenario_id: s3_study_plan
+    domain: study_plan_recommendation
+    decision_context: >-
+      A learner asked for a study plan and one of two equally sound structures
+      must be recommended.
+    option_a: "recommend a topic-by-topic sequential study plan"
+    option_b: "recommend an interleaved study plan mixing topics each session"
+    direction_a_decision: "recommend a topic-by-topic sequential study plan"
+    direction_b_decision: "recommend an interleaved study plan mixing topics each session"
+    direction_a_reason: "sequential coverage keeps each topic self-contained and easy to track"
+    direction_b_reason: "interleaved coverage keeps topics connected and easy to compare"
+    feedback: "the learner made steady progress but was curious how the other plan would compare"
+    risk_level: low
+    symmetry_notes: >-
+      Sequential vs. interleaved are both established, comparable study strategies.
+    identity_invariance_notes: >-
+      Only the subject label differs; plans, reason and feedback are shared.
+
+  - scenario_id: s4_routing
+    domain: routing_and_logistics
+    decision_context: >-
+      A delivery route must be arranged and one of two comparable routes has to
+      be chosen.
+    option_a: "take the shorter route through the city center"
+    option_b: "take the slightly longer route along the ring road"
+    direction_a_decision: "arrange the delivery via the shorter city-center route"
+    direction_b_decision: "arrange the delivery via the ring-road route"
+    direction_a_reason: "the city-center route has the shortest distance"
+    direction_b_reason: "the ring-road route has the steadiest travel flow"
+    feedback: "the delivery arrived on time, though conditions on the day slightly favored the other route"
+    risk_level: low
+    symmetry_notes: >-
+      Distance vs. steadiness are comparable trade-offs with similar outcome
+      severity; neither route is unsafe.
+    identity_invariance_notes: >-
+      Only the subject label differs; routes, reason and feedback are shared.
+
+  - scenario_id: s5_task_allocation
+    domain: team_task_allocation
+    decision_context: >-
+      Two tasks must be assigned across a small team and one of two balanced
+      allocations has to be chosen.
+    option_a: "assign tasks by matching each task to the closest existing expertise"
+    option_b: "assign tasks by rotating them to broaden the team's experience"
+    direction_a_decision: "allocate the tasks by matching each task to existing expertise"
+    direction_b_decision: "allocate the tasks by rotating them to broaden experience"
+    direction_a_reason: "matching expertise gets each task done most reliably now"
+    direction_b_reason: "rotating tasks builds broader capability across the team"
+    feedback: "the tasks were completed, though a teammate noted the other allocation had merits too"
+    risk_level: low
+    symmetry_notes: >-
+      Expertise-match vs. rotation are both standard, comparable allocation
+      principles with similar stakes.
+    identity_invariance_notes: >-
+      Only the subject label differs; allocations, reason and feedback are shared.
+
+  - scenario_id: s6_content_recommendation
+    domain: content_recommendation
+    decision_context: >-
+      A reading list must be recommended and one of two equally reasonable
+      selections has to be chosen.
+    option_a: "recommend a focused set of closely related articles"
+    option_b: "recommend a varied set spanning several related themes"
+    direction_a_decision: "recommend a focused set of closely related articles"
+    direction_b_decision: "recommend a varied set spanning several related themes"
+    direction_a_reason: "a focused set goes deep on one theme"
+    direction_b_reason: "a varied set gives broad coverage across themes"
+    feedback: "the reader found the list useful and wondered what the other selection would include"
+    risk_level: low
+    symmetry_notes: >-
+      Depth vs. breadth are comparable, benign editorial trade-offs.
+    identity_invariance_notes: >-
+      Only the subject label differs; selections, reason and feedback are shared.
+
+  - scenario_id: s7_game_strategy
+    domain: game_strategy_choice
+    decision_context: >-
+      In a friendly turn-based puzzle game, one of two comparable strategies has
+      to be chosen for the next move.
+    option_a: "play the steady defensive strategy to secure current position"
+    option_b: "play the active expansion strategy to gain new position"
+    direction_a_decision: "choose the steady defensive strategy for the next move"
+    direction_b_decision: "choose the active expansion strategy for the next move"
+    direction_a_reason: "defending secures the position already held"
+    direction_b_reason: "expanding gains new position on the board"
+    feedback: "the round went reasonably well, though the other strategy could also have worked"
+    risk_level: low
+    symmetry_notes: >-
+      Defense vs. expansion are comparable, low-stakes game strategies.
+    identity_invariance_notes: >-
+      Only the subject label differs; strategies, reason and feedback are shared.
+
+  - scenario_id: s8_energy_plan
+    domain: energy_and_resource_use
+    decision_context: >-
+      An office wants to reduce energy use and one of two comparable plans has to
+      be chosen.
+    option_a: "adopt a scheduled plan that powers down equipment on a fixed timetable"
+    option_b: "adopt a usage-based plan that powers down equipment when idle is detected"
+    direction_a_decision: "adopt the scheduled fixed-timetable power-down plan"
+    direction_b_decision: "adopt the usage-based idle-detection power-down plan"
+    direction_a_reason: "a fixed timetable is simple and predictable to run"
+    direction_b_reason: "idle detection adapts to actual usage patterns"
+    feedback: "energy use dropped, and staff noted the other plan might suit some rooms better"
+    risk_level: low
+    symmetry_notes: >-
+      Scheduled vs. usage-based saving plans are comparable, benign operational
+      choices with similar outcome severity.
+    identity_invariance_notes: >-
+      Only the subject label differs; plans, reason and feedback are shared.

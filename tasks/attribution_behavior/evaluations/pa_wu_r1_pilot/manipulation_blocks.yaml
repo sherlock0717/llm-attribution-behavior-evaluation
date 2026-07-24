@@ -1,0 +1,114 @@
+# Manipulation block text rules for the PA-Wu R1 pilot.
+#
+# D-levels affect ONLY Phase 1 (what is shown about how the subject decided).
+# U-levels affect ONLY feedback and Phase 2 (second decision).
+#
+# Invariants enforced by build_stimuli.py + validate_pilot_core.py:
+# - feedback text is identical across D for the same scenario/direction/identity;
+# - U2 and U3 differ ONLY in whether the second decision keeps or changes the
+#   original decision; the feedback text is identical between U2 and U3;
+# - U3 feedback is NOT more severe than U2 feedback (identical);
+# - U2's original decision is NOT made to look more clearly correct;
+# - across ai/human versions, reason / feedback / outcome text is unchanged
+#   (only the subject label differs, injected by scenario identity templates).
+
+manipulation_id: pa_wu_r1_pilot.manipulation_blocks.v1
+
+# --------------------------------------------------------------------------
+# Decision-process blocks (Phase 1)
+# --------------------------------------------------------------------------
+d_levels:
+  D0:
+    key: direct_decision
+    description: Present only the final decision.
+    phase_1_template: >-
+      {subject} reviewed the situation and decided: {chosen_decision}.
+    shows_alternatives: false
+    shows_reasons: false
+
+  D1:
+    key: alternatives_shown
+    description: >-
+      Present the alternatives the subject considered, WITHOUT detailed internal
+      reasons.
+    phase_1_template: >-
+      {subject} considered the available options: {option_a} and {option_b}.
+      After weighing them, {subject} decided: {chosen_decision}.
+    shows_alternatives: true
+    shows_reasons: false
+
+  D2:
+    key: reasons_shown
+    description: >-
+      Present the task-relevant reasons behind the decision. Reasons stay
+      task-relevant and add NO emotion, consciousness or personality cues.
+    phase_1_template: >-
+      {subject} decided: {chosen_decision}. The stated reason was: {decision_reason}.
+    shows_alternatives: false
+    shows_reasons: true
+
+# --------------------------------------------------------------------------
+# Update / feedback blocks (feedback + Phase 2)
+# --------------------------------------------------------------------------
+u_levels:
+  U0:
+    key: no_feedback
+    description: No feedback and no second decision.
+    feedback_template: ""
+    phase_2_template: ""
+    has_feedback: false
+    second_decision: false
+
+  U1:
+    key: feedback_only
+    description: Feedback is received, but no second decision is requested.
+    feedback_template: >-
+      Later, {subject} received this feedback: {feedback}.
+    phase_2_template: ""
+    has_feedback: true
+    second_decision: false
+
+  U2:
+    key: feedback_keep
+    description: Same feedback; the subject makes a second decision that keeps the original.
+    feedback_template: >-
+      Later, {subject} received this feedback: {feedback}.
+    phase_2_template: >-
+      After considering the feedback, {subject} made a second decision and kept
+      the original decision: {chosen_decision}.
+    has_feedback: true
+    second_decision: true
+    second_decision_outcome: keep
+
+  U3:
+    key: feedback_change
+    description: Same feedback; the subject makes a second decision that changes the original.
+    feedback_template: >-
+      Later, {subject} received this feedback: {feedback}.
+    phase_2_template: >-
+      After considering the feedback, {subject} made a second decision and changed
+      the original decision, now choosing: {alternate_decision}.
+    has_feedback: true
+    second_decision: true
+    second_decision_outcome: change
+
+# --------------------------------------------------------------------------
+# Identity templates (only the subject label differs across ai/human).
+# --------------------------------------------------------------------------
+identity_templates:
+  ai:
+    subject: "the AI assistant"
+    subject_intro: >-
+      The following describes actions taken by an AI assistant.
+  human:
+    subject: "the person"
+    subject_intro: >-
+      The following describes actions taken by a person.
+
+invariants:
+  d_affects_phase_1_only: true
+  u_affects_feedback_and_phase_2_only: true
+  feedback_identical_across_d: true
+  u2_u3_differ_only_in_second_decision: true
+  u3_feedback_not_more_severe: true
+  identity_changes_subject_label_only: true

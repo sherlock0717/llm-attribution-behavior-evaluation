@@ -1,0 +1,151 @@
+# Scoring specification for the PA-Wu R1 pilot.
+#
+# This spec REFERENCES the P0 item files verbatim; it does NOT rewrite or
+# re-translate any item text. Item IDs, constructs, scales and version
+# membership are taken directly from:
+#   pa_wu_p0/items_pa_2024.yaml
+#   pa_wu_p0/items_wu_shen_2026.yaml
+#   pa_wu_p0/forms.yaml
+#
+# Scoring rules:
+# 1. IN, GO, MSI, IC are each the native-scale mean of their member items.
+# 2. PA5 and PA8 are each computed separately and never substitute each other.
+# 3. No cross-scale total is computed.
+# 4. No missing-value imputation.
+# 5. A primary-analysis construct score requires ALL its member items valid.
+# 6. 0-1 standardized scores are for DISPLAY only.
+# 7. Statistical inference prefers the native scale.
+# 8. Reverse scoring is applied ONLY where the P0 files explicitly record it
+#    (the P0 files record NO reverse-scored items, so none are reversed here).
+# 9. Free-will-related items are flagged exploratory_item.
+
+scoring_spec_id: pa_wu_r1_pilot.scoring_spec.v1
+
+source_files:
+  pa_2024: pa_wu_p0/items_pa_2024.yaml
+  wu_shen_2026: pa_wu_p0/items_wu_shen_2026.yaml
+  forms: pa_wu_p0/forms.yaml
+
+response_scales:
+  likert_7: {minimum: 1, maximum: 7}       # IN / GO / IC (Wu independence_goal_influence)
+  semantic_differential_5: {minimum: 1, maximum: 5}  # MSI
+  likert_5: {minimum: 1, maximum: 5}       # PA (Strongly Disagree..Strongly Agree / terrible..great)
+
+constructs:
+  - construct: IN
+    name: Perceptual Independence
+    source: wu_shen_2026
+    source_construct: perceived_machine_independence
+    response_scale: likert_7
+    minimum: 1
+    maximum: 7
+    method: mean
+    require_all_items: true
+    primary_or_secondary: primary
+    items:
+      - {item_id: wu_in1a, reverse_scored: false, primary_or_secondary: primary}
+      - {item_id: wu_in2a, reverse_scored: false, primary_or_secondary: primary}
+      - {item_id: wu_in3b, reverse_scored: false, primary_or_secondary: primary}
+      - {item_id: wu_in4a, reverse_scored: false, primary_or_secondary: primary}
+
+  - construct: GO
+    name: Goal Orientation
+    source: wu_shen_2026
+    source_construct: perceived_machine_goal_orientation
+    response_scale: likert_7
+    minimum: 1
+    maximum: 7
+    method: mean
+    require_all_items: true
+    primary_or_secondary: primary
+    items:
+      - {item_id: wu_go1a, reverse_scored: false, primary_or_secondary: primary}
+      - {item_id: wu_go2a, reverse_scored: false, primary_or_secondary: primary}
+      - {item_id: wu_go3b, reverse_scored: false, primary_or_secondary: primary}
+      - {item_id: wu_go4a, reverse_scored: false, primary_or_secondary: primary}
+
+  - construct: MSI
+    name: Mental-State Inference
+    source: wu_shen_2026
+    source_construct: mental_state_inference
+    response_scale: semantic_differential_5
+    minimum: 1
+    maximum: 5
+    method: mean
+    require_all_items: true
+    primary_or_secondary: primary
+    items:
+      - {item_id: wu_ms1, indicator: consciousness, reverse_scored: false, primary_or_secondary: primary}
+      - {item_id: wu_ms2, indicator: thinking, reverse_scored: false, primary_or_secondary: primary}
+      - {item_id: wu_ms3, indicator: free_will, reverse_scored: false, primary_or_secondary: primary, exploratory_item: true}
+      - {item_id: wu_ms4, indicator: desires, reverse_scored: false, primary_or_secondary: primary}
+      - {item_id: wu_ms5, indicator: self_awareness, reverse_scored: false, primary_or_secondary: primary}
+      - {item_id: wu_ms6, indicator: intentionality, reverse_scored: false, primary_or_secondary: primary}
+
+  - construct: IC
+    name: Influential Capacity
+    source: wu_shen_2026
+    source_construct: influential_capacity_judgment
+    response_scale: likert_7
+    minimum: 1
+    maximum: 7
+    method: mean
+    require_all_items: true
+    primary_or_secondary: primary
+    items:
+      - {item_id: wu_ic1, reverse_scored: false, primary_or_secondary: primary}
+      - {item_id: wu_ic3, reverse_scored: false, primary_or_secondary: primary}
+      - {item_id: wu_ic4, reverse_scored: false, primary_or_secondary: primary}
+      - {item_id: wu_ic7, reverse_scored: false, primary_or_secondary: primary}
+      - {item_id: wu_ic8, reverse_scored: false, primary_or_secondary: primary}
+
+  - construct: PA5
+    name: Perceived Agency (5-item)
+    source: pa_2024
+    version: pa5
+    response_scale: likert_5
+    minimum: 1
+    maximum: 5
+    method: mean
+    require_all_items: true
+    primary_or_secondary: secondary
+    items:
+      - {item_id: pa_can_create_new_goals, reverse_scored: false, primary_or_secondary: secondary}
+      - {item_id: pa_can_communicate, reverse_scored: false, primary_or_secondary: secondary}
+      - {item_id: pa_can_change_behavior, reverse_scored: false, primary_or_secondary: secondary}
+      - {item_id: pa_can_adapt, reverse_scored: false, primary_or_secondary: secondary}
+      - {item_id: pa_actor_scenario, reverse_scored: false, primary_or_secondary: secondary}
+
+  - construct: PA8
+    name: Perceived Agency (8-item)
+    source: pa_2024
+    version: pa8
+    response_scale: likert_5
+    minimum: 1
+    maximum: 5
+    method: mean
+    require_all_items: true
+    primary_or_secondary: secondary
+    items:
+      - {item_id: pa_has_goals, reverse_scored: false, primary_or_secondary: secondary}
+      - {item_id: pa_can_create_new_goals, reverse_scored: false, primary_or_secondary: secondary}
+      - {item_id: pa_can_communicate, reverse_scored: false, primary_or_secondary: secondary}
+      - {item_id: pa_wanted_to_perform, reverse_scored: false, primary_or_secondary: secondary}
+      - {item_id: pa_can_change_behavior, reverse_scored: false, primary_or_secondary: secondary}
+      - {item_id: pa_can_adapt, reverse_scored: false, primary_or_secondary: secondary}
+      - {item_id: pa_actor_scenario, reverse_scored: false, primary_or_secondary: secondary}
+      - {item_id: pa_dinner_scenario, reverse_scored: false, primary_or_secondary: secondary}
+
+rules:
+  no_cross_scale_total: true
+  no_missing_imputation: true
+  primary_requires_all_items_valid: true
+  standardization_display_only: true
+  inference_prefers_native_scale: true
+  reverse_scoring_only_if_recorded_in_p0: true
+  free_will_items_exploratory: [wu_ms3]
+
+forbidden_scores:
+  - WU19_TOTAL
+  - MACHINE_AGENCY_TOTAL
+  - PA_WU_TOTAL

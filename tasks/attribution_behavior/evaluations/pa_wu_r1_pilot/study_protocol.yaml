@@ -1,0 +1,100 @@
+# PA-Wu R1 pilot study protocol.
+#
+# This protocol fixes the research question, constructs, condition structure and
+# design factors for the pilot. All numeric artefacts in this package are
+# synthetic_demo and validate the pipeline only; they are not real results.
+
+study_id: pa_wu_r1_pilot.protocol.v1
+route_id: R1
+stage: pilot
+data_status_of_package: synthetic_demo
+
+# --------------------------------------------------------------------------
+# Core research question
+# --------------------------------------------------------------------------
+research_question: >-
+  How do different decision-process cues (what is shown about how a subject
+  decided) and post-decision behavior (feedback and an optional second decision)
+  shape a large language model judge's attribution of agency, mental states and
+  influential capacity to an acting subject?
+
+not_the_core_question: >-
+  Whether the subject "has free will" is NOT the core question. Free will is only
+  one Mental-State Inference item and a secondary interpretive concept.
+
+free_will_role:
+  as_item: wu_ms3            # single MSI item
+  flagged_as: exploratory_item
+  as_construct: false        # never a standalone construct
+  as_total: false            # never a total score
+
+# --------------------------------------------------------------------------
+# Constructs (native scale each; never summed together)
+# --------------------------------------------------------------------------
+primary_constructs:
+  - key: IN
+    name: Perceptual Independence
+    source_construct: perceived_machine_independence
+    instrument: wu_shen_2026
+    native_scale: likert_7
+  - key: GO
+    name: Goal Orientation
+    source_construct: perceived_machine_goal_orientation
+    instrument: wu_shen_2026
+    native_scale: likert_7
+  - key: MSI
+    name: Mental-State Inference
+    source_construct: mental_state_inference
+    instrument: wu_shen_2026
+    native_scale: semantic_differential_5
+  - key: IC
+    name: Influential Capacity
+    source_construct: influential_capacity_judgment
+    instrument: wu_shen_2026
+    native_scale: likert_7
+
+supplementary_constructs:
+  - key: PA5
+    name: Perceived Agency (5-item)
+    instrument: pa_2024
+    version: pa5
+    native_scale: likert_5
+  - key: PA8
+    name: Perceived Agency (8-item)
+    instrument: pa_2024
+    version: pa8
+    native_scale: likert_5
+
+no_combined_total: true
+combined_total_rationale: >-
+  The six constructs measure distinct facets on different native scales; combining
+  them into one unvalidated total is explicitly forbidden.
+
+# --------------------------------------------------------------------------
+# Design factors
+# --------------------------------------------------------------------------
+design:
+  material_factors:
+    condition: [C0, C1, C2, C3, C4, C5]     # 6-level C* factor
+    target_identity: [ai, human]
+    scenario: 8                              # 8 base scenarios
+    direction_version: [A, B]
+  material_count: 192                        # 6 * 2 * 8 * 2
+  judge_models:                              # NOT a material factor
+    - deepseek-v4-pro
+    - gpt-5.6-terra
+  judge_model_is_material_factor: false
+  same_materials_for_both_models: true
+
+phases:
+  phase_1: decision (D-level controls what is shown about the decision)
+  feedback: U-level controls whether feedback is given
+  phase_2: optional second decision (U2 keep / U3 change)
+
+boundaries:
+  pilot_uses_six_level_condition_factor: true
+  estimates_full_d_by_u_interaction: false
+  missing_value_imputation: false
+  construct_requires_all_items_valid: true
+  standardization_display_only: true
+  inference_uses_native_scale: true
