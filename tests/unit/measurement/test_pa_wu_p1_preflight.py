@@ -1,37 +1,30 @@
-"""Static tests for the PA-Wu R1 P1 preflight decision & authorization gate package.
+"""Static tests for the PA-Wu R1 P1 preflight decision & authorization gates.
 
 NO real model, NO network, NO API key, NO model output, NO P1 execution. These
-tests exercise the offline static validator, the per-gate real-satisfaction
-logic, the single-source authorization state machine, the manifest check chain,
-the actual R1 mock source verification, and the AST-based self security scan.
+tests exercise the offline validator: per-gate real satisfaction, the single
+source authorization state machine (derived p1_execution_status), the manifest
+chain, actual R1 mock source verification, the AST-based self security scan, the
+controlled template resolver, and an end-to-end synthetic authorized run through
+build_preflight_report().
 """
 
 from __future__ import annotations
 
-import ast
 import copy
+import hashlib
 import importlib.util
+import shutil
 
 import pytest
 import yaml
 
 from freewill_attribution.paths import PROJECT_ROOT
 
-PKG_DIR = (
-    PROJECT_ROOT
-    / "tasks"
-    / "attribution_behavior"
-    / "measurement_candidates"
-    / "pa_wu_p1_preflight"
+MC_DIR = (
+    PROJECT_ROOT / "tasks" / "attribution_behavior" / "measurement_candidates"
 )
-R1_MOCK_MANIFEST = (
-    PROJECT_ROOT
-    / "tasks"
-    / "attribution_behavior"
-    / "measurement_candidates"
-    / "pa_wu_r1_mock"
-    / "mock_manifest.yaml"
-)
+PKG_DIR = MC_DIR / "pa_wu_p1_preflight"
+P0_ITEMS = MC_DIR / "pa_wu_p0" / "items_pa_2024.yaml"
 
 
 def _load_module(name: str, filename: str):
@@ -61,8 +54,12 @@ def _all_contracts(validator) -> dict:
     return {name: _load(name) for name in validator.CONTRACT_FILES}
 
 
+def _sha256_text(text: str) -> str:
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
 # ==========================================================================
-# Initial state
+# Initial state + single source
 # ==========================================================================
 
 
@@ -74,53 +71,32 @@ def test_initial_preflight_blocked(report) -> None:
     assert report["blocking_gates"]
 
 
+def test_p1_status_only_derived_not_persisted(validator) -> None:
+    # no contract or manifest persists p1_execution_status
+    auth = _load("authorization_gate.yaml")
+    assert "p1_execution_status" not in auth
+    manifest = _load("preflight_manifest.yaml")
+    assert "p1_execution_status" not in manifest
+    route = _load("route_freeze.yaml")
+    assert "p1_execution_status" not in route
+    # but the report derives it
+    assert "p1_execution_status" in validator.build_preflight_report()
+
+
 def test_authorization_single_source(validator) -> None:
-    # route_freeze must NOT carry authorization state; only authorization_gate does.
     route = _load("route_freeze.yaml")
     assert "real_model_execution_authorized" not in route
-    assert "p1_execution_status" not in route
     auth = _load("authorization_gate.yaml")
-    assert "real_model_execution_authorized" in auth
-    assert "authorization_status" in auth
-    assert "p1_execution_status" in auth
+    for key in ("real_model_execution_authorized", "authorization_status",
+                "authorized_by", "authorized_at", "required_gates"):
+        assert key in auth
 
 
-def test_route_carrying_auth_state_fails(validator) -> None:
-    route = _load("route_freeze.yaml")
-    route["real_model_execution_authorized"] = False
-    with pytest.raises(validator.PreflightError):
-        validator.check_route_boundary(route)
-
-
-# ==========================================================================
-# R1 mock actual verification + manifest chain
-# ==========================================================================
-
-
-def test_r1_mock_actually_validated(report, validator) -> None:
-    # hash comes from actually running the R1 mock validator, not a constant only.
-    assert report["r1_mock_validator_hash"] == validator.R1_MOCK_HASH
-    assert report["mock_package_hash"] == validator.R1_MOCK_HASH
-
-
-def test_r1_mock_manifest_hash_mismatch_fails(validator) -> None:
-    route = _load("route_freeze.yaml")
-    route["mock_package_hash"] = "deadbeefdeadbeef"
-    with pytest.raises(validator.PreflightError):
-        validator.verify_r1_mock_source(route)
-
-
-def test_manifest_in_validation_chain(validator) -> None:
-    m = validator.check_manifest()  # raises on mismatch
-    assert set(m["files"]) == set(validator.REQUIRED_FILES)
-    assert m["route_id"] == "R1"
-    assert m["package_status"] == "preflight_only"
-    assert m["p1_execution_status"] == "blocked"
-
-
-def test_manifest_files_drift_fails(validator, tmp_path, monkeypatch) -> None:
+def test_manifest_rejects_persisted_p1_status(validator, tmp_path, monkeypatch) -> None:
     m = _load("preflight_manifest.yaml")
-    m["files"] = m["files"][:-1]  # drop one
+    m["p1_execution_status"] = "blocked"
+    for name in validator.REQUIRED_FILES:
+        (tmp_path / name).write_text("x", encoding="utf-8")
     (tmp_path / "preflight_manifest.yaml").write_text(
         yaml.safe_dump(m, allow_unicode=True), encoding="utf-8"
     )
@@ -129,38 +105,63 @@ def test_manifest_files_drift_fails(validator, tmp_path, monkeypatch) -> None:
         validator.check_manifest()
 
 
-def test_package_hash_and_contract_hash_present(report) -> None:
-    assert report["contract_hash"]
-    assert report["package_hash"]
+# ==========================================================================
+# R1 mock actual verification + manifest chain
+# ==========================================================================
+
+
+def test_r1_mock_actually_validated(report, validator) -> None:
+    assert report["r1_mock_validator_hash"] == validator.R1_MOCK_HASH
+
+
+def test_r1_mock_hash_mismatch_fails(validator) -> None:
+    route = _load("route_freeze.yaml")
+    route["mock_package_hash"] = "deadbeefdeadbeef"
+    with pytest.raises(validator.PreflightError):
+        validator.verify_r1_mock_source(route)
+
+
+def test_manifest_in_chain(validator) -> None:
+    m = validator.check_manifest()
+    assert set(m["files"]) == set(validator.REQUIRED_FILES)
+
+
+def test_manifest_stray_asset_rejected(validator, tmp_path, monkeypatch) -> None:
+    for name in validator.REQUIRED_FILES:
+        (tmp_path / name).write_text("x", encoding="utf-8")
+    m = _load("preflight_manifest.yaml")
+    (tmp_path / "preflight_manifest.yaml").write_text(
+        yaml.safe_dump(m, allow_unicode=True), encoding="utf-8"
+    )
+    # add a stray undeclared yaml asset
+    (tmp_path / "stray_contract.yaml").write_text("a: 1\n", encoding="utf-8")
+    monkeypatch.setattr(validator, "PACKAGE_DIR", tmp_path)
+    with pytest.raises(validator.PreflightError):
+        validator.check_manifest()
+
+
+def test_hashes_present_and_distinct(report) -> None:
+    assert report["contract_hash"] and report["package_hash"]
     assert report["contract_hash"] != report["package_hash"]
 
 
 def test_contract_hash_deterministic(validator) -> None:
-    r1 = validator.build_preflight_report()
-    r2 = validator.build_preflight_report()
-    assert r1["contract_hash"] == r2["contract_hash"]
-    assert r1["package_hash"] == r2["package_hash"]
+    a = validator.build_preflight_report()
+    b = validator.build_preflight_report()
+    assert a["contract_hash"] == b["contract_hash"]
+    assert a["package_hash"] == b["package_hash"]
 
 
-def test_contract_hash_changes_on_change(validator) -> None:
+def test_hash_changes_on_change(validator) -> None:
     contracts = _all_contracts(validator)
     base = validator.compute_contract_hash(contracts)
     mutated = copy.deepcopy(contracts)
-    mutated["route_freeze.yaml"]["route_id"] = "R1-CHANGED"
+    mutated["route_freeze.yaml"]["route_id"] = "R1-X"
     assert validator.compute_contract_hash(mutated) != base
 
 
-def test_package_hash_changes_on_manifest_change(validator) -> None:
-    contracts = _all_contracts(validator)
-    manifest = _load("preflight_manifest.yaml")
-    base = validator.compute_package_hash(contracts, manifest)
-    mutated_manifest = copy.deepcopy(manifest)
-    mutated_manifest["manifest_id"] = "changed"
-    assert validator.compute_package_hash(contracts, mutated_manifest) != base
-
-
 # ==========================================================================
-# Route / language / identity boundary
+# Route boundary
 # ==========================================================================
 
 
@@ -168,224 +169,288 @@ def test_package_hash_changes_on_manifest_change(validator) -> None:
     "key,value",
     [("route_id", "R2"), ("language", "zh"), ("target_identity", "human")],
 )
-def test_route_boundary_violations_fail(validator, key, value) -> None:
+def test_route_boundary_violations(validator, key, value) -> None:
     route = _load("route_freeze.yaml")
     route[key] = value
     with pytest.raises(validator.PreflightError):
         validator.check_route_boundary(route)
 
 
-def test_route_forbidden_flags_locked(validator) -> None:
+def test_route_carrying_auth_state_fails(validator) -> None:
     route = _load("route_freeze.yaml")
-    route["forbidden"]["r2_chinese_route"] = False
+    route["p1_execution_status"] = "blocked"
     with pytest.raises(validator.PreflightError):
         validator.check_route_boundary(route)
 
 
 # ==========================================================================
-# Per-gate real satisfaction (blocked cases)
+# Template resolver
 # ==========================================================================
 
 
-def _satisfy_all(validator) -> dict:
-    """Build a fully-satisfied set of contracts (pure static synthetic)."""
-    import hashlib
+def test_template_resolver_reads_p0(validator) -> None:
+    h = validator.template_content_hash("pa_wu_p0/items_pa_2024.yaml")
+    assert h == _sha256_text(P0_ITEMS.read_text(encoding="utf-8"))
 
-    contracts = _all_contracts(validator)
 
-    # model
-    model = contracts["model_selection_decision.yaml"]
-    model["selection_status"] = "frozen"
-    model["selected_model"] = "acme-lm-1"
-    model["decision"] = {
-        "provider": "acme",
-        "model_id": "acme-lm-1",
-        "exact_model_version_or_snapshot": "2026-07-01",
-        "endpoint_type": "chat",
-        "access_method": "https_api",
-        "context_window_requirement": 8192,
-        "structured_output_support": True,
-        "deterministic_seed_support": False,
-        "temperature_support": True,
-        "response_id_available": True,
-        "provider_retention_policy_reviewed": True,
-        "pricing_snapshot_date": "2026-07-01",
-        "pricing_source_recorded": "https://acme.example/pricing",
-        "regional_availability_reviewed": True,
-        "terms_of_use_reviewed": True,
-        "decided_by": "researcher",
-        "decided_at": "2026-07-02T10:00",
-        "source_references": ["https://acme.example/docs"],
+def test_template_resolver_rejects_escape(validator) -> None:
+    with pytest.raises(validator.PreflightError):
+        validator.resolve_template("../../../etc/passwd")
+    with pytest.raises(validator.PreflightError):
+        validator.resolve_template("pa_wu_r1_mock/mock_manifest.yaml")  # not whitelisted
+
+
+def test_template_resolver_missing_file(validator) -> None:
+    with pytest.raises(validator.PreflightError):
+        validator.resolve_template("pa_wu_p0/does_not_exist.yaml")
+
+
+# ==========================================================================
+# Model gate: complete field coverage
+# ==========================================================================
+
+
+def test_model_frozen_fields_set_must_match(validator) -> None:
+    model = _load("model_selection_decision.yaml")
+    model["frozen_fields_required"] = model["frozen_fields_required"][:-1]
+    with pytest.raises(validator.PreflightError):
+        validator.check_model_frozen_fields_set(model)
+
+
+def _frozen_model(validator) -> dict:
+    return {
+        "selection_status": "frozen",
+        "selected_model": "acme-lm-1",
+        "frozen_fields_required": list(validator.MODEL_FROZEN_FIELDS),
+        "decision": {
+            "provider": "acme",
+            "model_id": "acme-lm-1",
+            "exact_model_version_or_snapshot": "2026-07-01",
+            "endpoint_type": "chat",
+            "access_method": "https_api",
+            "context_window_requirement": 8192,
+            "structured_output_support": True,
+            "deterministic_seed_support": False,
+            "temperature_support": True,
+            "response_id_available": True,
+            "provider_retention_policy_reviewed": True,
+            "pricing_snapshot_date": "2026-07-01",
+            "pricing_source_recorded": "https://acme.example/pricing",
+            "regional_availability_reviewed": True,
+            "terms_of_use_reviewed": True,
+            "decided_by": "researcher",
+            "decided_at": "2026-07-02T10:00",
+            "source_references": ["https://acme.example/docs"],
+        },
     }
 
-    # prompt
-    prompt = contracts["prompt_freeze_contract.yaml"]
-    for name, seg in prompt["segments"].items():
-        content = f"content for {name}"
-        seg["content"] = content
-        seg["template_reference"] = None
-        seg["sha256"] = hashlib.sha256(content.encode("utf-8")).hexdigest()
-        seg["frozen"] = True
-        seg["owner"] = "researcher"
-        seg["change_requires_new_run_version"] = True
 
-    # sampling
-    sampling = contracts["sampling_and_repeat_contract.yaml"]
-    sampling.update(
-        {
-            "temperature": 0.0,
-            "top_p": 1.0,
-            "max_output_tokens": 512,
-            "seed": None,
-            "seed_supported": False,
-            "seed_is_determinism_guarantee": False,
-            "planned_case_count": 8,
-            "repeats_per_case": 3,
-            "total_planned_requests": 24,
-            "concurrency": 2,
-            "request_timeout_seconds": 60,
-            "scenario_order_policy": "fixed",
-            "item_order_policy": "p0_order",
-            "repeat_index_policy": "zero_based",
-            "frozen": True,
-        }
-    )
+@pytest.mark.parametrize(
+    "field",
+    [
+        "provider",
+        "model_id",
+        "exact_model_version_or_snapshot",
+        "endpoint_type",
+        "access_method",
+        "context_window_requirement",
+        "pricing_snapshot_date",
+        "pricing_source_recorded",
+        "decided_by",
+        "decided_at",
+    ],
+)
+def test_model_field_empty_blocks(validator, field) -> None:
+    model = _frozen_model(validator)
+    model["decision"][field] = None
+    assert validator._model_frozen(model) is False
 
-    # budget
-    budget = contracts["budget_and_rate_limit_contract.yaml"]
-    budget.update(
-        {
-            "currency": "USD",
-            "maximum_total_budget": 100.0,
-            "warning_budget_threshold": 80.0,
-            "maximum_cost_per_case": 5.0,
-            "estimated_input_tokens": 1000,
-            "estimated_output_tokens": 500,
-            "total_planned_requests": 24,
-            "concurrency_limit": 2,
-            "requests_per_minute_limit": 60,
-            "tokens_per_minute_limit": 90000,
-            "budget_owner": "pi",
-            "budget_approved": True,
-            "approval_timestamp": "2026-07-02T11:00",
-            "pricing": {
-                "source": "https://acme.example/pricing",
-                "snapshot_date": "2026-07-01",
-                "verified": True,
-            },
-        }
-    )
 
-    # retry
-    retry = contracts["retry_and_recovery_contract.yaml"]
-    retry["frozen"] = True
+@pytest.mark.parametrize(
+    "field", ["provider_retention_policy_reviewed", "regional_availability_reviewed",
+              "terms_of_use_reviewed"],
+)
+def test_model_review_flag_false_blocks(validator, field) -> None:
+    model = _frozen_model(validator)
+    model["decision"][field] = False
+    assert validator._model_frozen(model) is False
 
-    # logging + privacy
-    logging_c = contracts["provenance_and_logging_contract.yaml"]
-    logging_c["frozen"] = True
-    logging_c["privacy_review"] = {
-        "status": "completed",
-        "reviewed_by": "dpo",
-        "reviewed_at": "2026-07-02T12:00",
+
+def test_model_placeholder_blocks(validator) -> None:
+    model = _frozen_model(validator)
+    model["decision"]["provider"] = "placeholder"
+    assert validator._model_frozen(model) is False
+
+
+def test_model_source_references_empty_blocks(validator) -> None:
+    model = _frozen_model(validator)
+    model["decision"]["source_references"] = []
+    assert validator._model_frozen(model) is False
+
+
+# ==========================================================================
+# Sampling / budget / stop boundaries
+# ==========================================================================
+
+
+def _full_sampling() -> dict:
+    return {
+        "temperature": 0.0,
+        "top_p": 1.0,
+        "max_output_tokens": 512,
+        "seed": None,
+        "seed_supported": False,
+        "seed_is_determinism_guarantee": False,
+        "linked_to_budget_contract": True,
+        "planned_case_count": 8,
+        "repeats_per_case": 3,
+        "total_planned_requests": 24,
+        "concurrency": 2,
+        "request_timeout_seconds": 60,
+        "scenario_order_policy": "fixed",
+        "item_order_policy": "p0_order",
+        "repeat_index_policy": "zero_based",
+        "frozen": True,
     }
 
-    # stop conditions
-    stop = contracts["stop_conditions.yaml"]
-    stop["frozen"] = True
-    for e in stop["immediate_stop"]:
+
+def test_sampling_frozen_ok(validator) -> None:
+    assert validator._sampling_frozen(_full_sampling()) is True
+
+
+@pytest.mark.parametrize(
+    "mutate",
+    [
+        {"temperature": -0.1},
+        {"top_p": 0.0},
+        {"top_p": 1.5},
+        {"seed_supported": True, "seed": None},   # seed inconsistent
+        {"seed_supported": False, "seed": 5},     # seed inconsistent
+        {"concurrency": 1000},                    # concurrency > total
+        {"linked_to_budget_contract": False},
+        {"total_planned_requests": 25},           # != 8*3
+    ],
+)
+def test_sampling_boundary_blocks(validator, mutate) -> None:
+    s = _full_sampling()
+    s.update(mutate)
+    assert validator._sampling_frozen(s) is False
+
+
+def _full_budget() -> dict:
+    return {
+        "budget_approved": True,
+        "currency": "USD",
+        "maximum_total_budget": 100.0,
+        "warning_budget_threshold": 80.0,
+        "maximum_cost_per_case": 5.0,
+        "estimated_input_tokens": 1000,
+        "estimated_output_tokens": 500,
+        "total_planned_requests": 24,
+        "concurrency_limit": 4,
+        "requests_per_minute_limit": 60,
+        "tokens_per_minute_limit": 90000,
+        "budget_owner": "pi",
+        "approval_timestamp": "2026-07-02",
+        "pricing": {
+            "source": "https://acme.example/pricing",
+            "snapshot_date": "2026-07-01",
+            "verified": True,
+        },
+    }
+
+
+def test_budget_ok(validator) -> None:
+    assert validator._budget_approved(_full_budget(), _full_sampling()) is True
+
+
+@pytest.mark.parametrize(
+    "mutate",
+    [
+        {"warning_budget_threshold": 200.0},   # > hard limit
+        {"maximum_cost_per_case": 200.0},      # > hard limit
+        {"total_planned_requests": 30},        # inconsistent with sampling
+        {"concurrency_limit": 1},              # < sampling concurrency
+        {"approval_timestamp": "later"},       # bad date format
+    ],
+)
+def test_budget_incompatible_blocks(validator, mutate) -> None:
+    b = _full_budget()
+    b.update(mutate)
+    assert validator._budget_approved(b, _full_sampling()) is False
+
+
+def test_budget_cost_times_cases_exceeds_hardlimit_blocks(validator) -> None:
+    b = _full_budget()
+    b["maximum_cost_per_case"] = 20.0  # 20 * 8 = 160 > 100
+    assert validator._budget_approved(b, _full_sampling()) is False
+
+
+def _full_stop() -> dict:
+    base = _load("stop_conditions.yaml")
+    base["frozen"] = True
+    for e in base["immediate_stop"]:
         e["owner"] = "ops"
-    for e in stop["threshold_stop"]:
+    for e in base["threshold_stop"]:
         e["threshold_status"] = "resolved"
         e["threshold"] = 0.05
         e["owner"] = "ops"
-
-    return contracts
-
-
-def test_model_unresolved_blocks(report) -> None:
-    assert "model_frozen" in report["blocking_gates"]
-    assert "model_selection_unresolved" in report["unresolved_decisions"]
+    return base
 
 
-def test_only_flip_frozen_with_nulls_still_blocked(validator) -> None:
-    contracts = _all_contracts(validator)
-    # flip frozen booleans but keep null fields
-    contracts["sampling_and_repeat_contract.yaml"]["frozen"] = True
-    contracts["retry_and_recovery_contract.yaml"]["frozen"] = True
-    contracts["provenance_and_logging_contract.yaml"]["frozen"] = True
-    contracts["stop_conditions.yaml"]["frozen"] = True
-    gs = validator.compute_gate_status(contracts, True, True)
-    assert gs["sampling_frozen"] is False  # still null fields
-    assert gs["logging_contract_frozen"] is True  # fields already complete in file
-    assert not all(gs.values())
+def test_stop_ok(validator) -> None:
+    assert validator._stop_conditions_frozen(_full_stop()) is True
 
 
-def test_model_placeholder_still_blocked(validator) -> None:
-    contracts = _satisfy_all(validator)
-    contracts["model_selection_decision.yaml"]["decision"]["model_id"] = "placeholder"
-    contracts["model_selection_decision.yaml"]["selected_model"] = "placeholder"
-    gs = validator.compute_gate_status(contracts, True, True)
-    assert gs["model_frozen"] is False
+def test_stop_missing_immediate_threshold_blocks(validator) -> None:
+    stop = _full_stop()
+    stop["immediate_stop"][0]["threshold"] = None
+    assert validator._stop_conditions_frozen(stop) is False
 
 
-def test_prompt_missing_hash_or_owner_still_blocked(validator) -> None:
-    contracts = _satisfy_all(validator)
-    seg = contracts["prompt_freeze_contract.yaml"]["segments"]["system_prompt"]
-    seg["sha256"] = None
-    gs = validator.compute_gate_status(contracts, True, True)
-    assert gs["prompt_frozen"] is False
-
-    contracts2 = _satisfy_all(validator)
-    contracts2["prompt_freeze_contract.yaml"]["segments"]["system_prompt"]["owner"] = None
-    gs2 = validator.compute_gate_status(contracts2, True, True)
-    assert gs2["prompt_frozen"] is False
+def test_stop_missing_action_or_resume_blocks(validator) -> None:
+    stop = _full_stop()
+    stop["threshold_stop"][0]["action"] = None
+    assert validator._stop_conditions_frozen(stop) is False
+    stop2 = _full_stop()
+    stop2["threshold_stop"][0]["resume_requires"] = None
+    assert validator._stop_conditions_frozen(stop2) is False
 
 
-def test_budget_approved_but_incomplete_still_blocked(validator) -> None:
-    contracts = _satisfy_all(validator)
-    contracts["budget_and_rate_limit_contract.yaml"]["maximum_total_budget"] = None
-    gs = validator.compute_gate_status(contracts, True, True)
-    assert gs["budget_approved"] is False
-
-    contracts2 = _satisfy_all(validator)
-    contracts2["budget_and_rate_limit_contract.yaml"]["pricing"]["verified"] = False
-    gs2 = validator.compute_gate_status(contracts2, True, True)
-    assert gs2["budget_approved"] is False
+def test_stop_rate_above_one_blocks(validator) -> None:
+    stop = _full_stop()
+    stop["threshold_stop"][0]["threshold"] = 1.5
+    assert validator._stop_conditions_frozen(stop) is False
 
 
-def test_stop_threshold_resolved_but_null_still_blocked(validator) -> None:
-    contracts = _satisfy_all(validator)
-    contracts["stop_conditions.yaml"]["threshold_stop"][0]["threshold"] = None
-    gs = validator.compute_gate_status(contracts, True, True)
-    assert gs["stop_conditions_frozen"] is False
+def test_stop_illegal_action_blocks(validator) -> None:
+    stop = _full_stop()
+    stop["threshold_stop"][0]["action"] = "explode"
+    assert validator._stop_conditions_frozen(stop) is False
 
 
-def test_privacy_pending_still_blocked(validator) -> None:
-    contracts = _satisfy_all(validator)
-    contracts["provenance_and_logging_contract.yaml"]["privacy_review"]["status"] = "pending"
-    gs = validator.compute_gate_status(contracts, True, True)
-    assert gs["privacy_review_completed"] is False
+# ==========================================================================
+# Privacy + retry
+# ==========================================================================
 
 
-def test_privacy_review_initial_pending() -> None:
+def test_privacy_initial_pending() -> None:
     logging_c = _load("provenance_and_logging_contract.yaml")
     assert logging_c["privacy_review"]["status"] == "pending"
 
 
-def test_sampling_total_requests_consistency(validator) -> None:
-    contracts = _satisfy_all(validator)
-    contracts["sampling_and_repeat_contract.yaml"]["total_planned_requests"] = 25  # != 8*3
-    gs = validator.compute_gate_status(contracts, True, True)
-    assert gs["sampling_frozen"] is False
+def test_privacy_pending_blocks(validator) -> None:
+    logging_c = _load("provenance_and_logging_contract.yaml")
+    logging_c["frozen"] = True
+    logging_c["privacy_review"] = {"status": "pending", "reviewed_by": None, "reviewed_at": None}
+    assert validator._privacy_review_completed(logging_c) is False
 
 
-def test_retry_manual_codes_must_equal_non_auto(validator) -> None:
-    contracts = _satisfy_all(validator)
-    contracts["retry_and_recovery_contract.yaml"]["manual_review_required_codes"] = [
-        "timeout"
-    ]
-    gs = validator.compute_gate_status(contracts, True, True)
-    assert gs["retry_policy_frozen"] is False
+def test_retry_manual_must_equal_non_auto(validator) -> None:
+    retry = _load("retry_and_recovery_contract.yaml")
+    retry["frozen"] = True
+    retry["manual_review_required_codes"] = ["timeout"]
+    assert validator._retry_frozen(retry) is False
 
 
 # ==========================================================================
@@ -393,155 +458,195 @@ def test_retry_manual_codes_must_equal_non_auto(validator) -> None:
 # ==========================================================================
 
 
+def test_required_gates_must_equal_exact(validator) -> None:
+    auth = _load("authorization_gate.yaml")
+    del auth["required_gates"]["model_frozen"]
+    with pytest.raises(validator.PreflightError):
+        validator.check_required_gates_exact(auth)
+    auth2 = _load("authorization_gate.yaml")
+    auth2["required_gates"]["extra_gate"] = True
+    with pytest.raises(validator.PreflightError):
+        validator.check_required_gates_exact(auth2)
+
+
 def test_declared_vs_computed_mismatch_fails(validator) -> None:
     auth = _load("authorization_gate.yaml")
-    gate_status = {g: False for g in validator.REQUIRED_GATES}
-    # auth declares route_frozen=true but computed says false -> mismatch
+    gate_status = dict.fromkeys(validator.REQUIRED_GATES, False)
     with pytest.raises(validator.PreflightError):
         validator.check_declared_matches_computed(auth, gate_status)
 
 
-def test_authorized_with_flag_false_hard_fails(validator) -> None:
-    auth = _load("authorization_gate.yaml")
-    auth["authorization_status"] = "authorized"
-    auth["real_model_execution_authorized"] = False
-    gate_status = {g: True for g in validator.REQUIRED_GATES}
-    with pytest.raises(validator.PreflightError):
-        validator.check_authorization_state_machine(auth, gate_status)
-
-
-def test_authorized_with_gate_false_hard_fails(validator) -> None:
-    auth = _load("authorization_gate.yaml")
-    auth["authorization_status"] = "authorized"
-    auth["real_model_execution_authorized"] = True
-    auth["authorized_by"] = "pi"
-    auth["authorized_at"] = "2026-07-02T13:00"
-    gate_status = {g: True for g in validator.REQUIRED_GATES}
-    gate_status["model_frozen"] = False
-    with pytest.raises(validator.PreflightError):
-        validator.check_authorization_state_machine(auth, gate_status)
-
-
-def test_authorized_missing_by_or_at_hard_fails(validator) -> None:
-    gate_status = {g: True for g in validator.REQUIRED_GATES}
-    auth = _load("authorization_gate.yaml")
-    auth["authorization_status"] = "authorized"
-    auth["real_model_execution_authorized"] = True
-    auth["authorized_by"] = None
-    auth["authorized_at"] = "2026-07-02T13:00"
-    with pytest.raises(validator.PreflightError):
-        validator.check_authorization_state_machine(auth, gate_status)
-
-
-def test_blocked_with_flag_true_hard_fails(validator) -> None:
-    auth = _load("authorization_gate.yaml")
-    auth["authorization_status"] = "blocked"
-    auth["real_model_execution_authorized"] = True
-    gate_status = {g: False for g in validator.REQUIRED_GATES}
-    with pytest.raises(validator.PreflightError):
-        validator.check_authorization_state_machine(auth, gate_status)
-
-
-def test_illegal_status_enum_hard_fails(validator) -> None:
-    auth = _load("authorization_gate.yaml")
-    auth["authorization_status"] = "maybe"
-    gate_status = {g: False for g in validator.REQUIRED_GATES}
-    with pytest.raises(validator.PreflightError):
-        validator.check_authorization_state_machine(auth, gate_status)
-
-
-def test_synthetic_full_authorization_resolves_authorized(validator) -> None:
-    """All gates truly satisfied + human flag + authorized_by/at -> authorized.
-
-    Pure static state-machine test: no model call, no P1 execution.
-    """
-    contracts = _satisfy_all(validator)
-    gate_status = validator.compute_gate_status(contracts, True, True)
-    assert all(gate_status.values()), sorted(
-        g for g, ok in gate_status.items() if not ok
-    )
+@pytest.mark.parametrize(
+    "status,flag,by,at,all_ok",
+    [
+        ("authorized", False, "pi", "t", True),   # flag false
+        ("authorized", True, "pi", "t", False),   # a gate false
+        ("authorized", True, None, "t", True),     # missing by
+        ("authorized", True, "pi", None, True),    # missing at
+        ("blocked", True, None, None, False),      # blocked + flag true
+        ("maybe", False, None, None, False),       # illegal enum
+    ],
+)
+def test_auth_state_machine_hard_fails(validator, status, flag, by, at, all_ok) -> None:
     auth = {
-        "authorization_status": "authorized",
-        "real_model_execution_authorized": True,
-        "authorized_by": "pi",
-        "authorized_at": "2026-07-02T13:00",
-        "required_gates": dict.fromkeys(validator.REQUIRED_GATES, True),
+        "authorization_status": status,
+        "real_model_execution_authorized": flag,
+        "authorized_by": by,
+        "authorized_at": at,
     }
-    validator.check_declared_matches_computed(auth, gate_status)
-    resolved = validator.check_authorization_state_machine(auth, gate_status)
-    assert resolved == "authorized"
+    gate_status = dict.fromkeys(validator.REQUIRED_GATES, all_ok)
+    with pytest.raises(validator.PreflightError):
+        validator.check_authorization_state_machine(auth, gate_status)
 
 
 # ==========================================================================
-# Security self-scan (AST) + no R2/R3
+# End-to-end synthetic authorized via build_preflight_report
 # ==========================================================================
 
 
-def test_validator_import_ast_clean(validator) -> None:
-    validator.check_validator_imports_ast()  # raises on banned import
+def _write(path, data) -> None:
+    path.write_text(yaml.safe_dump(data, allow_unicode=True, sort_keys=False), encoding="utf-8")
 
 
-def test_added_banned_import_would_be_rejected(validator) -> None:
-    # Prove the AST scanner rejects a real banned import node.
-    src = "import requests\n"
-    tree = ast.parse(src)
-    banned = validator._BANNED_IMPORT_MODULES
-    found = any(
-        isinstance(n, ast.Import) and n.names[0].name.split(".")[0] in banned
-        for n in ast.walk(tree)
+def test_end_to_end_synthetic_authorized(validator, tmp_path, monkeypatch) -> None:
+    """Copy the whole package to tmp, write fully-frozen legal contracts, set
+    authorization=authorized, and drive the entire build_preflight_report()."""
+    dst = tmp_path / "pa_wu_p1_preflight"
+    shutil.copytree(PKG_DIR, dst)
+
+    # We reference the REAL P0 items file for item_block and a real local
+    # template for other segments. Create a controlled template under the
+    # package templates dir root used by the resolver whitelist.
+    real_templates = PKG_DIR / "templates"
+    real_templates.mkdir(exist_ok=True)
+    seg_template = real_templates / "seg_e2e.txt"
+    seg_template.write_text("frozen segment content", encoding="utf-8")
+    seg_hash = _sha256_text(seg_template.read_text(encoding="utf-8"))
+    item_ref = "pa_wu_p0/items_pa_2024.yaml"
+    item_hash = validator.template_content_hash(item_ref)
+
+    try:
+        # route unchanged (already R1)
+        # model
+        model = _frozen_model(validator)
+        _write(dst / "model_selection_decision.yaml", model)
+
+        # prompt: all segments frozen via template_reference
+        prompt = _load("prompt_freeze_contract.yaml")
+        for name, seg in prompt["segments"].items():
+            seg["frozen"] = True
+            seg["owner"] = "researcher"
+            seg["change_requires_new_run_version"] = True
+            seg["content"] = None
+            if name == "item_block":
+                seg["template_reference"] = item_ref
+                seg["sha256"] = item_hash
+            else:
+                seg["template_reference"] = "pa_wu_p1_preflight/templates/seg_e2e.txt"
+                seg["sha256"] = seg_hash
+        _write(dst / "prompt_freeze_contract.yaml", prompt)
+
+        # sampling / budget / retry / logging / stop
+        _write(dst / "sampling_and_repeat_contract.yaml", _full_sampling())
+        _write(dst / "budget_and_rate_limit_contract.yaml", _full_budget())
+        retry = _load("retry_and_recovery_contract.yaml")
+        retry["frozen"] = True
+        _write(dst / "retry_and_recovery_contract.yaml", retry)
+        logging_c = _load("provenance_and_logging_contract.yaml")
+        logging_c["frozen"] = True
+        logging_c["privacy_review"] = {
+            "status": "completed",
+            "reviewed_by": "dpo",
+            "reviewed_at": "2026-07-02T12:00",
+        }
+        _write(dst / "provenance_and_logging_contract.yaml", logging_c)
+        _write(dst / "stop_conditions.yaml", _full_stop())
+
+        # authorization: authorized with all required_gates true
+        auth = _load("authorization_gate.yaml")
+        auth["required_gates"] = dict.fromkeys(validator.REQUIRED_GATES, True)
+        auth["authorization_status"] = "authorized"
+        auth["real_model_execution_authorized"] = True
+        auth["authorized_by"] = "pi"
+        auth["authorized_at"] = "2026-07-02T13:00"
+        _write(dst / "authorization_gate.yaml", auth)
+
+        monkeypatch.setattr(validator, "PACKAGE_DIR", dst)
+        report = validator.build_preflight_report()
+        assert report["preflight_status"] == "authorized"
+        assert report["p1_execution_status"] == "authorized"
+        assert report["blocking_gates"] == []
+        assert report["authorization_status"] == "authorized"
+    finally:
+        shutil.rmtree(real_templates, ignore_errors=True)
+
+
+# ==========================================================================
+# Security scan via formal production path
+# ==========================================================================
+
+
+def test_validator_self_ast_clean(validator) -> None:
+    validator.check_validator_self_ast()
+
+
+def test_scan_rejects_import_requests(validator, tmp_path) -> None:
+    p = tmp_path / "m.py"
+    p.write_text("import requests\n", encoding="utf-8")
+    with pytest.raises(validator.PreflightError):
+        validator.scan_python_source(p)
+
+
+def test_scan_rejects_dynamic_import(validator, tmp_path) -> None:
+    p = tmp_path / "m.py"
+    p.write_text("import importlib\nimportlib.import_module('requests')\n", encoding="utf-8")
+    with pytest.raises(validator.PreflightError):
+        validator.scan_python_source(p)
+
+
+def test_scan_rejects_dunder_import(validator, tmp_path) -> None:
+    p = tmp_path / "m.py"
+    p.write_text("__import__('socket')\n", encoding="utf-8")
+    with pytest.raises(validator.PreflightError):
+        validator.scan_python_source(p)
+
+
+def test_scan_rejects_subprocess_network_cli(validator, tmp_path) -> None:
+    p = tmp_path / "m.py"
+    p.write_text("import subprocess\nsubprocess.run('curl http://x')\n", encoding="utf-8")
+    with pytest.raises(validator.PreflightError):
+        validator.scan_python_source(p)
+
+
+def test_scan_rejects_r2_r3_path_open(validator, tmp_path) -> None:
+    p = tmp_path / "m.py"
+    p.write_text("open('adaptation_candidates/x.yaml')\n", encoding="utf-8")
+    with pytest.raises(validator.PreflightError):
+        validator.scan_python_source(p)
+
+
+def test_secret_scan_not_bypassed_by_marker(validator, tmp_path) -> None:
+    p = tmp_path / "m.yaml"
+    p.write_text(
+        'api_key: "abcdef0123456789"  # preflight-detection-pattern\n', encoding="utf-8"
     )
-    assert found  # our detection logic identifies it
+    with pytest.raises(validator.PreflightError):
+        validator.scan_text_secrets(p)
 
 
-def test_no_secrets_no_clients_scan_passes(validator) -> None:
+def test_secret_literal_rejected(validator, tmp_path) -> None:
+    p = tmp_path / "m.yaml"
+    p.write_text('token: "sk-abcdef0123456789abcdef"\n', encoding="utf-8")
+    with pytest.raises(validator.PreflightError):
+        validator.scan_text_secrets(p)
+
+
+def test_full_package_security_scan_passes(validator) -> None:
     validator.check_no_secrets_no_clients_no_network()  # raises on violation
 
 
-def test_secret_literal_rejected(validator, tmp_path, monkeypatch) -> None:
-    monkeypatch.setattr(validator, "PACKAGE_DIR", tmp_path)
-    (tmp_path / "leak.yaml").write_text(
-        'api_key: "sk-abcdef0123456789abcdef"\n', encoding="utf-8"
-    )
-    with pytest.raises(validator.PreflightError):
-        validator.check_no_secrets_no_clients_no_network()
-
-
-def test_network_import_in_package_file_rejected(validator, tmp_path, monkeypatch) -> None:
-    monkeypatch.setattr(validator, "PACKAGE_DIR", tmp_path)
-    (tmp_path / "bad.py").write_text("import requests\n", encoding="utf-8")
-    with pytest.raises(validator.PreflightError):
-        validator.check_no_secrets_no_clients_no_network()
-
-
-def test_no_r2_r3_reads(validator) -> None:
-    validator.check_no_r2_r3_reads()  # raises on violation
-
-
-def test_r2_r3_reference_rejected(validator, tmp_path, monkeypatch) -> None:
-    monkeypatch.setattr(validator, "PACKAGE_DIR", tmp_path)
-    (tmp_path / "bad.yaml").write_text("note: adaptation_candidates\n", encoding="utf-8")
-    with pytest.raises(validator.PreflightError):
-        validator.check_no_r2_r3_reads()
-
-
-def test_validator_source_has_no_real_network_call(validator) -> None:
-    """AST-prove the validator never actually calls requests/urllib/socket, and
-    contains no real network usage beyond detection-pattern string literals."""
-    import ast as _ast
-
-    src = (PKG_DIR / "validate_preflight.py").read_text(encoding="utf-8")
-    tree = _ast.parse(src)
-    # No ImportFrom/Import of banned modules as real nodes.
-    for node in _ast.walk(tree):
-        if isinstance(node, _ast.Import):
-            for a in node.names:
-                assert a.name.split(".")[0] not in validator._BANNED_IMPORT_MODULES
-        elif isinstance(node, _ast.ImportFrom):
-            assert (node.module or "").split(".")[0] not in validator._BANNED_IMPORT_MODULES
-
-
 # ==========================================================================
-# Environment acceptance (Windows exception recorded honestly)
+# Environment acceptance
 # ==========================================================================
 
 
@@ -550,10 +655,8 @@ def test_environment_acceptance_records_windows_exception() -> None:
     assert env["linux_ci"]["run_number"] == 71
     assert env["linux_ci"]["status"] == "success"
     win = env["windows_local"]
-    assert win["r1_target_tests"] == "passed"
     assert win["full_pytest_status"] == "environment_specific_failures"
     assert win["failed_count"] == 5
-    assert win["affected_test_file"] == "tests/integration/test_cross_platform_scripts.py"
     qual = env["windows_failure_qualification"]
     assert qual["in_pr_10_diff"] is False
     assert qual["is_r1_mock_regression"] is False

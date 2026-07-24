@@ -51,14 +51,27 @@ segments:
     frozen: false
     owner: null
     change_requires_new_run_version: true
+  # item_block 必须绑定 P0 来源：template_reference 指向 P0 item wording 资产，
+  # 不允许 inline content 替代；sha256 冻结时必须等于该 P0 文件规范化内容的哈希，
+  # P0 wording 变化后本门禁必须失败。
   item_block:
     content: null
-    template_reference: pa_wu_p0   # 来自 P0，最终 sha 冻结时由 P0 item wording 决定
+    template_reference: pa_wu_p0/items_pa_2024.yaml
     sha256: null
     frozen: false
     owner: null
     change_requires_new_run_version: true
 
+# template_reference 解析白名单（相对 repo 的本地资产根，禁止逃逸）：
+#   - pa_wu_p0/*          （P0 来源，item_block 必须来自此处）
+#   - pa_wu_p1_preflight/templates/*  （本包受控 prompt 模板）
+template_reference_allowed_roots:
+  - pa_wu_p0
+  - pa_wu_p1_preflight/templates
+
 notes: >-
   初始允许保留未冻结字段，但只要任一 segment.frozen 为 false，preflight 与 P1 都保持
-  blocked。冻结时每段必须填写 content 或 template_reference、sha256 与 owner。
+  blocked。冻结时每段必须恰有 content 或 template_reference 之一；template_reference 必须
+  解析到白名单目录内的真实本地文件，且 sha256 与其规范化内容一致。item_block 只允许
+  template_reference（P0 来源），不允许 inline content。scenario_block 若用
+  template_reference 也必须解析真实本地文件；在正式 scenario 资产不存在前保持未冻结。

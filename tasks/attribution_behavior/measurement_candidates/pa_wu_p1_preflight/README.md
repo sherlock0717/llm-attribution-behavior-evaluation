@@ -20,6 +20,46 @@
 `preflight_status` 恒为 `blocked`。`validate_preflight.py` **绝不**自动将授权改为
 `true`——授权只能由人工在合同文件中显式写入并经全部门禁核验。
 
+## P1 执行状态只在报告中派生
+
+`p1_execution_status` **不持久化**于任何合同或 manifest，只由
+`build_preflight_report()` 依据授权状态机派生（authorized 时为 `authorized`，
+否则 `blocked`）。授权状态的**唯一来源**是 `authorization_gate.yaml`
+（`authorization_status` / `real_model_execution_authorized` / `authorized_by` /
+`authorized_at` / `required_gates`）；`route_freeze.yaml` 只冻结研究路线。
+
+## template_reference 如何解析与校验
+
+Prompt 各段可用 `template_reference` 指向本地资产。受控解析器只允许白名单根内的
+真实本地文件（`pa_wu_p0/*` 与 `pa_wu_p1_preflight/templates/*`），**不联网**，
+且拒绝路径逃逸；冻结时 `sha256` 必须等于该文件规范化内容的哈希。
+
+- **item_block 必须绑定 P0**：只允许 `template_reference` 指向 `pa_wu_p0/`
+  下的 item wording 资产，**不允许 inline content 替代**；其 `sha256` 必须等于该
+  P0 文件实际内容哈希，**P0 wording 变化后 prompt 门禁必失败**。
+- **scenario_block** 若使用 `template_reference` 也必须解析真实本地文件与 hash；
+  在正式 scenario 资产尚不存在前保持未冻结与 blocked，不构造虚假正式引用。
+
+## synthetic authorized 已通过完整 build_preflight_report 链
+
+测试 `test_end_to_end_synthetic_authorized` 将整个包复制到临时目录，写入一套完整、
+合法、静态的冻结合同（含由真实 P0 文件计算的 item_block hash 与受控本地模板 hash），
+将 `authorization_gate` 置为 authorized，并直接调用 `build_preflight_report()`，
+断言 `preflight_status == authorized`、`p1_execution_status == authorized`、
+`blocking_gates == []`。此测试只验证状态机，**不调用模型、不执行 P1**。
+
+## 安全自扫描
+
+`validate_preflight.py` 通过 AST 扫描自身与包内 `.py`：拒绝 banned 模块的
+`import`/`from`、`importlib.import_module`/`__import__` 动态导入、对
+requests/httpx/urllib/socket 的调用、subprocess 调用网络 CLI、以及对 R2/R3 路径的
+`open`/`Path`/import 操作。secret 扫描在去除行尾注释后判定，**不能通过追加注释标记绕过**。
+
+## 当前真实合同状态
+
+当前磁盘上的真实合同仍为 **blocked**（模型未选定、prompt/sampling/budget/retry/logging/
+stop 未冻结、privacy review 处于 pending）。
+
 ## 文件
 
 | 文件 | 作用 |

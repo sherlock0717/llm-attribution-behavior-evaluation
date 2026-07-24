@@ -1,21 +1,19 @@
 """Static, offline validator for the PA-Wu R1 P1 preflight gate package.
 
 STRICT boundaries:
-- NO network I/O of any kind.
-- NEVER reads an API key from the environment.
-- NEVER imports a real-model SDK (openai / anthropic / httpx / requests / ...).
-- NEVER executes a model and NEVER produces model output.
-- NEVER rewrites any contract file (read-only).
+- NO network I/O; NEVER reads an API key; NEVER imports a real-model SDK;
+- NEVER executes a model; NEVER produces model output; NEVER rewrites a contract;
 - NEVER auto-enables authorization.
 
-Authorization state has a SINGLE source of truth: ``authorization_gate.yaml``.
-``route_freeze.yaml`` only freezes the research route. Every required gate is
-recomputed from its own source contract; the declared ``required_gates`` values
-in ``authorization_gate.yaml`` must match the recomputed ``gate_status`` exactly.
+Authorization state has a SINGLE source of truth: ``authorization_gate.yaml``
+(authorization_status / real_model_execution_authorized / authorized_by /
+authorized_at / required_gates). ``p1_execution_status`` is NOT persisted in any
+contract or manifest; it is derived only by ``build_preflight_report()``.
 """
 
 from __future__ import annotations
 
+import ast
 import hashlib
 import json
 import re
@@ -25,18 +23,15 @@ from typing import Any
 import yaml
 
 PACKAGE_DIR = Path(__file__).resolve().parent
-# PACKAGE_DIR = <repo>/tasks/attribution_behavior/measurement_candidates/pa_wu_p1_preflight
-# Its sibling R1 mock package lives next to it under measurement_candidates.
 MEASUREMENT_CANDIDATES_DIR = PACKAGE_DIR.parent
 R1_MOCK_DIR = MEASUREMENT_CANDIDATES_DIR / "pa_wu_r1_mock"
+P0_DIR = MEASUREMENT_CANDIDATES_DIR / "pa_wu_p0"
 
 R1_MOCK_HASH = "7c83def4c93ad26f"
 
-# Placeholder values that must NOT satisfy any "field present" check.
 _PLACEHOLDERS = frozenset({"", "x", "xx", "placeholder", "todo", "tbd", "none", "null"})
-
 _SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
-_ISO_LIKE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}")
+_DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}")
 
 REQUIRED_FILES = (
     "README.md",
@@ -91,6 +86,45 @@ PROMPT_SEGMENTS = (
     "item_block",
 )
 
+# Complete expected frozen-field set for the model selection decision.
+MODEL_FROZEN_FIELDS = (
+    "provider",
+    "model_id",
+    "exact_model_version_or_snapshot",
+    "endpoint_type",
+    "access_method",
+    "context_window_requirement",
+    "structured_output_support",
+    "deterministic_seed_support",
+    "temperature_support",
+    "response_id_available",
+    "provider_retention_policy_reviewed",
+    "pricing_snapshot_date",
+    "pricing_source_recorded",
+    "regional_availability_reviewed",
+    "terms_of_use_reviewed",
+)
+_MODEL_STRING_FIELDS = (
+    "provider",
+    "model_id",
+    "exact_model_version_or_snapshot",
+    "endpoint_type",
+    "access_method",
+    "pricing_snapshot_date",
+    "pricing_source_recorded",
+)
+_MODEL_BOOL_FIELDS = (
+    "structured_output_support",
+    "deterministic_seed_support",
+    "temperature_support",
+    "response_id_available",
+)
+_MODEL_TRUE_FIELDS = (
+    "provider_retention_policy_reviewed",
+    "regional_availability_reviewed",
+    "terms_of_use_reviewed",
+)
+
 REQUIRED_LOG_FIELDS = (
     "run_id",
     "run_version",
@@ -126,7 +160,6 @@ IMMEDIATE_STOP_CONDITIONS = (
     "secret_detected",
     "source_contract_changed",
 )
-
 THRESHOLD_STOP_CONDITIONS = (
     "schema_failure_rate",
     "provider_error_rate",
@@ -134,6 +167,24 @@ THRESHOLD_STOP_CONDITIONS = (
     "duplicate_response_rate",
     "cost_estimation_error",
 )
+# Rate-style thresholds constrained to (0, 1].
+_RATE_STOP_CONDITIONS = frozenset(THRESHOLD_STOP_CONDITIONS)
+_LEGAL_STOP_ACTIONS = frozenset({"hard_stop", "stop_and_review", "pause_and_alert"})
+
+# Banned modules for the AST self-scan and package scan.
+BANNED_MODULES = frozenset(
+    {"openai", "anthropic", "httpx", "requests", "socket", "urllib"}
+)
+# Forbidden R2/R3 asset path fragments.
+FORBIDDEN_PATH_FRAGMENTS = (
+    "pa_wu_p1_prep",
+    "provisional",
+    "adaptation_candidates",
+    "ai_human",
+    "zh_cn",
+    "zh-cn",
+)
+_NETWORK_CLI = ("curl", "wget", "powershell", "pwsh", "Invoke-WebRequest", "iwr")
 
 
 class PreflightError(RuntimeError):
@@ -141,16 +192,20 @@ class PreflightError(RuntimeError):
 
 
 # --------------------------------------------------------------------------
-# Loading
+# Loading + value helpers
 # --------------------------------------------------------------------------
 
 
-def _load_yaml(name: str) -> dict[str, Any]:
-    with (PACKAGE_DIR / name).open(encoding="utf-8") as fh:
+def _load_yaml_from(base: Path, name: str) -> dict[str, Any]:
+    with (base / name).open(encoding="utf-8") as fh:
         data = yaml.safe_load(fh)
     if not isinstance(data, dict):
         raise PreflightError(f"{name}: expected a mapping at top level")
     return data
+
+
+def _load_yaml(name: str) -> dict[str, Any]:
+    return _load_yaml_from(PACKAGE_DIR, name)
 
 
 def load_manifest() -> dict[str, Any]:
@@ -175,8 +230,69 @@ def _positive_int(value: Any) -> bool:
     return isinstance(value, int) and not isinstance(value, bool) and value > 0
 
 
+def _finite_number(value: Any) -> bool:
+    return isinstance(value, (int, float)) and not isinstance(value, bool)
+
+
+def _is_date(value: Any) -> bool:
+    return isinstance(value, str) and bool(_DATE_RE.match(value.strip()))
+
+
+def _rate_ok(value: Any) -> bool:
+    return _finite_number(value) and 0 < value <= 1
+
+
 # --------------------------------------------------------------------------
-# Structural checks (raise on violation)
+# Template resolver (local whitelist only, no network, no escape)
+# --------------------------------------------------------------------------
+
+
+def _allowed_template_roots() -> list[Path]:
+    # Roots are anchored to the stable measurement_candidates dir (NOT to the
+    # possibly-monkeypatched PACKAGE_DIR), so references always resolve to the
+    # real P0 source and the real controlled-template directory.
+    return [
+        (MEASUREMENT_CANDIDATES_DIR / "pa_wu_p0").resolve(),
+        (MEASUREMENT_CANDIDATES_DIR / "pa_wu_p1_preflight" / "templates").resolve(),
+    ]
+
+
+def resolve_template(reference: str) -> Path:
+    """Resolve a template_reference to a real local file inside a whitelist root.
+
+    Raises PreflightError if it escapes the whitelist or does not exist.
+    """
+    if not isinstance(reference, str) or not reference.strip():
+        raise PreflightError(f"invalid template_reference: {reference!r}")
+    # Reference is relative to measurement_candidates dir.
+    candidate = (MEASUREMENT_CANDIDATES_DIR / reference).resolve()
+    roots = _allowed_template_roots()
+
+    def _within(child: Path, root: Path) -> bool:
+        if child == root:
+            return True
+        try:
+            child.relative_to(root)
+            return True
+        except ValueError:
+            return False
+
+    if not any(_within(candidate, root) for root in roots):
+        raise PreflightError(f"template_reference escapes whitelist: {reference!r}")
+    if not candidate.is_file():
+        raise PreflightError(f"template_reference not found: {reference!r}")
+    return candidate
+
+
+def template_content_hash(reference: str) -> str:
+    """sha256 of the normalized (utf-8 text) content of a resolved template."""
+    path = resolve_template(reference)
+    text = path.read_text(encoding="utf-8")
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
+# --------------------------------------------------------------------------
+# Structural checks
 # --------------------------------------------------------------------------
 
 
@@ -201,7 +317,6 @@ def check_route_boundary(route: dict[str, Any]) -> None:
             raise PreflightError(
                 f"route_freeze.{key} must be {want!r}, got {route.get(key)!r}"
             )
-    # Authorization state must NOT live in route_freeze (single source of truth).
     for forbidden_key in ("real_model_execution_authorized", "p1_execution_status"):
         if forbidden_key in route:
             raise PreflightError(
@@ -216,7 +331,7 @@ def check_route_boundary(route: dict[str, Any]) -> None:
 
 
 # --------------------------------------------------------------------------
-# R1 mock source verification (actual file + real validator, no hardcode-only)
+# R1 mock source verification (actual file + real validator)
 # --------------------------------------------------------------------------
 
 
@@ -232,11 +347,6 @@ def load_r1_mock_manifest() -> dict[str, Any]:
 
 
 def verify_r1_mock_source(route: dict[str, Any]) -> str:
-    """Read the R1 mock manifest and cross-check hash + key source fields.
-
-    Returns the R1 deterministic hash on success. Raises on any mismatch or
-    missing key source field. Also asserts required R1 files exist.
-    """
     manifest = load_r1_mock_manifest()
     ref_hash = str(manifest.get("deterministic_run_hash_reference", ""))
     route_hash = str(route.get("mock_package_hash", ""))
@@ -244,14 +354,11 @@ def verify_r1_mock_source(route: dict[str, Any]) -> str:
         raise PreflightError(
             f"R1 mock hash mismatch: manifest {ref_hash!r} != route_freeze {route_hash!r}"
         )
-    # Key source fields must be present in the R1 manifest.
     reuses = manifest.get("reuses", {})
     if not isinstance(reuses, dict) or not _nonempty(reuses.get("p0_scoring_version")):
         raise PreflightError("R1 mock manifest missing reuses.p0_scoring_version")
-    forbidden_ids = manifest.get("forbidden_score_ids", [])
-    if not isinstance(forbidden_ids, list) or not forbidden_ids:
+    if not manifest.get("forbidden_score_ids"):
         raise PreflightError("R1 mock manifest missing forbidden_score_ids")
-    # Required R1 mock files must exist on disk.
     for fname in manifest.get("files", []):
         if not (R1_MOCK_DIR / str(fname)).is_file():
             raise PreflightError(f"R1 mock file listed in manifest is missing: {fname}")
@@ -259,10 +366,6 @@ def verify_r1_mock_source(route: dict[str, Any]) -> str:
 
 
 def run_r1_mock_validator() -> str:
-    """Reuse the R1 mock package's own static validator; return its hash.
-
-    Pure local static validation, no network, no model execution.
-    """
     import importlib.util
 
     spec = importlib.util.spec_from_file_location(
@@ -278,12 +381,24 @@ def run_r1_mock_validator() -> str:
 
 
 # --------------------------------------------------------------------------
-# Per-gate real satisfaction checks
+# Per-gate real satisfaction
 # --------------------------------------------------------------------------
+
+
+def check_model_frozen_fields_set(model: dict[str, Any]) -> None:
+    """The declared frozen_fields_required must exactly equal the expected set."""
+    declared = model.get("frozen_fields_required", [])
+    if not isinstance(declared, list) or set(declared) != set(MODEL_FROZEN_FIELDS):
+        raise PreflightError(
+            "model_selection.frozen_fields_required must equal the expected set"
+        )
 
 
 def _model_frozen(model: dict[str, Any]) -> bool:
     if str(model.get("selection_status")) != "frozen":
+        return False
+    declared = model.get("frozen_fields_required", [])
+    if not isinstance(declared, list) or set(declared) != set(MODEL_FROZEN_FIELDS):
         return False
     selected = model.get("selected_model")
     if not _nonempty(selected):
@@ -293,65 +408,66 @@ def _model_frozen(model: dict[str, Any]) -> bool:
         return False
     if str(selected) != str(dec.get("model_id")):
         return False
-    required = (
-        "provider",
-        "model_id",
-        "exact_model_version_or_snapshot",
-        "endpoint_type",
-        "access_method",
-        "pricing_snapshot_date",
-        "pricing_source_recorded",
-        "decided_by",
-        "decided_at",
-    )
-    for field_name in required:
-        if not _nonempty(dec.get(field_name)):
+    for f in _MODEL_STRING_FIELDS:
+        if not _nonempty(dec.get(f)):
             return False
-    for bool_field in (
-        "provider_retention_policy_reviewed",
-        "regional_availability_reviewed",
-        "terms_of_use_reviewed",
-    ):
-        if dec.get(bool_field) is not True:
+    if not _positive_int(dec.get("context_window_requirement")):
+        return False
+    for f in _MODEL_BOOL_FIELDS:
+        if not isinstance(dec.get(f), bool):
             return False
+    for f in _MODEL_TRUE_FIELDS:
+        if dec.get(f) is not True:
+            return False
+    if not _nonempty(dec.get("decided_by")) or not _nonempty(dec.get("decided_at")):
+        return False
     if not isinstance(dec.get("source_references"), list) or not dec["source_references"]:
         return False
     return True
 
 
-def _prompt_frozen(prompt: dict[str, Any]) -> bool:
-    segments = prompt.get("segments", {})
-    if not isinstance(segments, dict):
+def _segment_ok(name: str, seg: dict[str, Any]) -> bool:
+    if not isinstance(seg, dict) or seg.get("frozen") is not True:
         return False
-    if set(segments) != set(PROMPT_SEGMENTS):
+    content = seg.get("content")
+    tref = seg.get("template_reference")
+    has_content = _nonempty(content)
+    has_tref = _nonempty(tref)
+    # item_block must be P0 template_reference only (no inline content).
+    if name == "item_block":
+        if has_content or not has_tref:
+            return False
+        if not str(tref).startswith("pa_wu_p0/"):
+            return False
+    # exactly one source of truth.
+    if has_content == has_tref:
         return False
-    for seg in segments.values():
-        if not isinstance(seg, dict):
-            return False
-        if seg.get("frozen") is not True:
-            return False
-        content = seg.get("content")
-        tref = seg.get("template_reference")
-        has_content = _nonempty(content)
-        has_tref = _nonempty(tref)
-        # exactly one source of truth (no conflicting dual source)
-        if has_content == has_tref:
-            return False
-        sha = str(seg.get("sha256", ""))
-        if not _SHA256_RE.match(sha):
-            return False
-        # sha must match the actual content when content is inline.
+    sha = str(seg.get("sha256", ""))
+    if not _SHA256_RE.match(sha):
+        return False
+    try:
         if has_content:
             actual = hashlib.sha256(str(content).encode("utf-8")).hexdigest()
-            if actual != sha:
-                return False
-        if not _nonempty(seg.get("owner")):
+        else:
+            actual = template_content_hash(str(tref))
+    except PreflightError:
+        return False
+    if actual != sha:
+        return False
+    if not _nonempty(seg.get("owner")):
+        return False
+    return seg.get("change_requires_new_run_version") is True
+
+
+def _prompt_frozen(prompt: dict[str, Any]) -> bool:
+    segments = prompt.get("segments", {})
+    if not isinstance(segments, dict) or set(segments) != set(PROMPT_SEGMENTS):
+        return False
+    for name, seg in segments.items():
+        if not _segment_ok(name, seg):
             return False
-        if seg.get("change_requires_new_run_version") is not True:
-            return False
-    # Hard constraint boundaries must be intact.
     c = prompt.get("constraints", {})
-    if not (
+    return (
         c.get("request_hidden_reasoning") is False
         and c.get("request_structured_final_scores_only") is True
         and str(c.get("item_wording_source")) == "pa_wu_p0"
@@ -359,32 +475,34 @@ def _prompt_frozen(prompt: dict[str, Any]) -> bool:
         and str(c.get("identity_presented")) == "machine"
         and c.get("change_requires_new_run_version") is True
         and c.get("block_on_prompt_hash_mismatch") is True
-    ):
-        return False
-    return True
+    )
 
 
 def _sampling_frozen(sampling: dict[str, Any]) -> bool:
     if sampling.get("frozen") is not True:
         return False
-    # seed can never be declared a determinism guarantee.
     if sampling.get("seed_is_determinism_guarantee") is not False:
         return False
-    if not isinstance(sampling.get("temperature"), (int, float)) or isinstance(
-        sampling.get("temperature"), bool
-    ):
+    if sampling.get("linked_to_budget_contract") is not True:
         return False
-    if not isinstance(sampling.get("top_p"), (int, float)) or isinstance(
-        sampling.get("top_p"), bool
-    ):
+    temp = sampling.get("temperature")
+    if not _finite_number(temp) or temp < 0:
+        return False
+    top_p = sampling.get("top_p")
+    if not _finite_number(top_p) or not (0 < top_p <= 1):
         return False
     if not _positive_int(sampling.get("max_output_tokens")):
         return False
-    if not isinstance(sampling.get("seed_supported"), bool):
+    seed_supported = sampling.get("seed_supported")
+    if not isinstance(seed_supported, bool):
         return False
-    if sampling.get("seed_supported") is False and sampling.get("seed") is not None:
-        # allowed to be null; but if declared unsupported, seed must be null
-        return False
+    seed = sampling.get("seed")
+    if seed_supported:
+        if not isinstance(seed, int) or isinstance(seed, bool):
+            return False
+    else:
+        if seed is not None:
+            return False
     if not _positive_int(sampling.get("repeats_per_case")):
         return False
     if not _positive_int(sampling.get("planned_case_count")):
@@ -396,6 +514,8 @@ def _sampling_frozen(sampling: dict[str, Any]) -> bool:
     ):
         return False
     if not _positive_int(sampling.get("concurrency")):
+        return False
+    if sampling["concurrency"] > sampling["total_planned_requests"]:
         return False
     if not _positive_number(sampling.get("request_timeout_seconds")):
         return False
@@ -410,12 +530,14 @@ def _budget_approved(budget: dict[str, Any], sampling: dict[str, Any]) -> bool:
         return False
     if not _nonempty(budget.get("currency")):
         return False
-    if not _positive_number(budget.get("maximum_total_budget")):
+    mtb = budget.get("maximum_total_budget")
+    if not _positive_number(mtb):
         return False
     wbt = budget.get("warning_budget_threshold")
-    if not _positive_number(wbt) or wbt > budget["maximum_total_budget"]:
+    if not _positive_number(wbt) or wbt > mtb:
         return False
-    if not _positive_number(budget.get("maximum_cost_per_case")):
+    mcpc = budget.get("maximum_cost_per_case")
+    if not _positive_number(mcpc) or mcpc > mtb:
         return False
     if not _positive_int(budget.get("estimated_input_tokens")):
         return False
@@ -423,10 +545,15 @@ def _budget_approved(budget: dict[str, Any], sampling: dict[str, Any]) -> bool:
         return False
     if not _positive_int(budget.get("total_planned_requests")):
         return False
-    # must agree with sampling
     if budget["total_planned_requests"] != sampling.get("total_planned_requests"):
         return False
+    # maximum_cost_per_case * planned_case_count must not exceed hard limit.
+    planned = sampling.get("planned_case_count")
+    if _positive_int(planned) and mcpc * planned > mtb:
+        return False
     if not _positive_int(budget.get("concurrency_limit")):
+        return False
+    if sampling.get("concurrency", 0) > budget["concurrency_limit"]:
         return False
     if not _positive_number(budget.get("requests_per_minute_limit")):
         return False
@@ -434,41 +561,31 @@ def _budget_approved(budget: dict[str, Any], sampling: dict[str, Any]) -> bool:
         return False
     if not _nonempty(budget.get("budget_owner")):
         return False
-    if not _nonempty(budget.get("approval_timestamp")):
+    if not _is_date(budget.get("approval_timestamp")):
         return False
     pricing = budget.get("pricing", {})
-    if not isinstance(pricing, dict):
-        return False
-    if pricing.get("verified") is not True:
+    if not isinstance(pricing, dict) or pricing.get("verified") is not True:
         return False
     if not _nonempty(pricing.get("source")):
         return False
-    if not _nonempty(pricing.get("snapshot_date")):
+    if not _is_date(pricing.get("snapshot_date")):
         return False
     return True
-
-
-def _no_retry_overlap(retry: dict[str, Any]) -> bool:
-    retryable = set(retry.get("retryable_codes", []))
-    non_auto = set(retry.get("non_auto_retryable_codes", []))
-    return not (retryable & non_auto)
 
 
 def _retry_frozen(retry: dict[str, Any]) -> bool:
     if retry.get("frozen") is not True:
         return False
-    if not _no_retry_overlap(retry):
-        return False
+    retryable = set(retry.get("retryable_codes", []))
     non_auto = set(retry.get("non_auto_retryable_codes", []))
-    manual = set(retry.get("manual_review_required_codes", []))
-    if non_auto != manual:
+    if retryable & non_auto:
+        return False
+    if non_auto != set(retry.get("manual_review_required_codes", [])):
         return False
     policy = retry.get("policy", {})
-    if not isinstance(policy, dict):
+    if not isinstance(policy, dict) or not _positive_int(policy.get("max_attempts")):
         return False
-    if not _positive_int(policy.get("max_attempts")):
-        return False
-    for bool_field in (
+    for f in (
         "exponential_backoff",
         "jitter",
         "retry_after_respected",
@@ -476,13 +593,11 @@ def _retry_frozen(retry: dict[str, Any]) -> bool:
         "duplicate_request_detection",
         "partial_run_recovery",
     ):
-        if not isinstance(policy.get(bool_field), bool):
+        if not isinstance(policy.get(f), bool):
             return False
     if not _nonempty(policy.get("idempotency_key_policy")):
         return False
-    if not _positive_int(policy.get("checkpoint_interval")):
-        return False
-    return True
+    return _positive_int(policy.get("checkpoint_interval"))
 
 
 def _logging_frozen(logging_c: dict[str, Any]) -> bool:
@@ -531,9 +646,11 @@ def _stop_conditions_frozen(stop: dict[str, Any]) -> bool:
     if set(conds) != set(IMMEDIATE_STOP_CONDITIONS) or len(conds) != len(set(conds)):
         return False
     for e in immediate:
-        for field_name in ("condition", "action", "resume_requires", "owner"):
-            if not _nonempty(e.get(field_name)):
+        for f in ("condition", "threshold", "action", "resume_requires", "owner"):
+            if not _nonempty(e.get(f)):
                 return False
+        if str(e.get("action")) not in _LEGAL_STOP_ACTIONS:
+            return False
     thresh = stop.get("threshold_stop", [])
     if not isinstance(thresh, list):
         return False
@@ -543,9 +660,14 @@ def _stop_conditions_frozen(stop: dict[str, Any]) -> bool:
     for e in thresh:
         if str(e.get("threshold_status")) != "resolved":
             return False
-        if not _positive_number(e.get("threshold")):
+        if str(e.get("condition")) in _RATE_STOP_CONDITIONS and not _rate_ok(
+            e.get("threshold")
+        ):
             return False
-        if not _nonempty(e.get("owner")):
+        for f in ("action", "resume_requires", "owner"):
+            if not _nonempty(e.get(f)):
+                return False
+        if str(e.get("action")) not in _LEGAL_STOP_ACTIONS:
             return False
     return True
 
@@ -569,49 +691,58 @@ def compute_gate_status(
     source_hashes_verified: bool,
 ) -> dict[str, bool]:
     route = contracts["route_freeze.yaml"]
-    model = contracts["model_selection_decision.yaml"]
-    prompt = contracts["prompt_freeze_contract.yaml"]
-    sampling = contracts["sampling_and_repeat_contract.yaml"]
-    budget = contracts["budget_and_rate_limit_contract.yaml"]
-    retry = contracts["retry_and_recovery_contract.yaml"]
-    logging_c = contracts["provenance_and_logging_contract.yaml"]
-    stop = contracts["stop_conditions.yaml"]
-    env = contracts["environment_acceptance.yaml"]
-
-    route_frozen = (
-        route.get("route_id") == "R1"
-        and str(route.get("mock_package_hash")) == R1_MOCK_HASH
-    )
     return {
-        "route_frozen": bool(route_frozen),
-        "model_frozen": _model_frozen(model),
-        "prompt_frozen": _prompt_frozen(prompt),
-        "sampling_frozen": _sampling_frozen(sampling),
-        "budget_approved": _budget_approved(budget, sampling),
-        "retry_policy_frozen": _retry_frozen(retry),
-        "logging_contract_frozen": _logging_frozen(logging_c),
-        "stop_conditions_frozen": _stop_conditions_frozen(stop),
-        "privacy_review_completed": _privacy_review_completed(logging_c),
-        "environment_review_completed": _env_reviewed(env),
+        "route_frozen": bool(
+            route.get("route_id") == "R1"
+            and str(route.get("mock_package_hash")) == R1_MOCK_HASH
+        ),
+        "model_frozen": _model_frozen(contracts["model_selection_decision.yaml"]),
+        "prompt_frozen": _prompt_frozen(contracts["prompt_freeze_contract.yaml"]),
+        "sampling_frozen": _sampling_frozen(
+            contracts["sampling_and_repeat_contract.yaml"]
+        ),
+        "budget_approved": _budget_approved(
+            contracts["budget_and_rate_limit_contract.yaml"],
+            contracts["sampling_and_repeat_contract.yaml"],
+        ),
+        "retry_policy_frozen": _retry_frozen(
+            contracts["retry_and_recovery_contract.yaml"]
+        ),
+        "logging_contract_frozen": _logging_frozen(
+            contracts["provenance_and_logging_contract.yaml"]
+        ),
+        "stop_conditions_frozen": _stop_conditions_frozen(
+            contracts["stop_conditions.yaml"]
+        ),
+        "privacy_review_completed": _privacy_review_completed(
+            contracts["provenance_and_logging_contract.yaml"]
+        ),
+        "environment_review_completed": _env_reviewed(
+            contracts["environment_acceptance.yaml"]
+        ),
         "mock_package_validated": bool(mock_hash_verified),
         "source_hashes_verified": bool(source_hashes_verified),
     }
 
 
 # --------------------------------------------------------------------------
-# Authorization state machine
+# Authorization state machine (single source of truth)
 # --------------------------------------------------------------------------
 
 VALID_AUTH_STATUSES = frozenset({"blocked", "authorized"})
 
 
-def check_required_gates_present(auth: dict[str, Any]) -> None:
+def check_required_gates_exact(auth: dict[str, Any]) -> None:
     gates = auth.get("required_gates", {})
     if not isinstance(gates, dict):
         raise PreflightError("authorization_gate.required_gates must be a mapping")
-    missing = [g for g in REQUIRED_GATES if g not in gates]
-    if missing:
-        raise PreflightError(f"authorization_gate missing required gates: {missing}")
+    if set(gates) != set(REQUIRED_GATES):
+        missing = sorted(set(REQUIRED_GATES) - set(gates))
+        extra = sorted(set(gates) - set(REQUIRED_GATES))
+        raise PreflightError(
+            f"authorization_gate.required_gates must equal REQUIRED_GATES "
+            f"(missing={missing}, extra={extra})"
+        )
 
 
 def check_declared_matches_computed(
@@ -629,10 +760,6 @@ def check_declared_matches_computed(
 def check_authorization_state_machine(
     auth: dict[str, Any], gate_status: dict[str, bool]
 ) -> str:
-    """Validate the authorization state machine; return the resolved status.
-
-    Raises on any illegal combination.
-    """
     status = str(auth.get("authorization_status"))
     if status not in VALID_AUTH_STATUSES:
         raise PreflightError(f"illegal authorization_status: {status!r}")
@@ -640,173 +767,191 @@ def check_authorization_state_machine(
     if not isinstance(flag, bool):
         raise PreflightError("real_model_execution_authorized must be a boolean")
     all_gates_ok = all(gate_status.values())
-    authorized_by = auth.get("authorized_by")
-    authorized_at = auth.get("authorized_at")
-
     if status == "authorized":
         if flag is not True:
             raise PreflightError("authorized status requires flag=true")
         if not all_gates_ok:
             failing = sorted(g for g, ok in gate_status.items() if not ok)
             raise PreflightError(f"authorized but gates still failing: {failing}")
-        if not _nonempty(authorized_by):
+        if not _nonempty(auth.get("authorized_by")):
             raise PreflightError("authorized status requires non-empty authorized_by")
-        if not _nonempty(authorized_at):
+        if not _nonempty(auth.get("authorized_at")):
             raise PreflightError("authorized status requires non-empty authorized_at")
         return "authorized"
-
-    # status == "blocked"
     if flag is True:
         raise PreflightError("blocked status must not carry flag=true")
     return "blocked"
 
 
 # --------------------------------------------------------------------------
-# Security scans (AST-based for the validator itself; text for other files)
+# AST-based security scan (formal production path; used by tests too)
 # --------------------------------------------------------------------------
 
-_BANNED_IMPORT_MODULES = frozenset(
-    {"openai", "anthropic", "httpx", "requests", "socket", "urllib"}  # preflight-detection-pattern
-)
-_BANNED_TEXT_PATTERNS = (
-    re.compile(r"\bimport\s+(openai|anthropic|httpx|requests|socket)\b", re.IGNORECASE),  # preflight-detection-pattern
-    re.compile(r"\bfrom\s+(openai|anthropic|httpx|urllib)\b", re.IGNORECASE),  # preflight-detection-pattern
-    re.compile(r"requests\.(get|post)\s*\(", re.IGNORECASE),  # preflight-detection-pattern
-    re.compile(r"urllib\.request", re.IGNORECASE),  # preflight-detection-pattern
-    re.compile(r"chat\.completions", re.IGNORECASE),  # preflight-detection-pattern
-)
-_SECRET_LITERAL = re.compile(r"sk-[a-z0-9]{16,}", re.IGNORECASE)  # preflight-detection-pattern
+_SECRET_LITERAL = re.compile(r"sk-[a-z0-9]{16,}", re.IGNORECASE)
 _SECRET_ASSIGNMENT = re.compile(
-    r"(api_key|secret|token|password)\s*[:=]\s*[\"']?[A-Za-z0-9_\-]{8,}", re.IGNORECASE  # preflight-detection-pattern
+    r"(api_key|secret|token|password)\s*[:=]\s*['\"]?[A-Za-z0-9_\-]{8,}", re.IGNORECASE
 )
 _SECRET_POLICY_ALLOWED = re.compile(
-    r"(never_log_api_key|never_log_secret|secret_detected|no[_-]?api[_-]?key|"  # preflight-detection-pattern
-    r"api_key|secret)\s*[:=]\s*(true|false|null|any|\[\])?\s*$",  # preflight-detection-pattern
+    r"(never_log_api_key|never_log_secret|secret_detected|no[_-]?api[_-]?key|"
+    r"api_key|secret)\s*[:=]\s*(true|false|null|any|\[\])?\s*$",
     re.IGNORECASE,
 )
-_FORBIDDEN_REFS = (
-    "pa_wu_p1_prep",  # preflight-detection-pattern
-    "provisional",  # preflight-detection-pattern
-    "zh-cn",  # preflight-detection-pattern
-    "zh_cn",  # preflight-detection-pattern
-    "adaptation_candidates",  # preflight-detection-pattern
-    "ai_human",  # preflight-detection-pattern
-    "ai/human",  # preflight-detection-pattern
-)
-# Lines that legitimately DEFINE the detection patterns (exempt only these lines).
-_PATTERN_DEFINITION_MARKER = "# preflight-detection-pattern"
 
 
-def check_validator_imports_ast() -> None:
-    """AST-scan THIS validator's real Import/ImportFrom nodes for banned modules.
+def _ast_string_constants(tree: ast.AST) -> list[str]:
+    return [n.value for n in ast.walk(tree) if isinstance(n, ast.Constant) and isinstance(n.value, str)]
 
-    This proves that adding e.g. ``import requests`` to the validator would be
-    rejected, without exempting the whole file from scanning.
+
+def scan_python_source(path: Path) -> None:
+    """Formal AST-based scan of a Python file. Raises PreflightError on any:
+
+    - Import / ImportFrom of a banned module;
+    - importlib.import_module(...) / __import__(...) of a banned module;
+    - attribute calls into requests/httpx/urllib/socket;
+    - subprocess invocation of a network CLI (curl/wget/powershell/...);
+    - R2/R3 forbidden path fragment used in an Import/open/Path/import_module.
+
+    Detection does NOT rely on comment markers and cannot be bypassed by adding
+    a marker comment. String CONSTANTS that merely equal a module name are only
+    flagged when they are the argument of an import/open/subprocess call.
     """
-    import ast
+    tree = ast.parse(path.read_text(encoding="utf-8"))
 
-    src = Path(__file__).read_text(encoding="utf-8")
-    tree = ast.parse(src)
+    def _call_name(node: ast.Call) -> str:
+        f = node.func
+        if isinstance(f, ast.Name):
+            return f.id
+        if isinstance(f, ast.Attribute):
+            parts = []
+            cur: Any = f
+            while isinstance(cur, ast.Attribute):
+                parts.append(cur.attr)
+                cur = cur.value
+            if isinstance(cur, ast.Name):
+                parts.append(cur.id)
+            return ".".join(reversed(parts))
+        return ""
+
+    def _str_args(node: ast.Call) -> list[str]:
+        out = []
+        for a in list(node.args) + [k.value for k in node.keywords]:
+            if isinstance(a, ast.Constant) and isinstance(a.value, str):
+                out.append(a.value)
+        return out
+
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
             for alias in node.names:
-                top = alias.name.split(".")[0]
-                if top in _BANNED_IMPORT_MODULES:
-                    raise PreflightError(f"validator imports banned module: {alias.name}")
+                if alias.name.split(".")[0] in BANNED_MODULES:
+                    raise PreflightError(f"banned import: {alias.name} in {path.name}")
         elif isinstance(node, ast.ImportFrom):
-            top = (node.module or "").split(".")[0]
-            if top in _BANNED_IMPORT_MODULES:
-                raise PreflightError(f"validator imports banned module: {node.module}")
+            if (node.module or "").split(".")[0] in BANNED_MODULES:
+                raise PreflightError(f"banned import-from: {node.module} in {path.name}")
+        elif isinstance(node, ast.Call):
+            name = _call_name(node)
+            args = _str_args(node)
+            if name in ("importlib.import_module", "import_module", "__import__"):
+                for a in args:
+                    if a.split(".")[0] in BANNED_MODULES:
+                        raise PreflightError(f"banned dynamic import {a!r} in {path.name}")
+                    if any(frag in a for frag in FORBIDDEN_PATH_FRAGMENTS):
+                        raise PreflightError(f"forbidden path import {a!r} in {path.name}")
+            # attribute calls into banned modules e.g. requests.get / socket.socket
+            top = name.split(".")[0]
+            if top in BANNED_MODULES:
+                raise PreflightError(f"banned network call {name!r} in {path.name}")
+            # subprocess network CLI
+            if name.startswith("subprocess.") or name in ("run", "Popen", "call", "check_output"):
+                for a in args:
+                    low = a.lower()
+                    if any(cli.lower() in low.split() or low == cli.lower() for cli in _NETWORK_CLI):
+                        raise PreflightError(f"network CLI via subprocess in {path.name}: {a!r}")
+            # open()/Path() on forbidden R2/R3 fragments
+            if name in ("open", "Path") or name.endswith(".open"):
+                for a in args:
+                    if any(frag in a for frag in FORBIDDEN_PATH_FRAGMENTS):
+                        raise PreflightError(
+                            f"forbidden R2/R3 path access {a!r} in {path.name}"
+                        )
 
 
-def _scan_text_for_bans(path: Path) -> None:
+def scan_text_secrets(path: Path) -> None:
+    """Secret scan that CANNOT be bypassed by appending a marker comment."""
     text = path.read_text(encoding="utf-8")
-    for pat in _BANNED_TEXT_PATTERNS:
-        if pat.search(text):
-            raise PreflightError(
-                f"banned client/network pattern {pat.pattern!r} in {path.name}"
-            )
     if _SECRET_LITERAL.search(text):
         raise PreflightError(f"secret literal detected in {path.name}")
     for line in text.splitlines():
-        stripped = line.strip()
-        if _SECRET_ASSIGNMENT.search(stripped) and not _SECRET_POLICY_ALLOWED.search(
-            stripped
-        ):
-            raise PreflightError(
-                f"secret assignment detected in {path.name}: {stripped!r}"
-            )
+        # strip trailing comment before checking policy allow-list so that an
+        # appended comment cannot turn a real assignment into an "allowed" one.
+        code = line.split("#", 1)[0].strip()
+        if _SECRET_ASSIGNMENT.search(code) and not _SECRET_POLICY_ALLOWED.search(code):
+            raise PreflightError(f"secret assignment in {path.name}: {code!r}")
 
 
 def check_no_secrets_no_clients_no_network() -> None:
-    """Scan all package files. The validator is scanned via AST for imports and
-    via text for everything EXCEPT the specific lines that define detection
-    patterns (marked with a trailing comment)."""
-    check_validator_imports_ast()
-    self_path = Path(__file__).resolve()
     for path in PACKAGE_DIR.rglob("*"):
-        if path.suffix.lower() not in (".py", ".yaml", ".yml", ".md"):
-            continue
-        if path.resolve() == self_path:
-            # scan the validator, but exempt only the pattern-definition lines
-            for line in path.read_text(encoding="utf-8").splitlines():
-                if _PATTERN_DEFINITION_MARKER in line:
-                    continue
-                stripped = line.strip()
-                if _SECRET_LITERAL.search(stripped):
-                    raise PreflightError(f"secret literal in {path.name}: {stripped!r}")
-                if _SECRET_ASSIGNMENT.search(stripped) and not _SECRET_POLICY_ALLOWED.search(
-                    stripped
-                ):
-                    raise PreflightError(
-                        f"secret assignment in {path.name}: {stripped!r}"
-                    )
-            continue
-        _scan_text_for_bans(path)
+        suffix = path.suffix.lower()
+        if suffix == ".py":
+            scan_python_source(path)
+            scan_text_secrets(path)
+        elif suffix in (".yaml", ".yml", ".md"):
+            scan_text_secrets(path)
+            _scan_yaml_forbidden_refs(path)
 
 
-def check_no_r2_r3_reads() -> None:
+def _scan_yaml_forbidden_refs(path: Path) -> None:
     declaration = re.compile(
         r"^\s*(r2_[a-z0-9_]+|r3_[a-z0-9_]+|human_identity_version|chinese_formal_scale|"
         r"du_effect_conclusion|measurement_invariance_conclusion)\s*:\s*(true|false|null)\s*$",
         re.IGNORECASE,
     )
-    self_path = Path(__file__).resolve()
-    for path in PACKAGE_DIR.rglob("*"):
-        if path.suffix.lower() not in (".py", ".yaml", ".yml"):
+    for raw_line in path.read_text(encoding="utf-8").splitlines():
+        if declaration.match(raw_line):
             continue
-        for raw_line in path.read_text(encoding="utf-8").splitlines():
-            if path.resolve() == self_path and _PATTERN_DEFINITION_MARKER in raw_line:
-                continue  # exempt only the specific pattern-definition line
-            if declaration.match(raw_line):
-                continue  # lock-out declaration, not an asset read
-            low = raw_line.lower()
-            for ref in _FORBIDDEN_REFS:
-                if ref in low:
-                    raise PreflightError(
-                        f"forbidden R2/R3 reference {ref!r} in {path.name}: {raw_line.strip()!r}"
-                    )
+        low = raw_line.lower()
+        for frag in FORBIDDEN_PATH_FRAGMENTS:
+            if frag in low:
+                raise PreflightError(
+                    f"forbidden R2/R3 reference {frag!r} in {path.name}: {raw_line.strip()!r}"
+                )
+
+
+def check_validator_self_ast() -> None:
+    """AST-scan THIS validator; banned modules as real nodes are rejected."""
+    scan_python_source(Path(__file__))
 
 
 # --------------------------------------------------------------------------
-# Manifest checks
+# Manifest + hashes
 # --------------------------------------------------------------------------
+
+
+def _managed_contract_assets() -> set[str]:
+    """Every .yaml/.py contract asset physically in the package (excluding the
+    validator and manifest are still listed in files)."""
+    names = set()
+    for p in PACKAGE_DIR.iterdir():
+        if p.suffix.lower() in (".yaml", ".yml", ".py", ".md"):
+            names.add(p.name)
+    return names
 
 
 def check_manifest() -> dict[str, Any]:
     m = load_manifest()
     if set(m.get("files", [])) != set(REQUIRED_FILES):
         raise PreflightError("manifest files list does not match required files")
-    if tuple(m.get("contract_files", [])) != CONTRACT_FILES and set(
-        m.get("contract_files", [])
-    ) != set(CONTRACT_FILES):
+    # Every physical yaml/py/md asset must be declared in files (no stray assets).
+    stray = _managed_contract_assets() - set(m.get("files", []))
+    if stray:
+        raise PreflightError(f"undeclared package assets present: {sorted(stray)}")
+    if set(m.get("contract_files", [])) != set(CONTRACT_FILES):
         raise PreflightError("manifest contract_files does not match validator load list")
     if m.get("route_id") != "R1":
         raise PreflightError("manifest route_id must be R1")
     if m.get("package_status") != "preflight_only":
         raise PreflightError("manifest package_status must be preflight_only")
-    if m.get("p1_execution_status") != "blocked":
-        raise PreflightError("manifest p1_execution_status must be blocked")
+    if "p1_execution_status" in m:
+        raise PreflightError("manifest must not persist p1_execution_status")
     reuses = m.get("reuses", {})
     if str(reuses.get("r1_mock_package_hash")) != R1_MOCK_HASH:
         raise PreflightError("manifest reuses.r1_mock_package_hash mismatch")
@@ -815,16 +960,9 @@ def check_manifest() -> dict[str, Any]:
     if "pa_wu_r1_mock" not in str(reuses.get("r1_mock_package", "")):
         raise PreflightError("manifest reuses.r1_mock_package path invalid")
     invariants = m.get("invariants", {})
-    if not isinstance(invariants, dict) or not all(
-        v is True for v in invariants.values()
-    ):
+    if not isinstance(invariants, dict) or not all(v is True for v in invariants.values()):
         raise PreflightError("manifest invariants must all be true")
     return m
-
-
-# --------------------------------------------------------------------------
-# Hashes
-# --------------------------------------------------------------------------
 
 
 def compute_contract_hash(contracts: dict[str, dict[str, Any]]) -> str:
@@ -833,7 +971,9 @@ def compute_contract_hash(contracts: dict[str, dict[str, Any]]) -> str:
     return hashlib.sha256(blob.encode("utf-8")).hexdigest()[:16]
 
 
-def compute_package_hash(contracts: dict[str, dict[str, Any]], manifest: dict[str, Any]) -> str:
+def compute_package_hash(
+    contracts: dict[str, dict[str, Any]], manifest: dict[str, Any]
+) -> str:
     payload = {
         "manifest": manifest,
         "contracts": {name: contracts[name] for name in sorted(contracts)},
@@ -856,47 +996,39 @@ def build_preflight_report() -> dict[str, Any]:
     auth = contracts["authorization_gate.yaml"]
 
     check_route_boundary(route)
+    check_validator_self_ast()
     check_no_secrets_no_clients_no_network()
-    check_no_r2_r3_reads()
-    check_required_gates_present(auth)
+    check_required_gates_exact(auth)
+    check_model_frozen_fields_set(contracts["model_selection_decision.yaml"])
 
-    # Actual R1 mock source verification (manifest cross-check + real validator).
     verified_hash = verify_r1_mock_source(route)
     validator_hash = run_r1_mock_validator()
     mock_ok = validator_hash == R1_MOCK_HASH
     source_ok = verified_hash == R1_MOCK_HASH and mock_ok
 
     gate_status = compute_gate_status(contracts, mock_ok, source_ok)
-
-    # Declared required_gates must match computed values exactly.
     check_declared_matches_computed(auth, gate_status)
-
-    # Authorization state machine (raises on illegal combinations).
     resolved_status = check_authorization_state_machine(auth, gate_status)
 
     resolved_gates = sorted(g for g, ok in gate_status.items() if ok)
     blocking_gates = sorted(g for g, ok in gate_status.items() if not ok)
 
     unresolved: list[str] = []
-    if not gate_status["model_frozen"]:
-        unresolved.append("model_selection_unresolved")
-    if not gate_status["budget_approved"]:
-        unresolved.append("budget_not_approved")
-    if not gate_status["prompt_frozen"]:
-        unresolved.append("prompt_not_frozen")
-    if not gate_status["sampling_frozen"]:
-        unresolved.append("sampling_not_frozen")
-    if not gate_status["stop_conditions_frozen"]:
-        unresolved.append("stop_thresholds_unresolved")
-    if not gate_status["privacy_review_completed"]:
-        unresolved.append("privacy_review_pending")
-    if not gate_status["retry_policy_frozen"]:
-        unresolved.append("retry_policy_not_frozen")
-    if not gate_status["logging_contract_frozen"]:
-        unresolved.append("logging_contract_not_frozen")
+    label = {
+        "model_frozen": "model_selection_unresolved",
+        "budget_approved": "budget_not_approved",
+        "prompt_frozen": "prompt_not_frozen",
+        "sampling_frozen": "sampling_not_frozen",
+        "stop_conditions_frozen": "stop_thresholds_unresolved",
+        "privacy_review_completed": "privacy_review_pending",
+        "retry_policy_frozen": "retry_policy_not_frozen",
+        "logging_contract_frozen": "logging_contract_not_frozen",
+    }
+    for gate, name in label.items():
+        if not gate_status[gate]:
+            unresolved.append(name)
 
     preflight_status = "authorized" if resolved_status == "authorized" else "blocked"
-
     return {
         "preflight_status": preflight_status,
         "authorization_status": resolved_status,
@@ -908,6 +1040,7 @@ def build_preflight_report() -> dict[str, Any]:
         "real_model_execution_authorized": bool(
             auth.get("real_model_execution_authorized")
         ),
+        # Derived only here; never persisted in a contract/manifest.
         "p1_execution_status": "authorized"
         if preflight_status == "authorized"
         else "blocked",
@@ -917,9 +1050,8 @@ def build_preflight_report() -> dict[str, Any]:
     }
 
 
-def main() -> None:  # pragma: no cover - convenience entry point
-    report = build_preflight_report()
-    print(json.dumps(report, ensure_ascii=False, indent=2, default=str))
+def main() -> None:  # pragma: no cover
+    print(json.dumps(build_preflight_report(), ensure_ascii=False, indent=2, default=str))
 
 
 if __name__ == "__main__":  # pragma: no cover

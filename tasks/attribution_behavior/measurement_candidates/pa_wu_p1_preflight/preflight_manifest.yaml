@@ -5,7 +5,7 @@ manifest_id: pa_wu_p1_preflight.manifest.v1
 review_status: internal_agent_review_only
 package_status: preflight_only
 route_id: R1
-p1_execution_status: blocked
+# p1_execution_status 不在此持久化；只由 build_preflight_report() 派生。
 
 reuses:
   r1_mock_package: tasks/attribution_behavior/measurement_candidates/pa_wu_r1_mock
