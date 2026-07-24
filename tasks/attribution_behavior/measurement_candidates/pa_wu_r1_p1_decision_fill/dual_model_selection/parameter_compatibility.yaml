@@ -4,8 +4,8 @@
 # - canonical_research_parameter 必须精确等于 validator 的 REQUIRED_MAPPING_PARAMS，
 #   每项只出现一次，不允许多余项；
 # - 每个 evidence_source_id 必须存在于 official_evidence.sources；
-# - 涉及两个提供商的映射原则上同时引用 DeepSeek 与 OpenAI 来源；单侧 not_supported /
-#   provider_specific 时可只引相关侧，但须在 unresolved_difference 说明；
+# - 涉及某提供商侧（该侧不是 not_supported / not_applicable）时，evidence_source_ids
+#   中必须存在该 provider 的来源；对有字段绑定的参数，该来源必须 supports 对应字段；
 # - 不得为了表面统一把提供商特有参数伪装成完全等价。
 # semantic_equivalence_status 合法值：
 #   equivalent | approximately_equivalent | provider_specific | unresolved | not_supported
@@ -19,9 +19,11 @@ mappings:
     semantic_equivalence_status: provider_specific
     evidence_source_ids:
       - ds_create_chat_completion
-      - oai_responses_api
+      - ds_models_and_pricing
+      - oai_model_page
+      - oai_models_compare
     unresolved_difference: >-
-      两者均为 HTTPS API，但请求/响应结构不同，需在适配层归一化。
+      两者均为 HTTPS API，但端点结构不同，需在适配层归一化。
     harmonization_policy: >-
       研究层只依赖统一请求语义与响应字段，由 provider 适配层各自实现。
 
@@ -116,8 +118,8 @@ mappings:
     openai_mapping: unresolved
     semantic_equivalence_status: unresolved
     evidence_source_ids:
-      - ds_create_chat_completion
-      - oai_responses_api
+      - ds_pricing_snapshot
+      - oai_pricing_snapshot
     unresolved_difference: >-
       两侧 seed 支持与"是否为确定性保证"均未确认。
     harmonization_policy: >-
@@ -140,12 +142,12 @@ mappings:
     openai_mapping: response_id
     semantic_equivalence_status: provider_specific
     evidence_source_ids:
-      - ds_create_chat_completion
+      - ds_pricing_snapshot
       - oai_responses_api
     unresolved_difference: >-
-      OpenAI Responses API 提供 response id；DeepSeek 对应字段未确认。
+      OpenAI Responses endpoint 提供 response id；DeepSeek 对应字段未确认。
     harmonization_policy: >-
-      日志层各自记录可得的请求/响应标识；缺失侧标注 unresolved。
+      日志层各自记录可得的请求/响应标识；DeepSeek 侧标注 unresolved。
 
   - canonical_research_parameter: retry_relevant_error_categories
     deepseek_mapping: unresolved
@@ -164,7 +166,7 @@ mappings:
     openai_mapping: usage_tokens
     semantic_equivalence_status: approximately_equivalent
     evidence_source_ids:
-      - ds_models_and_pricing
+      - ds_create_chat_completion
       - oai_responses_api
     unresolved_difference: >-
       两侧均报告 token 用量，但字段命名与是否含缓存拆分未完全对齐。
@@ -179,6 +181,6 @@ mappings:
       - ds_models_and_pricing
       - oai_model_page
     unresolved_difference: >-
-      两侧均有缓存输入计费，但缓存写入/命中计费口径不同（OpenAI 有显式缓存写入倍率）。
+      两侧均有缓存输入计费，但缓存写入/命中口径不同（OpenAI 有显式缓存写入倍率）。
     harmonization_policy: >-
       成本估算按各自缓存口径分别建模，不假定缓存字段完全等价。

@@ -5,7 +5,10 @@
 # - "公开页面已读取"（confirmed_official_documentation）与"账户权限/实际接口表现
 #   尚未确认"（requires_account_check / requires_interface_check）是不同状态，不得混同；
 # - 页面存在 != 研究用途条款审查已完成；只有逐项确认的具体条款才可标 confirmed；
-# - 官方未明确说明的字段进入对应模型的 unresolved_fields，并在 field_evidence 给出 reason；
+# - 每个 source 必须声明 supports_fields（其直接支持的字段或风险 claim ID），
+#   field_evidence 引用某来源时，该字段/风险必须在该来源的 supports_fields 内；
+#   provider 一致不足以证明字段来源正确，provider_generic 也不代表支持所有字段；
+# - 官方未明确说明的字段进入 unresolved_fields，并在 field_evidence 给出 reason；
 # - 不得用模型规格推导任务质量结论。
 
 evidence_id: pa_wu_r1_p1.official_evidence.v1
@@ -21,8 +24,9 @@ allowed_source_domains:
 # --------------------------------------------------------------------------
 # 来源登记
 # 每个 source：source_id(唯一) / provider / page_title / source_type /
-# canonical_url(HTTPS) / retrieved_at / source_scope(provider_generic|model_specific) /
-# supports_model_ids / retrieved_claims(非空) / unresolved_claims / evidence_status
+# canonical_url(HTTPS) / retrieved_at / source_scope / supports_model_ids /
+# supports_fields(非空，字段名或 known_risks.<risk_id>) / retrieved_claims(非空) /
+# unresolved_claims / evidence_status
 # --------------------------------------------------------------------------
 sources:
   # ---- DeepSeek ----
@@ -35,9 +39,25 @@ sources:
     source_scope: model_specific
     supports_model_ids:
       - deepseek-v4-pro
+    supports_fields:
+      - public_model_name
+      - public_model_id_status
+      - endpoint_type
+      - context_window
+      - max_output_tokens
+      - reasoning_mode_support
+      - structured_output_support
+      - pricing_currency
+      - pricing_unit
+      - cached_input_price
+      - uncached_input_price
+      - output_price
+      - concurrency_limit
     retrieved_claims:
       - deepseek-v4-pro 在官方模型与价格页登记，含 token 计费口径与缓存/未缓存输入价格。
       - 价格以 per_million_tokens 计。
+      - 提供 OpenAI 格式 base URL 与 Anthropic 格式 base URL 两种入口。
+      - 页面登记并发上限具体数值。
     unresolved_claims:
       - 不可变日期快照标识符未在该页列出。
     evidence_status: confirmed_official_documentation
@@ -51,8 +71,14 @@ sources:
     source_scope: provider_generic
     supports_model_ids:
       - deepseek-v4-pro
+    supports_fields:
+      - alias_or_snapshot_risk
+      - exact_snapshot_available
+      - exact_snapshot_identifier
+      - known_risks.snapshot_update_risk
     retrieved_claims:
       - 官方以 Change Log 记录模型与接口变更。
+      - 无固定日期快照时存在服务端更新风险。
     unresolved_claims:
       - deepseek-v4-pro 是否存在固定可复现快照未在 Change Log 中列出。
     evidence_status: confirmed_official_documentation
@@ -66,6 +92,10 @@ sources:
     source_scope: provider_generic
     supports_model_ids:
       - deepseek-v4-pro
+    supports_fields:
+      - structured_output_support
+      - structured_output_mechanism
+      - known_risks.json_empty_content
     retrieved_claims:
       - 官方提供 JSON Output（JSON 模式）机制。
       - 官方说明 JSON Output 可能偶发返回空内容。
@@ -82,6 +112,11 @@ sources:
     source_scope: provider_generic
     supports_model_ids:
       - deepseek-v4-pro
+    supports_fields:
+      - reasoning_mode_support
+      - temperature_support
+      - top_p_support
+      - known_risks.thinking_parameters_ignored
     retrieved_claims:
       - 官方文档区分 thinking 与 non_thinking 两种模式。
       - thinking 模式下 temperature、top_p、presence_penalty、frequency_penalty 无效。
@@ -97,9 +132,13 @@ sources:
     source_scope: provider_generic
     supports_model_ids:
       - deepseek-v4-pro
+    supports_fields:
+      - endpoint_type
+      - documented_access_method
+      - token_usage_fields
     retrieved_claims:
-      - 官方提供 OpenAI 兼容的 chat completions 接口；另有 anthropic 兼容 API。
-      - 请求经 HTTPS API 访问。
+      - 官方提供 OpenAI 兼容的 Chat Completions 请求结构。
+      - 请求经 HTTPS API 访问，响应含 usage token 字段。
     unresolved_claims:
       - seed 支持与 response 标识字段未在该页明确。
     evidence_status: confirmed_official_documentation
@@ -113,8 +152,10 @@ sources:
     source_scope: provider_generic
     supports_model_ids:
       - deepseek-v4-pro
+    supports_fields:
+      - regional_availability_status
     retrieved_claims:
-      - 官方登记并发/限流口径（concurrency_limit）。
+      - 官方说明限流/隔离机制、user_id、keep-alive 与请求等待机制。
     unresolved_claims:
       - 当前账户的实际配额需接口确认。
     evidence_status: confirmed_official_documentation
@@ -128,6 +169,8 @@ sources:
     source_scope: provider_generic
     supports_model_ids:
       - deepseek-v4-pro
+    supports_fields:
+      - provider_retention_policy_status
     retrieved_claims:
       - 官方站点提供隐私/数据政策页面。
     unresolved_claims:
@@ -144,10 +187,32 @@ sources:
     source_scope: provider_generic
     supports_model_ids:
       - deepseek-v4-pro
+    supports_fields:
+      - terms_review_status
     retrieved_claims:
       - 官方站点提供服务条款 / 使用政策页面。
     unresolved_claims:
       - 与本研究用途相关的具体限制条款未逐条确认。
+    evidence_status: requires_interface_check
+
+  # DeepSeek 定价/快照日期占位来源（unresolved 用）。
+  - source_id: ds_pricing_snapshot
+    provider: deepseek
+    page_title: "Models & Pricing (snapshot date)"
+    source_type: models_and_pricing
+    canonical_url: "https://api-docs.deepseek.com/quick_start/pricing/"
+    retrieved_at: "2026-07-24T03:34:52+00:00"
+    source_scope: model_specific
+    supports_model_ids:
+      - deepseek-v4-pro
+    supports_fields:
+      - pricing_snapshot_date
+      - seed_support
+      - response_id_support
+    retrieved_claims:
+      - 官方定价页未绑定不可变快照日期；接口页未明确 seed/response 标识。
+    unresolved_claims:
+      - 定价未绑定不可变快照日期。
     evidence_status: requires_interface_check
 
   # ---- OpenAI ----
@@ -160,6 +225,22 @@ sources:
     source_scope: model_specific
     supports_model_ids:
       - gpt-5.6-terra
+    supports_fields:
+      - public_model_name
+      - public_model_id_status
+      - endpoint_type
+      - context_window
+      - max_output_tokens
+      - structured_output_support
+      - reasoning_mode_support
+      - pricing_currency
+      - pricing_unit
+      - cached_input_price
+      - uncached_input_price
+      - output_price
+      - long_context_pricing_rules
+      - temperature_support
+      - top_p_support
     retrieved_claims:
       - gpt-5.6-terra 官方模型页登记上下文窗口、最大输出、结构化输出与推理档位。
       - 官方登记缓存/未缓存输入与输出价格（per_million_tokens）。
@@ -167,7 +248,31 @@ sources:
     unresolved_claims:
       - 不可变日期快照标识符未列出。
       - temperature 支持及其与 reasoning effort 的组合限制未明确。
-      - seed 支持未明确。
+      - top_p 支持未明确。
+    evidence_status: confirmed_official_documentation
+
+  - source_id: oai_models_compare
+    provider: openai
+    page_title: "Compare models"
+    source_type: models_compare
+    canonical_url: "https://developers.openai.com/api/docs/models/compare"
+    retrieved_at: "2026-07-24T03:34:52+00:00"
+    source_scope: provider_generic
+    supports_model_ids:
+      - gpt-5.6-terra
+    supports_fields:
+      - endpoint_type
+      - structured_output_support
+      - structured_output_mechanism
+      - context_window
+      - max_output_tokens
+      - pricing_currency
+      - pricing_unit
+    retrieved_claims:
+      - 官方 Compare models 页对照 Responses 与 Chat Completions 端点、结构化输出、
+        上下文窗口、最大输出与定价。
+    unresolved_claims:
+      - 当前账户对 gpt-5.6-terra 的访问权限需接口确认。
     evidence_status: confirmed_official_documentation
 
   - source_id: oai_models_index
@@ -179,8 +284,10 @@ sources:
     source_scope: provider_generic
     supports_model_ids:
       - gpt-5.6-terra
+    supports_fields:
+      - regional_availability_status
     retrieved_claims:
-      - 官方 Models 索引登记可用模型与接口（Responses API 与 Chat Completions）。
+      - 官方 Models 索引登记可用模型与接口。
     unresolved_claims:
       - 当前账户对 gpt-5.6-terra 的访问权限需接口确认。
     evidence_status: confirmed_official_documentation
@@ -194,8 +301,14 @@ sources:
     source_scope: provider_generic
     supports_model_ids:
       - gpt-5.6-terra
+    supports_fields:
+      - alias_or_snapshot_risk
+      - exact_snapshot_available
+      - exact_snapshot_identifier
+      - known_risks.snapshot_update_risk
     retrieved_claims:
       - 官方指南说明模型别名与快照的关系及使用建议。
+      - 无确切 snapshot 时存在服务端更新风险。
     unresolved_claims:
       - gpt-5.6-terra 的具体不可变快照标识符未在该指南给出。
     evidence_status: confirmed_official_documentation
@@ -209,6 +322,9 @@ sources:
     source_scope: provider_generic
     supports_model_ids:
       - gpt-5.6-terra
+    supports_fields:
+      - structured_output_support
+      - structured_output_mechanism
     retrieved_claims:
       - 官方提供 Structured Outputs 机制。
     unresolved_claims:
@@ -224,11 +340,49 @@ sources:
     source_scope: provider_generic
     supports_model_ids:
       - gpt-5.6-terra
+    supports_fields:
+      - documented_access_method
+      - response_id_support
+      - token_usage_fields
     retrieved_claims:
-      - Responses API 提供 response id 与用量字段；亦支持 Chat Completions 接口。
+      - Responses endpoint 提供 response id 与用量字段。
     unresolved_claims:
       - seed / temperature 在该模型上的行为需接口确认。
     evidence_status: confirmed_official_documentation
+
+  - source_id: oai_reasoning_guide
+    provider: openai
+    page_title: "Reasoning"
+    source_type: guide
+    canonical_url: "https://platform.openai.com/docs/guides/reasoning"
+    retrieved_at: "2026-07-24T03:34:52+00:00"
+    source_scope: provider_generic
+    supports_model_ids:
+      - gpt-5.6-terra
+    supports_fields:
+      - known_risks.reasoning_cost_latency
+    retrieved_claims:
+      - 官方说明 reasoning 档位影响 token 用量与延迟。
+    unresolved_claims: []
+    evidence_status: confirmed_official_documentation
+
+  - source_id: oai_pricing_snapshot
+    provider: openai
+    page_title: "Model page (snapshot / seed)"
+    source_type: model_page
+    canonical_url: "https://developers.openai.com/api/docs/models/gpt-5.6-terra"
+    retrieved_at: "2026-07-24T03:34:52+00:00"
+    source_scope: model_specific
+    supports_model_ids:
+      - gpt-5.6-terra
+    supports_fields:
+      - pricing_snapshot_date
+      - seed_support
+    retrieved_claims:
+      - 官方定价未绑定不可变快照日期；seed 支持未明确。
+    unresolved_claims:
+      - 定价未绑定不可变快照日期。
+    evidence_status: requires_interface_check
 
   - source_id: oai_data_controls
     provider: openai
@@ -239,6 +393,8 @@ sources:
     source_scope: provider_generic
     supports_model_ids:
       - gpt-5.6-terra
+    supports_fields:
+      - provider_retention_policy_status
     retrieved_claims:
       - 官方提供 Data controls（数据控制/保留）页面。
     unresolved_claims:
@@ -255,6 +411,8 @@ sources:
     source_scope: provider_generic
     supports_model_ids:
       - gpt-5.6-terra
+    supports_fields:
+      - terms_review_status
     retrieved_claims:
       - 官方站点提供 Usage policies / Terms 页面。
     unresolved_claims:
@@ -262,11 +420,13 @@ sources:
     evidence_status: requires_interface_check
 
 # --------------------------------------------------------------------------
-# 每个模型的字段登记 + 字段级证据映射（field_evidence）
+# 每个模型的字段登记 + 字段级证据映射（field_evidence）+ 风险级证据（known_risks）
 # 规则：
-# - documented_fields 只由 field_evidence[field].status == confirmed_official_documentation 计算；
-# - unresolved 字段必须出现在 unresolved_fields 且在 field_evidence 给出 reason；
-# - confirmed 字段引用的来源本身必须为 confirmed_official_documentation，且 provider 与模型一致。
+# - documented_fields 只由 field_evidence[field].status == confirmed 计算；
+# - field_evidence 引用的来源必须 supports 该字段（在 source.supports_fields 内）；
+# - known_risks 为带稳定 risk_id 的列表，每个风险有独立 field_evidence（source 必须
+#   supports "known_risks.<risk_id>"）；
+# - confirmed 字段/风险引用的来源本身必须为 confirmed，且 provider 与模型一致。
 # --------------------------------------------------------------------------
 models:
   - provider: deepseek
@@ -309,9 +469,24 @@ models:
     regional_availability_status: requires_interface_check
     terms_review_status: requires_interface_check
     known_risks:
-      - JSON Output 可能偶发返回空内容。
-      - Thinking 模式中 temperature、top_p、presence_penalty、frequency_penalty 无效。
-      - 无固定日期快照时仍存在服务端更新风险。
+      - risk_id: json_empty_content
+        statement: JSON Output 可能偶发返回空内容。
+        field_evidence:
+          status: confirmed_official_documentation
+          source_ids:
+            - ds_json_output
+      - risk_id: thinking_parameters_ignored
+        statement: Thinking 模式中 temperature、top_p、presence_penalty、frequency_penalty 无效。
+        field_evidence:
+          status: confirmed_official_documentation
+          source_ids:
+            - ds_thinking_mode
+      - risk_id: snapshot_update_risk
+        statement: 无固定日期快照时仍存在服务端更新风险。
+        field_evidence:
+          status: confirmed_official_documentation
+          source_ids:
+            - ds_change_log
     official_source_ids:
       - ds_models_and_pricing
       - ds_change_log
@@ -321,6 +496,7 @@ models:
       - ds_rate_limit
       - ds_privacy
       - ds_terms
+      - ds_pricing_snapshot
     unresolved_fields:
       - exact_snapshot_available
       - exact_snapshot_identifier
@@ -356,7 +532,7 @@ models:
         source_ids: [ds_change_log]
       endpoint_type:
         status: confirmed_official_documentation
-        source_ids: [ds_create_chat_completion]
+        source_ids: [ds_models_and_pricing, ds_create_chat_completion]
       documented_access_method:
         status: confirmed_official_documentation
         source_ids: [ds_create_chat_completion]
@@ -383,11 +559,11 @@ models:
         source_ids: [ds_thinking_mode]
       seed_support:
         status: unresolved
-        source_ids: [ds_create_chat_completion]
+        source_ids: [ds_pricing_snapshot]
         reason: 官方接口文档未明确 seed 支持。
       response_id_support:
         status: unresolved
-        source_ids: [ds_create_chat_completion]
+        source_ids: [ds_pricing_snapshot]
         reason: 官方接口文档未明确响应标识字段。
       pricing_currency:
         status: confirmed_official_documentation
@@ -406,10 +582,10 @@ models:
         source_ids: [ds_models_and_pricing]
       concurrency_limit:
         status: confirmed_official_documentation
-        source_ids: [ds_rate_limit]
+        source_ids: [ds_models_and_pricing]
       pricing_snapshot_date:
         status: unresolved
-        source_ids: [ds_models_and_pricing]
+        source_ids: [ds_pricing_snapshot]
         reason: 官方定价页未绑定不可变快照日期。
       provider_retention_policy_status:
         status: requires_interface_check
@@ -465,14 +641,27 @@ models:
     regional_availability_status: requires_interface_check
     terms_review_status: requires_interface_check
     known_risks:
-      - reasoning 档位若默认较高会影响用量与延迟，需接口确认。
-      - 无确切 snapshot 时存在服务端更新风险。
+      - risk_id: reasoning_cost_latency
+        statement: reasoning 档位若默认较高会影响 token 用量与延迟。
+        field_evidence:
+          status: confirmed_official_documentation
+          source_ids:
+            - oai_reasoning_guide
+      - risk_id: snapshot_update_risk
+        statement: 无确切 snapshot 时存在服务端更新风险。
+        field_evidence:
+          status: confirmed_official_documentation
+          source_ids:
+            - oai_latest_model_guide
     official_source_ids:
       - oai_model_page
+      - oai_models_compare
       - oai_models_index
       - oai_latest_model_guide
       - oai_structured_outputs
       - oai_responses_api
+      - oai_reasoning_guide
+      - oai_pricing_snapshot
       - oai_data_controls
       - oai_usage_policies
     unresolved_fields:
@@ -504,14 +693,14 @@ models:
         reason: 官方指南未给出该模型不可变日期快照。
       exact_snapshot_identifier:
         status: unresolved
-        source_ids: [oai_model_page]
+        source_ids: [oai_latest_model_guide]
         reason: 当前官方页面未列出不可变日期快照标识符。
       alias_or_snapshot_risk:
         status: confirmed_official_documentation
         source_ids: [oai_latest_model_guide]
       endpoint_type:
         status: confirmed_official_documentation
-        source_ids: [oai_models_index]
+        source_ids: [oai_model_page, oai_models_compare]
       documented_access_method:
         status: confirmed_official_documentation
         source_ids: [oai_responses_api]
@@ -543,7 +732,7 @@ models:
         reason: top_p 支持未在官方页面明确。
       seed_support:
         status: unresolved
-        source_ids: [oai_responses_api]
+        source_ids: [oai_pricing_snapshot]
         reason: seed 支持未明确。
       pricing_currency:
         status: confirmed_official_documentation
@@ -560,9 +749,12 @@ models:
       output_price:
         status: confirmed_official_documentation
         source_ids: [oai_model_page]
+      long_context_pricing_rules:
+        status: confirmed_official_documentation
+        source_ids: [oai_model_page]
       pricing_snapshot_date:
         status: unresolved
-        source_ids: [oai_model_page]
+        source_ids: [oai_pricing_snapshot]
         reason: 官方定价未绑定不可变快照日期。
       provider_retention_policy_status:
         status: requires_interface_check

@@ -20,6 +20,14 @@
 - 官方规格证据已**按字段整理**（每个字段挂 `field_evidence`，documented 状态只由
   `field_evidence[field].status == confirmed_official_documentation` 计算，
   绝不因字段值非空就自动算作已确认）；
+- **来源与字段语义绑定**：每个 source 声明 `supports_fields`，`field_evidence` 引用某来源时
+  该字段（或风险 claim `known_risks.<risk_id>`）必须在该来源的 `supports_fields` 内，
+  provider 一致不足以证明来源正确；
+- **provider-specific 字段纳入证据追踪**：DeepSeek 的 `concurrency_limit`、GPT-5.6 Terra 的
+  `long_context_pricing_rules` 必须有 confirmed 来源；每个 known risk 有稳定 `risk_id` 与独立
+  confirmed 来源（不再靠字符串包含证明风险）；
+- **compatibility 双侧来源**：涉及两提供商的参数需同时有 DeepSeek 与 OpenAI 来源，且来源须
+  支持该侧对应字段；`context_window` 已纳入必需参数集；
 - 严格区分三层状态：
   - **已选择**（human_selected）：用户已明确选定两个模型；
   - **文档能力已确认**（confirmed_official_documentation）：官方公开页面已读取记载；
