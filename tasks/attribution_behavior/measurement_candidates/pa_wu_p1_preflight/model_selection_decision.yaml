@@ -1,0 +1,54 @@
+# 模型选择决策合同。
+# 不得在没有来源和人工决策的情况下自动选择模型。
+# selected_model 只有在 selection_status == frozen 时才允许非空。
+
+model_selection_id: pa_wu_p1_preflight.model_selection.v1
+
+# selection_status 取值：unresolved | frozen
+selection_status: unresolved
+
+# 初始必须为 null（未选定）。frozen 前保持 null。
+selected_model: null
+
+# 需要冻结的字段（frozen 时必须全部填写且 selected_model 非空）。
+frozen_fields_required:
+  - provider
+  - model_id
+  - exact_model_version_or_snapshot
+  - endpoint_type
+  - access_method
+  - context_window_requirement
+  - structured_output_support
+  - deterministic_seed_support
+  - temperature_support
+  - response_id_available
+  - provider_retention_policy_reviewed
+  - pricing_snapshot_date
+  - pricing_source_recorded
+  - regional_availability_reviewed
+  - terms_of_use_reviewed
+
+# 决策记录占位（unresolved 时全部保持 null，禁止虚构）。
+decision:
+  provider: null
+  model_id: null
+  exact_model_version_or_snapshot: null
+  endpoint_type: null
+  access_method: null
+  context_window_requirement: null
+  structured_output_support: null
+  deterministic_seed_support: null
+  temperature_support: null
+  response_id_available: null
+  provider_retention_policy_reviewed: null
+  pricing_snapshot_date: null
+  pricing_source_recorded: null
+  regional_availability_reviewed: null
+  terms_of_use_reviewed: null
+  decided_by: null
+  decided_at: null
+  source_references: []
+
+notes: >-
+  当前无已选模型。任何模型选择都必须附带 provider 官方来源、定价快照来源与人工决策记录，
+  并将 selection_status 显式置为 frozen；validator 不会自动完成此操作。

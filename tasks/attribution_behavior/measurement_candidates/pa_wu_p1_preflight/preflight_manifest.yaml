@@ -1,0 +1,58 @@
+# PA-Wu R1 P1 执行前置决策与授权门禁包清单。
+# 本包只建立静态合同与本地校验器，不执行真实模型、不联网、不执行 P1。
+
+manifest_id: pa_wu_p1_preflight.manifest.v1
+review_status: internal_agent_review_only
+package_status: preflight_only
+route_id: R1
+# p1_execution_status 不在此持久化；只由 build_preflight_report() 派生。
+
+reuses:
+  r1_mock_package: tasks/attribution_behavior/measurement_candidates/pa_wu_r1_mock
+  r1_mock_package_hash: 7c83def4c93ad26f
+  measurement_source: pa_wu_p0
+
+files:
+  - README.md
+  - preflight_manifest.yaml
+  - route_freeze.yaml
+  - model_selection_decision.yaml
+  - prompt_freeze_contract.yaml
+  - sampling_and_repeat_contract.yaml
+  - budget_and_rate_limit_contract.yaml
+  - retry_and_recovery_contract.yaml
+  - provenance_and_logging_contract.yaml
+  - stop_conditions.yaml
+  - authorization_gate.yaml
+  - environment_acceptance.yaml
+  - validate_preflight.py
+
+# 嵌套受管资产（如 templates/ 下的受控 prompt 模板）。当前无正式模板，保持为空；
+# 目录中任何未声明的嵌套 yaml/py/md/txt/json 资产都会被 validator 拒绝。
+template_files: []
+
+# validator 需要纳入 contract_hash 计算的合同文件（顺序无关，validator 排序）。
+contract_files:
+  - route_freeze.yaml
+  - model_selection_decision.yaml
+  - prompt_freeze_contract.yaml
+  - sampling_and_repeat_contract.yaml
+  - budget_and_rate_limit_contract.yaml
+  - retry_and_recovery_contract.yaml
+  - provenance_and_logging_contract.yaml
+  - stop_conditions.yaml
+  - authorization_gate.yaml
+  - environment_acceptance.yaml
+
+invariants:
+  no_real_model: true
+  no_network: true
+  no_api_key: true
+  no_model_output: true
+  no_p1_execution: true
+  authorization_never_auto_enabled: true
+  reads_no_r2_r3_assets: true
+
+notes: >-
+  本包为 P1 执行前置门禁。preflight_status 与 P1 均为 blocked，直到全部门禁人工冻结/批准
+  且授权被显式开启。研究结论保持 "C — 仍需补证"。

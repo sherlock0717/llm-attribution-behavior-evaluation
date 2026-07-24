@@ -1,0 +1,49 @@
+# 重试与恢复合同。
+# 不得通过无限重试掩盖失败。区分可重试与不可自动重试的失败类别。
+
+retry_id: pa_wu_p1_preflight.retry.v1
+
+# 可重试（瞬态传输/服务端错误）。
+retryable_codes:
+  - timeout
+  - connection_reset
+  - provider_5xx
+  - rate_limit_429
+
+# 默认不可自动重试（语义/契约违背，需人工审查）。
+non_auto_retryable_codes:
+  - schema_validation_failure
+  - wrong_item_count
+  - forbidden_total
+  - prompt_hash_mismatch
+  - item_hash_mismatch
+  - model_version_drift
+  - identity_mismatch
+
+# 重试策略参数。
+policy:
+  max_attempts: 3               # 有限重试，禁止无限
+  exponential_backoff: true
+  jitter: true
+  retry_after_respected: true   # 尊重 provider 的 Retry-After
+  idempotency_key_policy: per_request_case_repeat
+  checkpoint_interval: 25       # 每 N 个请求落一次 checkpoint
+  resume_from_checkpoint: true
+  duplicate_request_detection: true
+  partial_run_recovery: true
+
+# 需要人工审查（永不自动重试）的失败码 —— 必须等于 non_auto_retryable_codes。
+manual_review_required_codes:
+  - schema_validation_failure
+  - wrong_item_count
+  - forbidden_total
+  - prompt_hash_mismatch
+  - item_hash_mismatch
+  - model_version_drift
+  - identity_mismatch
+
+frozen: false
+
+notes: >-
+  max_attempts 必须为有限正整数。可重试类别不得包含任何 non_auto_retryable_codes；
+  两个集合不得相交。manual_review_required_codes 覆盖全部不可自动重试码。

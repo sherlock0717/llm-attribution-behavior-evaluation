@@ -1,0 +1,37 @@
+# 采样与重复合同。
+# 不得把 seed 写成确定性保证；若 provider 不支持 seed，必须显式记录。
+# 任何字段未决时执行状态仍为 blocked。
+
+sampling_id: pa_wu_p1_preflight.sampling.v1
+
+# 采样参数（未决为 null）。
+temperature: null
+top_p: null
+max_output_tokens: null
+
+# seed 相关：seed 本身不构成确定性保证；是否支持须显式记录。
+seed: null
+seed_supported: null            # true | false | null(未决)
+seed_is_determinism_guarantee: false  # 恒为 false：seed 不等于确定性保证
+
+# 重复与并发。
+planned_case_count: null        # R1 mock 输入基数（冻结时必须为正整数）
+repeats_per_case: null          # 必须与预算合同联动（total_planned_requests）
+total_planned_requests: null    # 必须等于 planned_case_count × repeats_per_case
+concurrency: null
+request_timeout_seconds: null
+
+# 顺序策略。
+scenario_order_policy: null
+item_order_policy: null
+repeat_index_policy: null
+
+# 与预算联动声明。
+linked_to_budget_contract: true
+
+frozen: false
+
+notes: >-
+  seed_supported 必须在冻结前显式确定；若 provider 不支持 seed，置为 false 并在
+  provenance 中记录。repeats_per_case 与 budget_and_rate_limit_contract 的
+  total_planned_requests 必须一致。存在 null 字段时 P1 保持 blocked。

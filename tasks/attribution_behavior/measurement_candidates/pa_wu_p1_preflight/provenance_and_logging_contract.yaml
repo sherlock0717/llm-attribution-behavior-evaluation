@@ -1,0 +1,62 @@
+# 来源与日志合同。
+# 不记录 API key；不将 secret 写入日志；原始响应与解析结果分开；日志不可静默覆盖。
+
+provenance_id: pa_wu_p1_preflight.provenance.v1
+
+# 每条执行记录必须包含的字段（validator 核对完整性）。
+required_log_fields:
+  - run_id
+  - run_version
+  - case_id
+  - scenario_id
+  - repeat_index
+  - request_timestamp
+  - response_timestamp
+  - provider
+  - model_id
+  - exact_model_version
+  - request_id_or_response_id
+  - prompt_hash
+  - administration_hash
+  - input_payload_hash
+  - raw_response_hash
+  - parsed_response_hash
+  - validation_status
+  - failure_code
+  - retry_count
+  - token_usage
+  - estimated_cost
+  - package_commit_sha
+
+# 隐私与完整性规则。
+rules:
+  never_log_api_key: true
+  never_log_secret: true
+  separate_raw_and_parsed_response: true
+  no_silent_overwrite: true              # 日志不可静默覆盖
+  case_repeat_unique_within_run: true    # 同一 run_id 下 case/repeat 唯一
+  block_scoring_if_missing_provenance: true  # 缺关键来源字段不得进入评分分析
+
+# 关键来源字段：缺失任一则该记录不得进入评分分析（必须是 required_log_fields 子集）。
+critical_provenance_fields:
+  - run_id
+  - run_version
+  - case_id
+  - repeat_index
+  - prompt_hash
+  - administration_hash
+  - model_id
+  - exact_model_version
+
+# 隐私审查记录。privacy_review_completed 门禁只有 status=completed 且
+# reviewed_by / reviewed_at 均非空时才为 true。初始为 pending。
+privacy_review:
+  status: pending           # pending | completed
+  reviewed_by: null
+  reviewed_at: null
+
+frozen: false
+
+notes: >-
+  raw_response_hash 与 parsed_response_hash 必须分别记录。日志写入必须为追加/唯一键，
+  不得覆盖既有记录。缺少 critical_provenance_fields 中任一字段的记录被排除于评分分析。

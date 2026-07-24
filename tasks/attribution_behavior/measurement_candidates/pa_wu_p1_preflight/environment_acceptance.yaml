@@ -1,0 +1,49 @@
+# 环境验收记录。如实记录 CI 与本地事实，不得美化为"Windows 全量测试通过"。
+# environment_review_completed 门禁只有在【本 preflight 分支】自己的 Linux CI 成功且
+# 记录完整时才允许为 true；仅有 R1 baseline CI 成功不足以满足该门禁。
+
+environment_acceptance_id: pa_wu_p1_preflight.environment_acceptance.v2
+
+# R1 baseline（PR #10）CI 事实。
+r1_baseline_ci:
+  run_number: 71
+  status: success
+
+# 本 preflight 分支自身 CI —— PR #11 CI #79 已 success（回填静态证据，不联网核验）。
+preflight_branch_ci:
+  workflow: CI
+  run_number: 79
+  run_id: 30062667683
+  status: success
+  verified_head_sha: 72dc5cfd76a967b9302e81c8ff20b8b07932d24f
+
+windows_local:
+  r1_target_tests: passed
+  ruff: passed
+  compileall: passed
+  full_pytest_status: environment_specific_failures
+  # 5 项 bash wrapper 失败 + 2 项 SciPy DLL 失败 + 1 项 SciPy collection error。
+  failed_count: 7
+  bash_wrapper_failures: 5
+  scipy_dll_failures: 2
+  scipy_collection_errors: 1
+  affected_test_files:
+    - tests/integration/test_cross_platform_scripts.py
+    - tests/integration/test_explicit_output_pipeline.py
+    - tests/characterization/test_analysis_contract.py
+
+# 对上述失败的明确定性。
+windows_failure_qualification:
+  in_pr_10_diff: false               # 不属于 PR #10 diff
+  is_r1_mock_regression: false       # 不是 R1 Mock 回归
+  is_preflight_code_regression: false  # 不是本轮 preflight 代码回归
+  is_fixed: false                    # 均未修复
+  followup_handling: separate_engineering_maintenance_branch
+
+notes: >-
+  bash wrapper 失败源于 Windows 子进程环境缺 uv；SciPy DLL 失败/collection error 源于
+  Windows 主机"应用程序控制策略"拦截 SciPy 原生 DLL。二者均为 Windows 本地环境问题，与本
+  preflight 包无关，未修复；不得修改 scripts / SciPy 配置 / 系统策略掩盖。上述 Windows 例外
+  均未声称修复（is_fixed: false），CI 成功也不构成真实模型执行授权。
+  environment_review_completed 现已解析为 true：本 preflight 分支自身 Linux CI（PR #11 CI #79，
+  run_id 30062667683，head 72dc5cfd76a967b9302e81c8ff20b8b07932d24f）已 success 并完整记录。

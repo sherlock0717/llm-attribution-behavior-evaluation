@@ -1,0 +1,87 @@
+# 停止条件合同。
+# 不得在初始文件中随意编造阈值。阈值未决时使用 threshold_status: unresolved，
+# 存在未决阈值时 P1 保持 blocked。
+
+stop_conditions_id: pa_wu_p1_preflight.stop_conditions.v1
+
+# 立即停止条件（任一触发即硬停）。每项定义 condition/threshold/action/resume_requires/owner。
+immediate_stop:
+  - condition: model_version_changed
+    threshold: any_change
+    action: hard_stop
+    resume_requires: model_refreeze_and_reauthorization
+    owner: null
+  - condition: prompt_hash_mismatch
+    threshold: any_mismatch
+    action: hard_stop
+    resume_requires: prompt_refreeze_and_new_run_version
+    owner: null
+  - condition: administration_hash_mismatch
+    threshold: any_mismatch
+    action: hard_stop
+    resume_requires: source_reverification
+    owner: null
+  - condition: item_set_version_mismatch
+    threshold: any_mismatch
+    action: hard_stop
+    resume_requires: p0_source_reverification
+    owner: null
+  - condition: budget_hard_limit_reached
+    threshold: maximum_total_budget
+    action: hard_stop
+    resume_requires: new_budget_approval
+    owner: null
+  - condition: unauthorized_execution
+    threshold: any
+    action: hard_stop
+    resume_requires: authorization_gate_review
+    owner: null
+  - condition: secret_detected
+    threshold: any
+    action: hard_stop
+    resume_requires: security_review
+    owner: null
+  - condition: source_contract_changed
+    threshold: any_change
+    action: hard_stop
+    resume_requires: full_preflight_revalidation
+    owner: null
+
+# 阈值停止条件（超过阈值即停）。阈值待人工核定：threshold_status: unresolved。
+threshold_stop:
+  - condition: schema_failure_rate
+    threshold: null
+    threshold_status: unresolved
+    action: stop_and_review
+    resume_requires: human_review
+    owner: null
+  - condition: provider_error_rate
+    threshold: null
+    threshold_status: unresolved
+    action: stop_and_review
+    resume_requires: human_review
+    owner: null
+  - condition: missing_item_rate
+    threshold: null
+    threshold_status: unresolved
+    action: stop_and_review
+    resume_requires: human_review
+    owner: null
+  - condition: duplicate_response_rate
+    threshold: null
+    threshold_status: unresolved
+    action: stop_and_review
+    resume_requires: human_review
+    owner: null
+  - condition: cost_estimation_error
+    threshold: null
+    threshold_status: unresolved
+    action: stop_and_review
+    resume_requires: human_review
+    owner: null
+
+frozen: false
+
+notes: >-
+  阈值数值必须由人工基于试运行/文献核定，禁止编造。任一 threshold_stop 项的
+  threshold_status 为 unresolved 时，preflight 与 P1 保持 blocked。

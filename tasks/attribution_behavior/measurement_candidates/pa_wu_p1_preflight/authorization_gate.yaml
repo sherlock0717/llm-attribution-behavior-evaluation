@@ -1,0 +1,41 @@
+# 授权门禁 —— 本阶段核心，且是授权状态的唯一来源。
+#
+# validator 会从各来源合同重新计算 gate_status，并要求本文件 required_gates 的声明值
+# 与重新计算结果完全一致（不得忽略声明值）。
+#
+# authorization_status 只允许 blocked | authorized。
+# 只有所有计算门禁为 true 且 real_model_execution_authorized: true、
+# authorized_by 与 authorized_at 均非空时，authorization_status 才允许为 authorized。
+# validate_preflight.py 绝不自动将授权改为 true。
+
+authorization_id: pa_wu_p1_preflight.authorization.v1
+
+# 授权状态的单一来源。p1_execution_status 不持久化于任何合同/manifest，
+# 只由 build_preflight_report() 派生。
+real_model_execution_authorized: false
+authorization_status: blocked
+authorized_by: null
+authorized_at: null
+
+# required_gates：如实写入当前已完成 / 未完成门禁（不是全部 false）。
+# 已完成（路线已冻结、mock 已验证、来源 hash 已核、环境已复核）：
+required_gates:
+  route_frozen: true
+  model_frozen: false
+  prompt_frozen: false
+  sampling_frozen: false
+  budget_approved: false
+  retry_policy_frozen: false
+  logging_contract_frozen: false
+  stop_conditions_frozen: false
+  privacy_review_completed: false
+  # environment_review_completed 需本 preflight 分支 Linux CI 成功并记录后才为 true；
+  # PR #11 CI #79 已 success 并完整回填，故为 true。
+  environment_review_completed: true
+  mock_package_validated: true
+  source_hashes_verified: true
+
+notes: >-
+  授权是人工动作：需在所有 required_gates 为 true 后，由 authorized_by/authorized_at
+  显式记录并将 real_model_execution_authorized 置为 true，authorization_status 方可为
+  authorized。validator 只校验一致性与状态机，绝不代替人工授权。
