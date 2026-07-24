@@ -1,0 +1,186 @@
+# 双模型参数兼容性映射（研究参数 -> 各提供商映射）。
+#
+# 严格规则：
+# - canonical_research_parameter 必须精确等于 validator 的 REQUIRED_MAPPING_PARAMS，
+#   每项只出现一次，不允许多余项；
+# - 每个 evidence_source_id 必须存在于 official_evidence.sources；
+# - 涉及某提供商侧（该侧不是 not_supported / not_applicable）时，evidence_source_ids
+#   中必须存在该 provider 的来源；对有字段绑定的参数，该来源必须 supports 对应字段；
+# - 不得为了表面统一把提供商特有参数伪装成完全等价。
+# semantic_equivalence_status 合法值：
+#   equivalent | approximately_equivalent | provider_specific | unresolved | not_supported
+
+compatibility_id: pa_wu_r1_p1.parameter_compatibility.v1
+
+mappings:
+  - canonical_research_parameter: endpoint
+    deepseek_mapping: openai_chat_completions_or_anthropic_compatible
+    openai_mapping: responses_api_or_chat_completions
+    semantic_equivalence_status: provider_specific
+    evidence_source_ids:
+      - ds_create_chat_completion
+      - ds_models_and_pricing
+      - oai_model_page
+      - oai_models_compare
+    unresolved_difference: >-
+      两者均为 HTTPS API，但端点结构不同，需在适配层归一化。
+    harmonization_policy: >-
+      研究层只依赖统一请求语义与响应字段，由 provider 适配层各自实现。
+
+  - canonical_research_parameter: request_format
+    deepseek_mapping: messages_array
+    openai_mapping: responses_input
+    semantic_equivalence_status: approximately_equivalent
+    evidence_source_ids:
+      - ds_create_chat_completion
+      - oai_responses_api
+    unresolved_difference: >-
+      字段命名与结构不同；system/user 语义大体对应但需逐项核验。
+    harmonization_policy: >-
+      适配层将统一 prompt 分段映射到各自请求结构，禁止改变语义。
+
+  - canonical_research_parameter: response_format
+    deepseek_mapping: json_output_mode
+    openai_mapping: structured_outputs
+    semantic_equivalence_status: approximately_equivalent
+    evidence_source_ids:
+      - ds_json_output
+      - oai_structured_outputs
+    unresolved_difference: >-
+      两者均支持结构化 JSON，但 schema 约束强度与失败行为不同，未测试。
+    harmonization_policy: >-
+      定义统一响应字段集，各自尽力约束；结构化稳定性留待 preflight 验证。
+
+  - canonical_research_parameter: structured_output_mechanism
+    deepseek_mapping: json_output_mode
+    openai_mapping: structured_outputs
+    semantic_equivalence_status: provider_specific
+    evidence_source_ids:
+      - ds_json_output
+      - oai_structured_outputs
+    unresolved_difference: >-
+      内部约束机制（是否强制 schema、是否可拒绝）不同，不声称强度等价。
+    harmonization_policy: >-
+      研究层只消费解析后的字段；机制差异记录为提供商特有。
+
+  - canonical_research_parameter: reasoning_or_thinking_mode
+    deepseek_mapping: thinking_and_non_thinking
+    openai_mapping: reasoning_effort_none_to_max
+    semantic_equivalence_status: provider_specific
+    evidence_source_ids:
+      - ds_thinking_mode
+      - oai_model_page
+    unresolved_difference: >-
+      DeepSeek 提供 thinking/non_thinking 两态；OpenAI 提供 none..max 多档 reasoning
+      effort。计算语义不同，映射为提供商特有，不视为等价。
+    harmonization_policy: >-
+      研究层记录各自模式设定，不假定跨提供商推理语义等价。
+
+  - canonical_research_parameter: context_window
+    deepseek_mapping: 1000000
+    openai_mapping: 1050000
+    semantic_equivalence_status: approximately_equivalent
+    evidence_source_ids:
+      - ds_models_and_pricing
+      - oai_model_page
+    unresolved_difference: >-
+      量级相近但数值不同（1,000,000 vs 1,050,000）。
+    harmonization_policy: >-
+      研究层按两者较小值约束输入长度，不假定完全一致。
+
+  - canonical_research_parameter: temperature
+    deepseek_mapping: mode_dependent
+    openai_mapping: unresolved
+    semantic_equivalence_status: provider_specific
+    evidence_source_ids:
+      - ds_thinking_mode
+      - oai_model_page
+    unresolved_difference: >-
+      DeepSeek 为 mode_dependent（thinking 模式下 temperature 无效）；
+      OpenAI 端 temperature 支持及其与 reasoning effort 组合限制仍待确认。
+    harmonization_policy: >-
+      不假定 temperature 语义等价；采样设置留待 preflight 冻结并按模式分别处理。
+
+  - canonical_research_parameter: top_p
+    deepseek_mapping: mode_dependent
+    openai_mapping: unresolved
+    semantic_equivalence_status: provider_specific
+    evidence_source_ids:
+      - ds_thinking_mode
+      - oai_model_page
+    unresolved_difference: >-
+      DeepSeek 为 mode_dependent（thinking 模式下 top_p 无效）；OpenAI 端待确认。
+    harmonization_policy: >-
+      确认前不设置 top_p 差异；按模式记录，不假定等价。
+
+  - canonical_research_parameter: seed
+    deepseek_mapping: unresolved
+    openai_mapping: unresolved
+    semantic_equivalence_status: unresolved
+    evidence_source_ids:
+      - ds_create_chat_completion
+      - oai_responses_api
+    unresolved_difference: >-
+      两侧 seed 支持与"是否为确定性保证"均未确认。
+    harmonization_policy: >-
+      不把 seed 视为确定性保证；确认前记录为 unresolved。
+
+  - canonical_research_parameter: max_output_tokens
+    deepseek_mapping: 384000
+    openai_mapping: 128000
+    semantic_equivalence_status: approximately_equivalent
+    evidence_source_ids:
+      - ds_models_and_pricing
+      - oai_model_page
+    unresolved_difference: >-
+      概念对应（输出上限），但数值不同（384,000 vs 128,000）。
+    harmonization_policy: >-
+      研究层设定统一目标上限，受各模型实际上限（分别 384000 / 128000）约束。
+
+  - canonical_research_parameter: response_identifier
+    deepseek_mapping: unresolved
+    openai_mapping: response_id
+    semantic_equivalence_status: provider_specific
+    evidence_source_ids:
+      - ds_create_chat_completion
+      - oai_responses_api
+    unresolved_difference: >-
+      OpenAI Responses endpoint 提供 response id；DeepSeek 对应字段未确认。
+    harmonization_policy: >-
+      日志层各自记录可得的请求/响应标识；DeepSeek 侧标注 unresolved。
+
+  - canonical_research_parameter: retry_relevant_error_categories
+    deepseek_mapping: unresolved
+    openai_mapping: unresolved
+    semantic_equivalence_status: unresolved
+    evidence_source_ids:
+      - ds_rate_limit
+      - oai_responses_api
+    unresolved_difference: >-
+      两侧错误码分类（限流/服务端错误/内容策略）映射未逐项确认。
+    harmonization_policy: >-
+      在 preflight 重试合同中按提供商分别建立错误分类映射。
+
+  - canonical_research_parameter: token_usage_fields
+    deepseek_mapping: usage_tokens
+    openai_mapping: usage_tokens
+    semantic_equivalence_status: approximately_equivalent
+    evidence_source_ids:
+      - ds_create_chat_completion
+      - oai_responses_api
+    unresolved_difference: >-
+      两侧均报告 token 用量，但字段命名与是否含缓存拆分未完全对齐。
+    harmonization_policy: >-
+      日志层归一化为统一用量字段；缺失细分标注 unresolved。
+
+  - canonical_research_parameter: cache_usage_fields
+    deepseek_mapping: cached_input_pricing
+    openai_mapping: cached_input_pricing
+    semantic_equivalence_status: provider_specific
+    evidence_source_ids:
+      - ds_models_and_pricing
+      - oai_model_page
+    unresolved_difference: >-
+      两侧均有缓存输入计费，但缓存写入/命中口径不同（OpenAI 有显式缓存写入倍率）。
+    harmonization_policy: >-
+      成本估算按各自缓存口径分别建模，不假定缓存字段完全等价。

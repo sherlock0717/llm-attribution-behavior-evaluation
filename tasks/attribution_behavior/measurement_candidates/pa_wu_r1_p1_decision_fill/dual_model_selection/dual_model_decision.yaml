@@ -1,0 +1,51 @@
+# PA-Wu R1 P1 双模型选择决策合同（唯一记录用户的模型选择）。
+#
+# 本文件固化用户已作出的双模型选择，不进行候选筛选或综合能力排名。
+# selection_status 只记录"人工已选择"这一事实，绝不表示已完成效果比较，
+# 也绝不表示其中一个模型优于另一个。validator 不会自动改动此文件。
+
+decision_id: pa_wu_r1_p1.dual_model_selection.v1
+
+# 人工已选择（不是 unresolved：用户已明确给出两个模型）。
+selection_status: human_selected
+
+selection_scope:
+  design: cross_provider_dual_model
+  model_count: 2
+  role_policy: co_primary
+  ranking_intended: false
+
+# 精确两个模型，均为 co_primary；不得引入 primary/secondary/winner/fallback。
+selected_models:
+  - provider: deepseek
+    model_id: deepseek-v4-pro
+    role: co_primary
+  - provider: openai
+    model_id: gpt-5.6-terra
+    role: co_primary
+
+# 实际效果评估：全部未进行（本阶段不比较回答效果）。
+empirical_evaluation:
+  task_specific_effect_test_performed: false
+  comparative_quality_evaluated: false
+  structured_output_reliability_tested: false
+  ranking_supported: false
+  status: not_evaluated
+
+# 运行就绪度：不完整（选择已定，但双模型 preflight 结构尚未冻结）。
+operational_readiness:
+  status: incomplete
+  reason: >-
+    用户已完成模型选择，但正式Prompt、采样映射、预算、日志、
+    停止条件、隐私审查与双模型preflight结构尚未全部冻结。
+
+decision_provenance:
+  decision_source: user_explicit_selection
+  decided_models:
+    - deepseek-v4-pro
+    - gpt-5.6-terra
+  decided_at: "2026-07-24T03:34:52+00:00"
+  recorded_by: internal_agent
+  decision_note: >-
+    用户明确选择两个模型共同进入后续设计。本记录不表示已完成
+    模型效果比较，也不表示其中一个模型优于另一个。
