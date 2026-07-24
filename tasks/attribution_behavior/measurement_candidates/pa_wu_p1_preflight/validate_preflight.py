@@ -701,7 +701,8 @@ def _privacy_review_completed(logging_c: dict[str, Any]) -> bool:
     return (
         str(pr.get("status")) == "completed"
         and _nonempty(pr.get("reviewed_by"))
-        and _nonempty(pr.get("reviewed_at"))
+        # reviewed_at must be a REAL ISO date/datetime, not merely non-empty.
+        and _is_date(pr.get("reviewed_at"))
     )
 
 
@@ -903,8 +904,11 @@ def check_authorization_state_machine(
             raise PreflightError(f"authorized but gates still failing: {failing}")
         if not _nonempty(auth.get("authorized_by")):
             raise PreflightError("authorized status requires non-empty authorized_by")
-        if not _nonempty(auth.get("authorized_at")):
-            raise PreflightError("authorized status requires non-empty authorized_at")
+        # authorized_at must be a REAL ISO date/datetime, not merely non-empty.
+        if not _is_date(auth.get("authorized_at")):
+            raise PreflightError(
+                "authorized status requires ISO-parseable authorized_at"
+            )
         return "authorized"
     if flag is True:
         raise PreflightError("blocked status must not carry flag=true")
@@ -1071,8 +1075,14 @@ def _scan_yaml_forbidden_refs(path: Path) -> None:
 
 
 def check_validator_self_ast() -> None:
-    """AST-scan THIS validator; banned modules as real nodes are rejected."""
-    scan_python_source(Path(__file__))
+    """AST-scan the validator IN THE CURRENT PACKAGE_DIR (so it matches the
+    package being validated); banned modules as real nodes are rejected."""
+    validator_path = PACKAGE_DIR / "validate_preflight.py"
+    if not validator_path.is_file():
+        raise PreflightError(
+            f"validate_preflight.py not found in package dir: {validator_path}"
+        )
+    scan_python_source(validator_path)
 
 
 # --------------------------------------------------------------------------
@@ -1151,10 +1161,15 @@ def compute_contract_hash(contracts: dict[str, dict[str, Any]]) -> str:
 def compute_package_hash(
     contracts: dict[str, dict[str, Any]], manifest: dict[str, Any]
 ) -> str:
-    """Package hash covering manifest + all contracts + validate_preflight.py +
-    every managed nested template asset. Any change to the validator or a
-    template therefore changes the package hash."""
-    validator_src = Path(__file__).read_text(encoding="utf-8")
+    """Package hash covering manifest + all contracts + the validator source
+    IN THE CURRENT PACKAGE_DIR + every managed nested template asset. Any change
+    to the (packaged) validator or a template therefore changes the hash."""
+    validator_path = PACKAGE_DIR / "validate_preflight.py"
+    if not validator_path.is_file():
+        raise PreflightError(
+            f"validate_preflight.py not found in package dir: {validator_path}"
+        )
+    validator_src = validator_path.read_text(encoding="utf-8")
     templates: dict[str, str] = {}
     for rel in sorted(_managed_nested_assets()):
         templates[rel] = (PACKAGE_DIR / rel).read_text(encoding="utf-8")

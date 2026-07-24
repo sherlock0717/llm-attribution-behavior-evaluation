@@ -304,15 +304,31 @@ def _repo_status(paths) -> str:
     ).stdout
 
 
+def _dir_snapshot(directory) -> dict:
+    """Recursive {relative_path: sha256} snapshot of a directory, or {} if it
+    does not exist. Used to prove a directory is untouched across an operation."""
+    snap: dict = {}
+    if not directory.exists():
+        return snap
+    for p in sorted(directory.rglob("*")):
+        if p.is_file():
+            rel = p.relative_to(directory).as_posix()
+            snap[rel] = hashlib.sha256(p.read_bytes()).hexdigest()
+    return snap
+
+
 def test_end_to_end_synthetic_authorized_fully_isolated(validator, tmp_path, monkeypatch) -> None:
     """Build a COMPLETE measurement_candidates structure in tmp; write frozen
     contracts + controlled templates ONLY in tmp; drive build_preflight_report().
     The real repository must remain untouched."""
     real_templates_rel = "tasks/attribution_behavior/measurement_candidates/pa_wu_p1_preflight/templates"
+    real_templates_dir = PKG_DIR / "templates"
     status_before = _repo_status([
         "tasks/attribution_behavior/measurement_candidates/pa_wu_p1_preflight",
         real_templates_rel,
     ])
+    # Snapshot the real templates dir (may or may not exist); it must be unchanged.
+    templates_snapshot_before = _dir_snapshot(real_templates_dir)
 
     mc = tmp_path / "measurement_candidates"
     dst = mc / "pa_wu_p1_preflight"
@@ -381,31 +397,78 @@ def test_end_to_end_synthetic_authorized_fully_isolated(validator, tmp_path, mon
     assert report["p1_execution_status"] == "authorized"
     assert report["blocking_gates"] == []
 
-    # real repo must be untouched (no templates created/modified in real tree)
-    assert not (PKG_DIR / "templates").exists()
+    # The real repo must be untouched. We do NOT assume the real templates dir
+    # is absent (a future legitimate templates dir must be allowed to exist);
+    # instead we assert git status and the templates snapshot are unchanged.
     status_after = _repo_status([
         "tasks/attribution_behavior/measurement_candidates/pa_wu_p1_preflight",
         real_templates_rel,
     ])
     assert status_after == status_before
+    assert _dir_snapshot(real_templates_dir) == templates_snapshot_before
 
 
-def test_real_templates_sentinel_untouched(validator, tmp_path, monkeypatch) -> None:
-    """Even if a real templates dir with a sentinel pre-exists, running an
-    isolated e2e must not modify or delete it. We simulate by ensuring the
-    validator's file operations only touch tmp (PACKAGE_DIR monkeypatched)."""
-    # create a sentinel in tmp-only package; the real tree is never written.
+def test_external_sentinel_tree_untouched(validator, tmp_path, monkeypatch) -> None:
+    """An external, pre-existing template tree (simulating a foreign directory)
+    must be neither accessed nor deleted by the validator. The validated package
+    lives in a SEPARATE tmp tree; the external sentinel's content/hash is
+    identical before and after the run."""
+    external = tmp_path / "external_do_not_touch"
+    external.mkdir()
+    sentinel = external / "sentinel.txt"
+    sentinel.write_text("KEEP-EXTERNAL", encoding="utf-8")
+    before = _dir_snapshot(external)
+
+    # The validated package is a fully separate tmp tree.
     mc = tmp_path / "measurement_candidates"
     dst = mc / "pa_wu_p1_preflight"
     shutil.copytree(PKG_DIR, dst)
     shutil.copytree(P0_DIR, mc / "pa_wu_p0")
-    (dst / "templates").mkdir()
-    sentinel = dst / "templates" / "sentinel.txt"
-    sentinel.write_text("KEEP", encoding="utf-8")
     monkeypatch.setattr(validator, "PACKAGE_DIR", dst)
-    # resolver reads only; sentinel remains
-    validator.template_content_hash("pa_wu_p1_preflight/templates/sentinel.txt")
-    assert sentinel.read_text(encoding="utf-8") == "KEEP"
+
+    validator.check_no_secrets_no_clients_no_network()
+    validator.check_manifest()
+
+    assert _dir_snapshot(external) == before
+    assert sentinel.read_text(encoding="utf-8") == "KEEP-EXTERNAL"
+
+
+def test_package_hash_reads_current_package_dir_validator(validator, tmp_path, monkeypatch) -> None:
+    """package_hash must read PACKAGE_DIR/validate_preflight.py (not __file__):
+    modifying the tmp package's validator changes the hash; the real repository
+    validator is never modified."""
+    real_validator = PKG_DIR / "validate_preflight.py"
+    real_before = real_validator.read_bytes()
+
+    mc = tmp_path / "measurement_candidates"
+    dst = mc / "pa_wu_p1_preflight"
+    shutil.copytree(PKG_DIR, dst)
+    monkeypatch.setattr(validator, "PACKAGE_DIR", dst)
+
+    contracts = {n: yaml.safe_load((dst / n).read_text(encoding="utf-8")) for n in validator.CONTRACT_FILES}
+    manifest = yaml.safe_load((dst / "preflight_manifest.yaml").read_text(encoding="utf-8"))
+    h1 = validator.compute_package_hash(contracts, manifest)
+
+    # modify the TMP package's validator source
+    vp = dst / "validate_preflight.py"
+    vp.write_text(vp.read_text(encoding="utf-8") + "\n# tmp change\n", encoding="utf-8")
+    h2 = validator.compute_package_hash(contracts, manifest)
+    assert h1 != h2
+
+    # real repository validator untouched
+    assert real_validator.read_bytes() == real_before
+
+
+def test_package_hash_missing_validator_raises(validator, tmp_path, monkeypatch) -> None:
+    mc = tmp_path / "measurement_candidates"
+    dst = mc / "pa_wu_p1_preflight"
+    shutil.copytree(PKG_DIR, dst)
+    (dst / "validate_preflight.py").unlink()
+    monkeypatch.setattr(validator, "PACKAGE_DIR", dst)
+    contracts = {n: yaml.safe_load((dst / n).read_text(encoding="utf-8")) for n in validator.CONTRACT_FILES}
+    manifest = yaml.safe_load((dst / "preflight_manifest.yaml").read_text(encoding="utf-8"))
+    with pytest.raises(validator.PreflightError):
+        validator.compute_package_hash(contracts, manifest)
 
 
 def test_package_hash_changes_with_template(validator, tmp_path, monkeypatch) -> None:
@@ -589,3 +652,74 @@ def test_source_reference_placeholder_rejected(validator) -> None:
     model = _frozen_model(validator)
     model["decision"]["source_references"] = ["placeholder"]
     assert validator._model_frozen(model) is False
+
+
+# ==========================================================================
+# 一、privacy reviewed_at + authorized_at real ISO parse
+# ==========================================================================
+
+
+def _completed_privacy(reviewed_at):
+    return {
+        "frozen": True,
+        "required_log_fields": list(_load("provenance_and_logging_contract.yaml")["required_log_fields"]),
+        "critical_provenance_fields": list(_load("provenance_and_logging_contract.yaml")["critical_provenance_fields"]),
+        "rules": _load("provenance_and_logging_contract.yaml")["rules"],
+        "privacy_review": {
+            "status": "completed",
+            "reviewed_by": "dpo",
+            "reviewed_at": reviewed_at,
+        },
+    }
+
+
+@pytest.mark.parametrize(
+    "reviewed_at,expected",
+    [
+        ("later", False),
+        ("2026-99-99", False),
+        ("2026-07-24T12:00:00", True),
+        ("2026-07-24", True),
+        (None, False),
+        ("placeholder", False),
+    ],
+)
+def test_privacy_reviewed_at_real_parse(validator, reviewed_at, expected) -> None:
+    logging_c = _completed_privacy(reviewed_at)
+    assert validator._privacy_review_completed(logging_c) is expected
+
+
+def test_privacy_reviewed_by_placeholder_rejected(validator) -> None:
+    logging_c = _completed_privacy("2026-07-24")
+    logging_c["privacy_review"]["reviewed_by"] = "placeholder"
+    assert validator._privacy_review_completed(logging_c) is False
+
+
+def _authorized_auth(authorized_at):
+    return {
+        "authorization_status": "authorized",
+        "real_model_execution_authorized": True,
+        "authorized_by": "pi",
+        "authorized_at": authorized_at,
+    }
+
+
+@pytest.mark.parametrize("bad_at", ["later", "2026-99-99", "", None, "placeholder"])
+def test_authorized_at_bad_hard_fails(validator, bad_at) -> None:
+    gate_status = dict.fromkeys(validator.REQUIRED_GATES, True)
+    with pytest.raises(validator.PreflightError):
+        validator.check_authorization_state_machine(_authorized_auth(bad_at), gate_status)
+
+
+@pytest.mark.parametrize("good_at", ["2026-07-24", "2026-07-24T12:00:00"])
+def test_authorized_at_iso_passes(validator, good_at) -> None:
+    gate_status = dict.fromkeys(validator.REQUIRED_GATES, True)
+    assert validator.check_authorization_state_machine(_authorized_auth(good_at), gate_status) == "authorized"
+
+
+def test_authorized_by_placeholder_hard_fails(validator) -> None:
+    gate_status = dict.fromkeys(validator.REQUIRED_GATES, True)
+    auth = _authorized_auth("2026-07-24")
+    auth["authorized_by"] = "placeholder"
+    with pytest.raises(validator.PreflightError):
+        validator.check_authorization_state_machine(auth, gate_status)
