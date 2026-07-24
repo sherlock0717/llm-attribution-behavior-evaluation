@@ -16,11 +16,17 @@
 
 ## 本包记录的是什么
 
-- 记录的是**选择**与**官方文档证据**，不是模型效果结论；
+- 用户的模型**选择已经完成**（human_selected）；
+- 官方规格证据已**按字段整理**（每个字段挂 `field_evidence`，documented 状态只由
+  `field_evidence[field].status == confirmed_official_documentation` 计算，
+  绝不因字段值非空就自动算作已确认）；
 - 严格区分三层状态：
   - **已选择**（human_selected）：用户已明确选定两个模型；
-  - **文档能力已确认**（documented）：仅表示官方文档记载了某能力（如结构化输出）；
+  - **文档能力已确认**（confirmed_official_documentation）：官方公开页面已读取记载；
   - **实际效果未评估**（not_evaluated）：本任务未测试任何回答效果 / 准确率 / 稳定性。
+- 仍有部分**账户权限、不可变快照、具体条款与接口行为**未解决
+  （`requires_account_check` / `requires_interface_check` / `unresolved`），
+  已逐字段记录在各模型的 `unresolved_fields` 与 `field_evidence` 中。
 
 ## 明确的边界
 

@@ -72,9 +72,21 @@ SEMANTIC_EQUIVALENCE_STATUSES = frozenset(
     }
 )
 
-REQUIRED_MODEL_FIELDS = (
+# Metadata / list fields present on every model but NOT tracked per-field by
+# field_evidence (they are model-level aggregates, not single evidence claims).
+_MODEL_META_FIELDS = (
     "provider",
     "model_id",
+    "official_source_ids",
+    "unresolved_fields",
+    "operational_risks",
+    "reproducibility_risks",
+    "field_evidence",
+)
+
+# Every evidence-tracked field MUST have a field_evidence entry. These are the
+# substantive spec fields whose documented/unresolved status is meaningful.
+EVIDENCE_TRACKED_FIELDS = (
     "public_model_name",
     "public_model_id_status",
     "exact_snapshot_available",
@@ -88,47 +100,30 @@ REQUIRED_MODEL_FIELDS = (
     "structured_output_mechanism",
     "reasoning_mode_support",
     "temperature_support",
+    "top_p_support",
     "seed_support",
     "response_id_support",
-    "pricing_snapshot_date",
     "pricing_currency",
+    "pricing_unit",
     "cached_input_price",
     "uncached_input_price",
     "output_price",
+    "pricing_snapshot_date",
     "provider_retention_policy_status",
     "regional_availability_status",
     "terms_review_status",
-    "official_source_ids",
-    "unresolved_fields",
-    "operational_risks",
-    "reproducibility_risks",
 )
 
-# Fields that, when null/unset, MUST be declared in unresolved_fields.
-_NULLABLE_EVIDENCE_FIELDS = (
-    "exact_snapshot_identifier",
-    "context_window",
-    "max_output_tokens",
-    "pricing_snapshot_date",
-    "pricing_currency",
-    "cached_input_price",
-    "uncached_input_price",
-    "output_price",
-)
-# String fields whose "unresolved" sentinel value means unresolved.
-_UNRESOLVABLE_STRING_FIELDS = (
-    "exact_snapshot_available",
-    "reasoning_mode_support",
-    "temperature_support",
-    "seed_support",
-    "response_id_support",
-    "provider_retention_policy_status",
-    "regional_availability_status",
-    "terms_review_status",
-)
-_UNRESOLVED_SENTINELS = frozenset(
+# Required top-level model keys = tracked fields + metadata fields.
+REQUIRED_MODEL_FIELDS = EVIDENCE_TRACKED_FIELDS + _MODEL_META_FIELDS
+
+_CONFIRMED = "confirmed_official_documentation"
+_UNRESOLVED_STATUSES = frozenset(
     {"unresolved", "requires_account_check", "requires_interface_check"}
 )
+# provider -> at least one allowed source domain fragment (host match handled
+# by _domain_of + membership; provider legitimacy handled here).
+_LEGAL_PROVIDERS = frozenset({"deepseek", "openai"})
 
 MAPPING_KEYS = (
     "canonical_research_parameter",
@@ -145,6 +140,7 @@ REQUIRED_MAPPING_PARAMS = (
     "response_format",
     "structured_output_mechanism",
     "reasoning_or_thinking_mode",
+    "context_window",
     "temperature",
     "top_p",
     "seed",
@@ -189,7 +185,6 @@ _FORBIDDEN_EFFECT_PHRASES = (
     "beats deepseek",
     "beats gpt",
 )
-_ISO_DT_RE = re.compile(r"^\d{4}-\d{2}-\d{2}")
 
 
 class DualModelDecisionError(RuntimeError):
@@ -313,34 +308,69 @@ def check_decision(decision: dict[str, Any]) -> None:
         raise DualModelDecisionError("recorded_by must be non-empty")
 
 
-def check_evidence(evidence: dict[str, Any]) -> tuple[dict[str, list[str]], dict[str, list[str]]]:
-    """Validate official evidence. Returns
-    (documented_fields_by_model, unresolved_fields_by_model)."""
-    sources = evidence.get("sources", [])
+def _check_sources(sources: Any) -> dict[str, dict[str, Any]]:
+    """Validate the source registry. Returns {source_id: meta}. source_id must be
+    globally unique; url must be HTTPS + allowed domain; provider legal;
+    supported/retrieved claims non-empty; scope + supports legal."""
     if not isinstance(sources, list) or not sources:
         raise DualModelDecisionError("evidence.sources must be a non-empty list")
-
-    source_ids: set[str] = set()
+    meta: dict[str, dict[str, Any]] = {}
     for s in sources:
         if not isinstance(s, dict):
             raise DualModelDecisionError("each source must be a mapping")
         sid = str(s.get("source_id", ""))
         if not sid:
             raise DualModelDecisionError("source missing source_id")
-        source_ids.add(sid)
+        if sid in meta:
+            raise DualModelDecisionError(f"duplicate source_id {sid!r}")
+        provider = str(s.get("provider", ""))
+        if provider not in _LEGAL_PROVIDERS:
+            raise DualModelDecisionError(f"source {sid}: illegal provider {provider!r}")
         url = str(s.get("canonical_url", ""))
-        domain = _domain_of(url)
-        if domain not in ALLOWED_SOURCE_DOMAINS:
+        if not url.lower().startswith("https://"):
+            raise DualModelDecisionError(f"source {sid}: canonical_url must be HTTPS")
+        if _domain_of(url) not in ALLOWED_SOURCE_DOMAINS:
             raise DualModelDecisionError(
-                f"illegal source domain {domain!r} for {sid} ({url!r})"
+                f"illegal source domain for {sid} ({url!r})"
             )
         if str(s.get("evidence_status")) not in EVIDENCE_STATUSES:
             raise DualModelDecisionError(f"illegal evidence_status for {sid}")
         if not _is_iso_datetime(s.get("retrieved_at")):
             raise DualModelDecisionError(f"source {sid} retrieved_at not ISO")
-        for f in ("provider", "page_title", "source_type"):
+        for f in ("page_title", "source_type"):
             if not str(s.get(f, "")).strip():
                 raise DualModelDecisionError(f"source {sid} missing {f}")
+        scope = str(s.get("source_scope", ""))
+        if scope not in ("provider_generic", "model_specific"):
+            raise DualModelDecisionError(f"source {sid}: illegal source_scope {scope!r}")
+        supports = s.get("supports_model_ids", [])
+        if not isinstance(supports, list) or not supports:
+            raise DualModelDecisionError(f"source {sid}: supports_model_ids required")
+        for mid in supports:
+            if str(mid) not in EXPECTED_MODEL_IDS:
+                raise DualModelDecisionError(
+                    f"source {sid}: illegal supports_model_id {mid!r}"
+                )
+        retrieved = s.get("retrieved_claims", [])
+        if not isinstance(retrieved, list) or not retrieved:
+            raise DualModelDecisionError(f"source {sid}: retrieved_claims must be non-empty")
+        meta[sid] = {
+            "provider": provider,
+            "status": str(s.get("evidence_status")),
+            "scope": scope,
+            "supports": set(map(str, supports)),
+        }
+    return meta
+
+
+def check_evidence(evidence: dict[str, Any]) -> tuple[dict[str, list[str]], dict[str, list[str]]]:
+    """Validate official evidence with per-field evidence mapping. Returns
+    (documented_fields_by_model, unresolved_fields_by_model).
+
+    documented is computed ONLY from field_evidence[field].status == confirmed;
+    a concrete value alone never marks a field documented.
+    """
+    src_meta = _check_sources(evidence.get("sources", []))
 
     models = evidence.get("models", [])
     if not isinstance(models, list) or len(models) != 2:
@@ -348,7 +378,7 @@ def check_evidence(evidence: dict[str, Any]) -> tuple[dict[str, list[str]], dict
 
     documented_by_model: dict[str, list[str]] = {}
     unresolved_by_model: dict[str, list[str]] = {}
-    seen_ids: set[str] = set()
+    seen: set[str] = set()
 
     for m in models:
         if not isinstance(m, dict):
@@ -357,64 +387,146 @@ def check_evidence(evidence: dict[str, Any]) -> tuple[dict[str, list[str]], dict
             if key not in m:
                 raise DualModelDecisionError(f"evidence model missing field {key!r}")
         mid = str(m.get("model_id"))
-        seen_ids.add(mid)
-        if mid not in EXPECTED_MODEL_IDS:
-            raise DualModelDecisionError(f"unexpected evidence model_id {mid!r}")
-
-        src_ids = m.get("official_source_ids", [])
-        if not isinstance(src_ids, list) or not src_ids:
-            raise DualModelDecisionError(f"{mid}: official_source_ids must be non-empty")
-        for sid in src_ids:
-            if str(sid) not in source_ids:
-                raise DualModelDecisionError(f"{mid}: unknown source_id {sid!r}")
+        provider = str(m.get("provider"))
+        if (provider, mid) not in set(EXPECTED_MODELS):
+            raise DualModelDecisionError(f"unexpected model (provider,id): {(provider, mid)!r}")
+        seen.add(mid)
 
         declared_unresolved = m.get("unresolved_fields", [])
         if not isinstance(declared_unresolved, list):
             raise DualModelDecisionError(f"{mid}: unresolved_fields must be a list")
         declared_set = set(map(str, declared_unresolved))
 
-        # Every null/unset nullable field must be declared unresolved.
-        for f in _NULLABLE_EVIDENCE_FIELDS:
-            if m.get(f) is None and f not in declared_set:
-                raise DualModelDecisionError(
-                    f"{mid}: field {f!r} is null but not in unresolved_fields"
-                )
-        # Every string field carrying an unresolved sentinel must be declared.
-        for f in _UNRESOLVABLE_STRING_FIELDS:
-            if str(m.get(f)) in _UNRESOLVED_SENTINELS and f not in declared_set:
-                raise DualModelDecisionError(
-                    f"{mid}: field {f!r} is unresolved but not in unresolved_fields"
-                )
-        # A documented field must NOT also be declared unresolved.
+        fe = m.get("field_evidence", {})
+        if not isinstance(fe, dict):
+            raise DualModelDecisionError(f"{mid}: field_evidence must be a mapping")
+
         documented: list[str] = []
-        for f in REQUIRED_MODEL_FIELDS:
-            if f in ("official_source_ids", "unresolved_fields", "operational_risks",
-                     "reproducibility_risks"):
-                continue
-            val = m.get(f)
-            is_unresolved = (
-                val is None
-                or (isinstance(val, str) and val.strip() in _UNRESOLVED_SENTINELS)
-            )
-            if not is_unresolved:
-                documented.append(f)
-            if f in declared_set and not is_unresolved:
+        unresolved_from_fe: set[str] = set()
+        used_source_ids: set[str] = set()
+
+        for field in EVIDENCE_TRACKED_FIELDS:
+            if field not in fe:
                 raise DualModelDecisionError(
-                    f"{mid}: field {f!r} declared unresolved but has a concrete value"
+                    f"{mid}: field {field!r} has no field_evidence entry"
                 )
+            entry = fe[field]
+            if not isinstance(entry, dict):
+                raise DualModelDecisionError(f"{mid}: field_evidence[{field}] not a mapping")
+            status = str(entry.get("status"))
+            sids = entry.get("source_ids", [])
+            if not isinstance(sids, list) or not sids:
+                raise DualModelDecisionError(
+                    f"{mid}.{field}: field_evidence source_ids must be non-empty"
+                )
+            for sid in sids:
+                sid = str(sid)
+                if sid not in src_meta:
+                    raise DualModelDecisionError(f"{mid}.{field}: unknown source_id {sid!r}")
+                used_source_ids.add(sid)
+                # source provider must match the model provider
+                if src_meta[sid]["provider"] != provider:
+                    raise DualModelDecisionError(
+                        f"{mid}.{field}: source {sid} provider "
+                        f"{src_meta[sid]['provider']!r} != model provider {provider!r}"
+                    )
+                # source scope must support this model or be provider_generic
+                if (src_meta[sid]["scope"] != "provider_generic"
+                        and mid not in src_meta[sid]["supports"]):
+                    raise DualModelDecisionError(
+                        f"{mid}.{field}: source {sid} does not support this model"
+                    )
+
+            field_value = m.get(field)
+            value_is_unresolved_sentinel = (
+                field_value is None
+                or (isinstance(field_value, str)
+                    and field_value.strip() in _UNRESOLVED_STATUSES)
+            )
+
+            if status == _CONFIRMED:
+                # A confirmed field's cited sources must themselves be confirmed.
+                for sid in sids:
+                    if src_meta[str(sid)]["status"] != _CONFIRMED:
+                        raise DualModelDecisionError(
+                            f"{mid}.{field}: confirmed field cites non-confirmed "
+                            f"source {sid!r}"
+                        )
+                # A confirmed field must carry a concrete (non-unresolved) value.
+                if value_is_unresolved_sentinel:
+                    raise DualModelDecisionError(
+                        f"{mid}.{field}: confirmed but value is null/unresolved"
+                    )
+                if field in declared_set:
+                    raise DualModelDecisionError(
+                        f"{mid}.{field}: confirmed field must not be in unresolved_fields"
+                    )
+                documented.append(field)
+            elif status in _UNRESOLVED_STATUSES:
+                if not str(entry.get("reason", "")).strip():
+                    raise DualModelDecisionError(
+                        f"{mid}.{field}: unresolved field_evidence must give a reason"
+                    )
+                # An unresolved field must NOT carry a contradicting concrete value.
+                if not value_is_unresolved_sentinel:
+                    raise DualModelDecisionError(
+                        f"{mid}.{field}: unresolved status but value is concrete"
+                    )
+                if field not in declared_set:
+                    raise DualModelDecisionError(
+                        f"{mid}.{field}: unresolved but not in unresolved_fields"
+                    )
+                unresolved_from_fe.add(field)
+            else:
+                raise DualModelDecisionError(
+                    f"{mid}.{field}: illegal field_evidence status {status!r}"
+                )
+
+        # model-level official_source_ids must be a superset of field sources.
+        official = m.get("official_source_ids", [])
+        if not isinstance(official, list) or not official:
+            raise DualModelDecisionError(f"{mid}: official_source_ids must be non-empty")
+        official_set = set(map(str, official))
+        for sid in official_set:
+            if sid not in src_meta:
+                raise DualModelDecisionError(f"{mid}: unknown official_source_id {sid!r}")
+        if not used_source_ids.issubset(official_set):
+            missing = sorted(used_source_ids - official_set)
+            raise DualModelDecisionError(
+                f"{mid}: official_source_ids missing field sources {missing}"
+            )
+
+        # documented and unresolved must not overlap.
+        if set(documented) & declared_set:
+            raise DualModelDecisionError(
+                f"{mid}: documented and unresolved fields overlap: "
+                f"{sorted(set(documented) & declared_set)}"
+            )
+        # declared unresolved_fields must equal the unresolved set derived from
+        # field_evidence (no silent extras/missing among tracked fields).
+        tracked_unresolved = {f for f in declared_set if f in EVIDENCE_TRACKED_FIELDS}
+        if tracked_unresolved != unresolved_from_fe:
+            raise DualModelDecisionError(
+                f"{mid}: unresolved_fields disagree with field_evidence "
+                f"(declared={sorted(tracked_unresolved)}, "
+                f"field_evidence={sorted(unresolved_from_fe)})"
+            )
+
         documented_by_model[mid] = sorted(documented)
         unresolved_by_model[mid] = sorted(declared_set)
 
-    if seen_ids != set(EXPECTED_MODEL_IDS):
+    if seen != set(EXPECTED_MODEL_IDS):
         raise DualModelDecisionError("evidence models mismatch expected model ids")
     return documented_by_model, unresolved_by_model
 
 
-def check_parameter_compatibility(compat: dict[str, Any]) -> dict[str, int]:
+def check_parameter_compatibility(
+    compat: dict[str, Any], known_source_ids: set[str]
+) -> dict[str, int]:
     mappings = compat.get("mappings", [])
     if not isinstance(mappings, list) or not mappings:
         raise DualModelDecisionError("parameter_compatibility.mappings must be non-empty")
-    params_seen: set[str] = set()
+    params_seen: list[str] = []
     summary: dict[str, int] = {}
     for mp in mappings:
         if not isinstance(mp, dict):
@@ -426,13 +538,28 @@ def check_parameter_compatibility(compat: dict[str, Any]) -> dict[str, int]:
         if status not in SEMANTIC_EQUIVALENCE_STATUSES:
             raise DualModelDecisionError(f"illegal semantic_equivalence_status {status!r}")
         summary[status] = summary.get(status, 0) + 1
-        params_seen.add(str(mp.get("canonical_research_parameter")))
+        param = str(mp.get("canonical_research_parameter"))
+        params_seen.append(param)
         ev = mp.get("evidence_source_ids", [])
         if not isinstance(ev, list) or not ev:
             raise DualModelDecisionError("mapping evidence_source_ids must be non-empty")
-    missing = set(REQUIRED_MAPPING_PARAMS) - params_seen
-    if missing:
-        raise DualModelDecisionError(f"parameter_compatibility missing params: {sorted(missing)}")
+        for sid in ev:
+            if str(sid) not in known_source_ids:
+                raise DualModelDecisionError(
+                    f"compatibility[{param}] references unknown source_id {sid!r}"
+                )
+    # exact parameter set: no missing, no extra, no duplicates.
+    seen_set = set(params_seen)
+    if len(params_seen) != len(seen_set):
+        dups = sorted({p for p in params_seen if params_seen.count(p) > 1})
+        raise DualModelDecisionError(f"duplicate compatibility params: {dups}")
+    missing = set(REQUIRED_MAPPING_PARAMS) - seen_set
+    extra = seen_set - set(REQUIRED_MAPPING_PARAMS)
+    if missing or extra:
+        raise DualModelDecisionError(
+            f"compatibility params mismatch (missing={sorted(missing)}, "
+            f"extra={sorted(extra)})"
+        )
     return summary
 
 
@@ -584,7 +711,8 @@ def build_report() -> dict[str, Any]:
 
     check_decision(decision)
     documented_by_model, unresolved_by_model = check_evidence(evidence)
-    compatibility_summary = check_parameter_compatibility(compat)
+    known_source_ids = {str(s.get("source_id")) for s in evidence.get("sources", [])}
+    compatibility_summary = check_parameter_compatibility(compat, known_source_ids)
     check_comparability(comparability)
     migration_status = check_migration_plan()
     check_no_placeholders_no_ranking()
